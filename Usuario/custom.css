@@ -1,0 +1,123 @@
+/* ===============================
+   INJUV - Estilos base con basureros
+   =============================== */
+
+/* Reset */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ---------- Avatar y cropper ---------- */
+#cropper img {
+  max-width: none;
+}
+
+#cropFrame {
+  overflow: hidden;
+  position: relative;
+}
+
+#cropImg {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+}
+
+/* ---------- Botones de edición ---------- */
+.edit-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+/* ---------- Habilidades ---------- */
+.bar-track {
+  width: 100%;
+  height: 10px;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  background-color: #2563eb;
+  border-radius: 9999px;
+  transition: width 0.2s ease;
+}
+
+.bar-track:hover .bar-fill {
+  filter: brightness(1.1);
+}
+
+/* Botones de acción en habilidades */
+.skill-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.skill-actions button {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Botón eliminar (basurero) */
+.skill-actions .delete-btn {
+  background-color: transparent;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.skill-actions .delete-btn:hover {
+  background-color: #dc2626;
+  color: #fff;
+}
+
+/* Botón añadir */
+#skillQuickAdd {
+  transition: background-color 0.2s ease;
+}
+
+/* ---------- Modal ---------- */
+#modal,
+#cropper {
+  backdrop-filter: blur(2px);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* ---------- Animaciones suaves ---------- */
+.section-card {
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.section-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}

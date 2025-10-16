@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plataforma de Voluntariados INJUV</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tu CSS personalizado -->
+  <link rel="stylesheet" href="assets/custom.css" />
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+
+  <!-- HEADER -->
+  <header class="bg-white shadow-sm border-b-4 border-blue-700">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
+      <img src="https://www.injuv.gob.cl/sites/default/files/logo_injuv_2021_portal.png?v=3" alt="INJUV" class="h-10 w-auto">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold">Plataforma de Voluntariados INJUV</h1>
+        <p class="mt-1 text-blue-700 text-sm">Instituto Nacional de la Juventud - Gobierno de Chile</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- PERFIL (banner + avatar + nombre) -->
+  <section class="max-w-7xl mx-auto mt-6 rounded-2xl overflow-hidden shadow-sm">
+    <!-- Banner azul -->
+    <div class="relative bg-blue-700 h-40">
+      <!-- Input de foto (oculto) -->
+      <input id="avatarInput" type="file" accept="image/*" class="hidden">
+    </div>
+
+    <!-- Franja blanca con nombre -->
+    <div class="relative bg-white">
+      <!-- Botón editar foto -->
+      <label for="avatarInput"
+         class="absolute right-4 top-3 inline-flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 cursor-pointer text-sm shadow">
+        ✎ Editar foto
+      </label>
+
+      <!-- Avatar superpuesto -->
+      <img id="avatarCard"
+           src="assets/avatar-default.png"
+           alt="Foto de perfil"
+           class="absolute -top-12 left-8 h-28 w-28 rounded-full ring-4 ring-white object-cover object-top bg-white">
+
+      <!-- Nombre y meta -->
+      <div class="pl-40 pr-4 py-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold text-gray-900">María Alejandra González</h2>
+          <div class="mt-1 text-sm text-gray-600 flex flex-wrap gap-x-6 gap-y-1">
+            <span>📍 Santiago, Región Metropolitana</span>
+            <span>⏱ 157 horas de voluntariado</span>
+            <span>🎂 27 años</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <section class="lg:col-span-2 space-y-6">
+
+        <!-- INFORMACIÓN DE CONTACTO -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 section-card">
+          <h3 class="text-xl font-semibold mb-4">Información de Contacto</h3>
+          <button data-edit="contact" class="edit-btn text-blue-600 hover:text-blue-800" title="Editar información">✎</button>
+
+          <div id="contactView" class="space-y-2 text-gray-700">
+            <p>📧 <span id="contactEmail">maria.gonzalez@email.com</span></p>
+            <p>📞 <span id="contactPhone">+56 9 8765 4321</span></p>
+            <p>📍 <span id="contactLocation">Santiago, Región Metropolitana</span></p>
+          </div>
+
+          <form id="contactForm" class="hidden mt-1 space-y-3">
+            <input id="emailInput" type="email" class="w-full border rounded-lg p-2" placeholder="Correo electrónico">
+            <input id="phoneInput" type="text" class="w-full border rounded-lg p-2" placeholder="Teléfono">
+            <input id="locationInput" type="text" class="w-full border rounded-lg p-2" placeholder="Ubicación">
+            <div class="flex justify-end gap-2">
+              <button type="button" data-cancel="contact" class="px-3 py-1 border rounded-lg">Cancelar</button>
+              <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ACERCA DE MÍ -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 section-card">
+          <h3 class="text-xl font-semibold mb-3">Acerca de Mí</h3>
+          <button data-edit="about" class="edit-btn text-blue-600 hover:text-blue-800" title="Editar descripción">✎</button>
+
+          <p id="aboutText" class="text-gray-700 leading-relaxed">
+            Soy una persona comprometida con el servicio comunitario y el desarrollo social.
+            Me apasiona ayudar a otros y contribuir al bienestar de mi comunidad a través del voluntariado.
+          </p>
+
+          <form id="aboutForm" class="hidden mt-1">
+            <textarea id="aboutInput" rows="4" class="w-full border rounded-lg p-2"></textarea>
+            <div class="flex justify-end gap-2 mt-2">
+              <button type="button" data-cancel="about" class="px-3 py-1 border rounded-lg">Cancelar</button>
+              <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- EXPERIENCIA -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <h3 class="text-xl font-semibold mb-4">Experiencia de Voluntariados</h3>
+
+          <article class="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-sm transition">
+            <h4 class="font-semibold text-gray-900">Apoyo Educacional</h4>
+            <p class="text-blue-600 font-medium">Fundación Educación para Todos</p>
+            <p class="text-sm text-gray-600">Enero 2024 – Presente</p>
+            <p class="text-gray-700 mt-2">Refuerzo para estudiantes de educación básica.</p>
+            <div class="flex items-center mt-3 gap-4">
+              <span class="text-sm text-green-600 font-medium">45 horas completadas</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">Plataforma</span>
+            </div>
+          </article>
+
+          <article class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition">
+            <h4 class="font-semibold text-gray-900">Cuidado de Adultos Mayores</h4>
+            <p class="text-blue-600 font-medium">Hogar San José</p>
+            <p class="text-sm text-gray-600">Agosto 2023 – Diciembre 2023</p>
+            <p class="text-gray-700 mt-2">Acompañamiento y apoyo en actividades diarias.</p>
+            <div class="flex items-center mt-3 gap-4">
+              <span class="text-sm text-green-600 font-medium">30 horas completadas</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800">Manual</span>
+            </div>
+          </article>
+        </div>
+
+        <!-- RESEÑAS Y REFERENCIAS -->
+        <section class="bg-white rounded-xl shadow-sm border p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">⭐</span>
+            <h3 class="text-xl font-semibold">Reseñas y Referencias</h3>
+          </div>
+
+          <article class="border rounded-lg px-4 py-3 mb-4">
+            <div class="flex items-start justify-between">
+              <div>
+                <a href="#" class="font-semibold text-gray-900 hover:underline">Fundación Educación para Todos</a>
+                <p class="text-sm text-gray-600">Apoyo Educacional</p>
+              </div>
+              <div class="flex items-center gap-1" data-rating="5"></div>
+            </div>
+            <p class="mt-3 italic text-gray-800">“Excelente voluntaria, muy comprometida y dedicada. Los niños la adoran.”</p>
+            <p class="mt-3 text-xs text-gray-500">2024-08-20</p>
+          </article>
+
+          <article class="border rounded-lg px-4 py-3">
+            <div class="flex items-start justify-between">
+              <div>
+                <a href="#" class="font-semibold text-gray-900 hover:underline">Hogar San José</a>
+                <p class="text-sm text-gray-600">Cuidado de Adultos Mayores</p>
+              </div>
+              <div class="flex items-center gap-1" data-rating="4"></div>
+            </div>
+            <p class="mt-3 italic text-gray-800">“Muy responsable y cariñosa con los residentes. Siempre puntual.”</p>
+            <p class="mt-3 text-xs text-gray-500">2023-12-28</p>
+          </article>
+        </section>
+      </section>
+
+      <!-- COLUMNA DERECHA -->
+      <aside class="space-y-6">
+        <!-- ESTADÍSTICAS -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <h3 class="text-xl font-semibold mb-4">Estadísticas de Voluntariado</h3>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="rounded-lg bg-blue-50 p-4 text-center">
+              <div class="text-3xl font-bold text-blue-700">157</div>
+              <div class="text-xs text-blue-800 mt-1">Horas Totales</div>
+            </div>
+            <div class="rounded-lg bg-green-50 p-4 text-center">
+              <div class="text-3xl font-bold text-green-700">2</div>
+              <div class="text-xs text-green-800 mt-1">Proyectos</div>
+            </div>
+            <div class="rounded-lg bg-yellow-50 p-4 text-center">
+              <div class="text-3xl font-bold text-yellow-700">2</div>
+              <div class="text-xs text-yellow-800 mt-1">Certificados</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HABILIDADES (limpio y editable) -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">◎</span>
+              <h3 class="text-xl font-semibold">Habilidades</h3>
+            </div>
+            <button id="skillQuickAdd"
+              class="rounded-full w-7 h-7 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700"
+              title="Añadir habilidad">+</button>
+          </div>
+
+          <ul id="skillsBars" class="space-y-5">
+            <li class="space-y-2" data-id="team" data-level="90">
+              <div class="flex items-center justify-between">
+                <span class="text-sm md:text-base text-gray-900">Trabajo en Equipo</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+            </li>
+
+            <li class="space-y-2" data-id="comm" data-level="78">
+              <div class="flex items-center justify-between">
+                <span class="text-sm md:text-base text-gray-900">Comunicación Efectiva</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+            </li>
+
+            <li class="space-y-2" data-id="lead" data-level="45">
+              <div class="flex items-center justify-between">
+                <span class="text-sm md:text-base text-gray-900">Liderazgo</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+            </li>
+
+            <li class="space-y-2" data-id="empathy" data-level="85">
+              <div class="flex items-center justify-between">
+                <span class="text-sm md:text-base text-gray-900">Empatía</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+            </li>
+
+            <li class="space-y-2" data-id="solve" data-level="70">
+              <div class="flex items-center justify-between">
+                <span class="text-sm md:text-base text-gray-900">Resolución de Problemas</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill"></div></div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- CERTIFICADOS -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">Certificados</h3>
+            <button id="openModalBtn" class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Subir</button>
+          </div>
+          <div class="space-y-3">
+            <div class="border border-gray-200 rounded-lg p-3">
+              <h4 class="font-medium text-gray-900 text-sm">Antecedentes</h4>
+              <p class="text-xs text-gray-600">Registro Civil</p>
+              <p class="text-xs text-gray-500 mt-1">Emitido: 2025-02-01</p>
+              <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Obtenido</span>
+            </div>
+            <div class="border border-gray-200 rounded-lg p-3">
+              <h4 class="font-medium text-gray-900 text-sm">Inhabilidades</h4>
+              <p class="text-xs text-gray-600">Registro Civil</p>
+              <p class="text-xs text-gray-500 mt-1">Emitido: 2025-03-10</p>
+              <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">Subido</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- MODAL SUBIR CERTIFICADOS -->
+  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
+      <div class="flex items-start justify-between">
+        <h2 class="text-xl font-semibold">Subir Certificados (≤ 6 meses)</h2>
+        <button id="closeModalBtn" class="rounded-lg px-3 py-1 text-sm hover:bg-gray-100">✕</button>
+      </div>
+
+      <div id="errors" class="mt-4 hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <ul class="list-disc pl-5"></ul>
+      </div>
+
+      <form id="certForm" class="mt-5 space-y-6">
+        <!-- Antecedentes -->
+        <section class="rounded-xl border p-4">
+          <h3 class="mb-3 font-medium">Certificado de Antecedentes</h3>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <label class="mb-1 block text-sm font-medium">Archivo (PDF)</label>
+              <input type="file" accept="application/pdf" id="antecedentesFile" class="w-full rounded-lg border p-2" required>
+              <p id="antecedentesName" class="mt-1 text-xs text-gray-600 hidden"></p>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium">Fecha de emisión</label>
+              <input type="date" id="antecedentesDate" class="w-full rounded-lg border p-2" required>
+              <p id="antecedentesFlag" class="mt-1 text-xs"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Inhabilidades -->
+        <section class="rounded-xl border p-4">
+          <h3 class="mb-3 font-medium">Certificado de Inhabilidades</h3>
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <label class="mb-1 block text-sm font-medium">Archivo (PDF)</label>
+              <input type="file" accept="application/pdf" id="inhabilidadesFile" class="w-full rounded-lg border p-2" required>
+              <p id="inhabilidadesName" class="mt-1 text-xs text-gray-600 hidden"></p>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium">Fecha de emisión</label>
+              <input type="date" id="inhabilidadesDate" class="w-full rounded-lg border p-2" required>
+              <p id="inhabilidadesFlag" class="mt-1 text-xs"></p>
+            </div>
+          </div>
+        </section>
+
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" id="cancelBtn" class="px-4 py-2 rounded-lg border">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL RECORTE AVATAR -->
+  <div id="cropper" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-xl">
+      <h3 class="text-lg font-semibold">Recortar foto de perfil</h3>
+
+      <!-- Marco circular -->
+      <div id="cropFrame"
+           class="relative mx-auto my-4 h-64 w-64 rounded-full overflow-hidden ring-4 ring-white shadow-lg bg-gray-100">
+        <img id="cropImg" alt="Previsualización" class="absolute select-none cursor-move" draggable="false" />
+      </div>
+
+      <!-- Controles -->
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-600">Zoom</span>
+        <input id="cropZoom" type="range" min="0.5" max="3" step="0.01" value="1" class="w-full">
+        <button id="cropReset" class="px-3 py-1 rounded border text-sm">Reiniciar</button>
+        <div class="flex-1"></div>
+        <button id="cropCancel" class="px-3 py-2 rounded border">Cancelar</button>
+        <button id="cropSave" class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Guardar</button>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-2">Arrastra la imagen para centrarla y usa el control de zoom.</p>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script src="assets/app.js"></script>
+</body>
+</html>
