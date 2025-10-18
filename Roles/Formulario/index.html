@@ -7,25 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css" />
   <link rel="stylesheet" href="styles.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-  <!-- Simulación simple del header gubernamental -->
-  <header class="gov-header">
-    <div class="gov-wrap">
-      <div class="gov-left">
-        <div class="brand">
-          <span class="brand-flag" aria-hidden="true"></span>
-          <strong>INJUV</strong>
-          <span class="brand-min">Ministerio de Desarrollo Social y Familia</span>
-        </div>
-      </div>
-      <div class="gov-right">
-        <input type="search" placeholder="¿Qué deseas buscar?" aria-label="Buscar" />
-        <div class="lang-switch" aria-label="Cambiar idioma" title="Cambiar idioma"></div>
-      </div>
-    </div>
-  </header>
+  <!-- Header Principal -->
+  <div id="header-container"></div>
 
   <main class="container">
     <section class="hero">
@@ -374,5 +362,15 @@
       <p>Clon estático con fines educativos. No envía datos.</p>
     </footer>
   </main>
+  
+  <script>
+    // Cargar header dinámicamente
+    fetch('../../header.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('header-container').innerHTML = data;
+        })
+        .catch(error => console.error('Error loading header:', error));
+  </script>
 </body>
 </html>
