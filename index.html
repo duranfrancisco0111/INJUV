@@ -1,219 +1,873 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INJUV - Panel de Administración</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1976D2 0%, #D32F2F 50%, #FFFFFF 100%);
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .container {
-      text-align: center;
-      max-width: 600px;
-      padding: 40px;
-    }
-    
-    .logo {
-      width: 120px;
-      height: 120px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-      border-radius: 50%;
-      margin: 0 auto 30px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      color: white;
-      border: 3px solid rgba(255,255,255,0.3);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-    }
-    
-    .logo:hover {
-      transform: scale(1.1);
-      border-color: rgba(255,255,255,0.5);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-    }
-    
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-    
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 40px;
-      opacity: 0.9;
-      line-height: 1.6;
-    }
-    
-    .btn {
-      display: inline-block;
-      padding: 15px 40px;
-      background: linear-gradient(135deg, #1976D2, #D32F2F);
-      color: white;
-      text-decoration: none;
-      border-radius: 30px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(25,118,210,0.4);
-    }
-    
-    .btn:hover {
-      background: linear-gradient(135deg, #1565C0, #B71C1C);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(25,118,210,0.5);
-    }
-    
-    .features {
-      margin-top: 60px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 30px;
-    }
-    
-    .feature {
-      background: rgba(255,255,255,0.15);
-      padding: 25px;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(255,255,255,0.2);
-      transition: all 0.3s ease;
-    }
-    
-    .feature:hover {
-      background: rgba(255,255,255,0.25);
-      transform: translateY(-5px);
-      border-color: rgba(255,255,255,0.4);
-    }
-    
-    .feature h3 {
-      margin-bottom: 15px;
-      font-size: 1.2rem;
-    }
-    
-    .feature p {
-      font-size: 0.95rem;
-      opacity: 0.8;
-      margin: 0;
-    }
-    
-    @media (max-width: 768px) {
-      .container {
-        padding: 20px;
-      }
-      
-      h1 {
-        font-size: 2rem;
-      }
-      
-      .features {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-    }
-    
-    /* Elementos decorativos flotantes */
-    .floating-elements {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-    }
-    
-    .floating-element {
-      position: absolute;
-      opacity: 0.6;
-      animation: float 6s ease-in-out infinite;
-    }
-    
-    .floating-element:nth-child(1) {
-      top: 20%;
-      left: 10%;
-      font-size: 2rem;
-      color: #FFFFFF;
-      animation-delay: 0s;
-    }
-    
-    .floating-element:nth-child(2) {
-      top: 60%;
-      right: 15%;
-      font-size: 1.5rem;
-      color: #FFFFFF;
-      animation-delay: 2s;
-    }
-    
-    .floating-element:nth-child(3) {
-      bottom: 30%;
-      left: 20%;
-      font-size: 1.8rem;
-      color: #FFFFFF;
-      animation-delay: 4s;
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-20px) rotate(180deg); }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INJUV Connect - Juventud y Voluntariado Internacional</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="floating-elements">
-    <div class="floating-element">⭐</div>
-    <div class="floating-element">💫</div>
-    <div class="floating-element">✨</div>
-  </div>
-  
-  <div class="container">
-    <div class="logo">
-      🏛️
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-content">
+                <div class="top-links">
+                    <a href="#" class="top-link">Consejo de la Sociedad Civil (COSOC)</a>
+                    <a href="#" class="top-link">Personas</a>
+                    <a href="#" class="top-link">Empresas</a>
+                    <a href="#" class="top-link">Organismos</a>
+                    <a href="#" class="top-link">Sobre Sence</a>
+                </div>
+                <div class="search-toggle">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <h1>Panel de Administración INJUV</h1>
-    <p>Sistema completo de gestión para la plataforma de voluntariado. Administra usuarios, contenido y configuración de manera eficiente y segura.</p>
-    
-    <a href="admin.html" class="btn">Acceder al Panel</a>
-    
-    <div class="features">
-      <div class="feature">
-        <h3>👥 Usuarios</h3>
-        <p>Gestión completa de usuarios y organizaciones con sistema de roles</p>
-      </div>
-      
-      <div class="feature">
-        <h3>📊 Reportes</h3>
-        <p>Generación de reportes personalizables por diferentes criterios</p>
-      </div>
-      
-      <div class="feature">
-        <h3>🎨 Personalización</h3>
-        <p>Configuración visual y temática de la plataforma</p>
-      </div>
-      
-      <div class="feature">
-        <h3>📰 Contenido</h3>
-        <p>Gestión de noticias, oportunidades y repositorio de documentos</p>
-      </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMDA2NkNDIi8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPklOSlVWPC90ZXh0Pgo8L3N2Zz4K" alt="INJUV Logo">
+                    <span>INJUV Connect</span>
+                </div>
+                
+                <nav class="main-nav">
+                    <ul class="nav-menu">
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">INJUV <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Quiénes Somos</a></li>
+                                <li><a href="#">Dirección Nacional</a></li>
+                                <li><a href="#">Estudios</a></li>
+                                <li><a href="#">Noticias</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Voluntariado <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#explore">Oportunidades</a></li>
+                                <li><a href="#how-it-works">Cómo funciona</a></li>
+                                <li><a href="#features">Características</a></li>
+                                <li><a href="#pricing">Planes</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Participación <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Compromiso Joven</a></li>
+                                <li><a href="#">Espacios de participación</a></li>
+                                <li><a href="#">COSOC</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Bienestar <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Hablemos de Todo</a></li>
+                                <li><a href="#">Comunidad Joven</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Trámites INJUV</a></li>
+                                <li><a href="#">Gobierno Transparente</a></li>
+                                <li><a href="#">OIRS</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="header-actions">
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div class="nav-buttons">
+                        <button class="btn-secondary">Iniciar sesión</button>
+                        <button class="btn-primary">Registrarse</button>
+                    </div>
+                    <button class="menu-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Bar -->
+    <div class="search-bar" id="searchBar">
+        <div class="container">
+            <div class="search-content">
+                <div class="search-input-group">
+                    <input type="text" placeholder="¿Qué deseas buscar?" class="search-input">
+                    <button class="search-submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <button class="search-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Lanzamiento Programa de <span class="highlight">Voluntariado Internacional</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Conecta con oportunidades de voluntariado en más de 140 países mientras desarrollas habilidades 
+                    y contribuyes al desarrollo sostenible. Más de 50,000 jóvenes ya han participado.
+                </p>
+                <div class="hero-search">
+                    <div class="search-container">
+                        <div class="search-field">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <input type="text" placeholder="¿A dónde quieres viajar?" id="destination">
+                        </div>
+                        <div class="search-field">
+                            <i class="fas fa-calendar"></i>
+                            <input type="text" placeholder="¿Cuándo?" id="dates">
+                        </div>
+                        <div class="search-field">
+                            <i class="fas fa-briefcase"></i>
+                            <select id="work-type">
+                                <option value="">Tipo de trabajo</option>
+                                <option value="teaching">Enseñanza</option>
+                                <option value="agriculture">Agricultura</option>
+                                <option value="construction">Construcción</option>
+                                <option value="hospitality">Hostelería</option>
+                                <option value="marketing">Marketing</option>
+                            </select>
+                        </div>
+                        <button class="search-btn">
+                            <i class="fas fa-search"></i>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">50,000+</span>
+                        <span class="stat-label">Viajeros</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">140+</span>
+                        <span class="stat-label">Países</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">10,000+</span>
+                        <span class="stat-label">Oportunidades</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="image-placeholder">
+                    <i class="fas fa-mountain"></i>
+                    <p>Imagen de viajeros</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Volunteering Carousel -->
+    <section class="volunteering-carousel">
+        <div class="container">
+            <h2 class="section-title">Experiencias de Voluntariado</h2>
+            <p class="section-subtitle">Descubre las increíbles experiencias de nuestros voluntarios alrededor del mundo</p>
+            
+            <div class="carousel-container">
+                <div class="carousel-wrapper">
+                    <div class="carousel-track" id="carouselTrack">
+                        <div class="carousel-slide active">
+                            <div class="slide-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-seedling"></i>
+                                </div>
+                                <div class="slide-overlay">
+                                    <h3>Conservación en Costa Rica</h3>
+                                    <p>María, 22 años - Proyecto de reforestación</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <div class="slide-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <div class="slide-overlay">
+                                    <h3>Enseñanza en Tailandia</h3>
+                                    <p>Carlos, 24 años - Educación rural</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <div class="slide-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-hands-helping"></i>
+                                </div>
+                                <div class="slide-overlay">
+                                    <h3>Desarrollo Comunitario en India</h3>
+                                    <p>Ana, 21 años - Construcción de escuelas</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <div class="slide-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="slide-overlay">
+                                    <h3>Salud en Nepal</h3>
+                                    <p>Diego, 23 años - Atención médica rural</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="carousel-slide">
+                            <div class="slide-image">
+                                <div class="image-placeholder">
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                <div class="slide-overlay">
+                                    <h3>Turismo Sostenible en Perú</h3>
+                                    <p>Valentina, 20 años - Ecoturismo</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="carousel-controls">
+                    <button class="carousel-btn prev-btn" id="prevBtn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="carousel-btn next-btn" id="nextBtn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="carousel-indicators">
+                    <span class="indicator active" data-slide="0"></span>
+                    <span class="indicator" data-slide="1"></span>
+                    <span class="indicator" data-slide="2"></span>
+                    <span class="indicator" data-slide="3"></span>
+                    <span class="indicator" data-slide="4"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Section -->
+    <section class="news-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Noticias INJUV</h2>
+                <a href="#" class="view-all">Ver todas las noticias</a>
+            </div>
+            
+            <div class="news-grid">
+                <article class="news-card featured">
+                    <div class="news-image">
+                        <div class="image-placeholder">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <div class="news-categories">
+                            <span class="category">INJUV</span>
+                            <span class="category">Voluntariado</span>
+                            <span class="category">Internacional</span>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <h3>INJUV lanza programa de voluntariado internacional para jóvenes chilenos</h3>
+                        <p>Nueva iniciativa permite a jóvenes de 18 a 29 años participar en proyectos de desarrollo sostenible en más de 140 países, con apoyo institucional y certificación oficial.</p>
+                        <div class="news-meta">
+                            <span class="news-date">Lun, 15 Ene, 10:30 am.</span>
+                            <a href="#" class="read-more">Ver más</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="news-card">
+                    <div class="news-image">
+                        <div class="image-placeholder">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="news-categories">
+                            <span class="category">INJUV</span>
+                            <span class="category">Educación</span>
+                            <span class="category">Juventud</span>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <h3>Convenio con universidades facilita reconocimiento académico de voluntariados</h3>
+                        <p>Los jóvenes podrán obtener créditos académicos por su participación en programas de voluntariado internacional reconocidos por INJUV.</p>
+                        <div class="news-meta">
+                            <span class="news-date">Vie, 12 Ene, 14:20 pm.</span>
+                            <a href="#" class="read-more">Ver más</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="news-card">
+                    <div class="news-image">
+                        <div class="image-placeholder">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="news-categories">
+                            <span class="category">INJUV</span>
+                            <span class="category">Alianzas</span>
+                            <span class="category">Internacional</span>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <h3>INJUV firma alianza estratégica con organizaciones internacionales de voluntariado</h3>
+                        <p>Nuevas alianzas permiten ampliar las oportunidades de voluntariado y garantizar mayor seguridad para los participantes chilenos.</p>
+                        <div class="news-meta">
+                            <span class="news-date">Mié, 10 Ene, 09:15 am.</span>
+                            <a href="#" class="read-more">Ver más</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">¿Por qué elegir INJUV Connect?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Apoyo Institucional</h3>
+                    <p>Contamos con el respaldo oficial del Instituto Nacional de la Juventud y alianzas estratégicas internacionales.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Reconocimiento Académico</h3>
+                    <p>Los voluntariados pueden ser reconocidos como créditos académicos en convenio con universidades chilenas.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3>Certificación Oficial</h3>
+                    <p>Recibe certificados oficiales de INJUV que validan tu experiencia de voluntariado internacional.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>Red de Apoyo</h3>
+                    <p>Accede a una red de apoyo de jóvenes chilenos y mentores en destinos internacionales.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>140+ Países</h3>
+                    <p>Explora oportunidades de voluntariado en más de 140 países con proyectos verificados.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Desarrollo Sostenible</h3>
+                    <p>Contribuye a los Objetivos de Desarrollo Sostenible de la ONU mientras desarrollas habilidades.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">¿Cómo funciona?</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3>1. Crea tu perfil</h3>
+                    <p>Regístrate gratis y completa tu perfil con tus habilidades e intereses</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>2. Encuentra oportunidades</h3>
+                    <p>Busca y filtra oportunidades de voluntariado que se adapten a ti</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>3. Conecta con anfitriones</h3>
+                    <p>Contacta directamente con anfitriones y coordina tu experiencia</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-plane"></i>
+                    </div>
+                    <h3>4. ¡Viaja y ayuda!</h3>
+                    <p>Disfruta de una experiencia única mientras contribuyes a una causa</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Countries -->
+    <section class="popular-countries">
+        <div class="container">
+            <h2 class="section-title">Países más populares</h2>
+            <div class="countries-grid">
+                <div class="country-card">
+                    <div class="country-flag">🇨🇷</div>
+                    <h3>Costa Rica</h3>
+                    <p>Eco-turismo y conservación</p>
+                    <span class="country-count">245 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🇹🇭</div>
+                    <h3>Tailandia</h3>
+                    <p>Enseñanza y cultura</p>
+                    <span class="country-count">189 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🇪🇸</div>
+                    <h3>España</h3>
+                    <p>Hostelería y turismo</p>
+                    <span class="country-count">156 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🇮🇳</div>
+                    <h3>India</h3>
+                    <p>Desarrollo comunitario</p>
+                    <span class="country-count">298 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🇳🇵</div>
+                    <h3>Nepal</h3>
+                    <p>Construcción y educación</p>
+                    <span class="country-count">167 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🇵🇪</div>
+                    <h3>Perú</h3>
+                    <p>Arqueología y cultura</p>
+                    <span class="country-count">134 oportunidades</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured opportunities -->
+    <section class="featured-opportunities" id="explore">
+        <div class="container">
+            <h2 class="section-title">Oportunidades destacadas</h2>
+            <div class="opportunities-grid">
+                <div class="opportunity-card">
+                    <div class="card-image">
+                        <div class="image-placeholder">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="card-badge">Eco-friendly</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Granja orgánica en Costa Rica</h3>
+                        <p class="location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            San José, Costa Rica
+                        </p>
+                        <p class="description">
+                            Ayuda en una granja orgánica sostenible mientras aprendes sobre agricultura ecológica.
+                        </p>
+                        <div class="card-details">
+                            <span class="duration">
+                                <i class="fas fa-clock"></i>
+                                2-4 semanas
+                            </span>
+                            <span class="work-type">
+                                <i class="fas fa-briefcase"></i>
+                                Agricultura
+                            </span>
+                        </div>
+                        <div class="card-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="rating-text">4.9 (127 reseñas)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="opportunity-card">
+                    <div class="card-image">
+                        <div class="image-placeholder">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="card-badge">Educación</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Enseñanza de inglés en Tailandia</h3>
+                        <p class="location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Chiang Mai, Tailandia
+                        </p>
+                        <p class="description">
+                            Enseña inglés a niños en una escuela rural y descubre la cultura tailandesa.
+                        </p>
+                        <div class="card-details">
+                            <span class="duration">
+                                <i class="fas fa-clock"></i>
+                                1-3 meses
+                            </span>
+                            <span class="work-type">
+                                <i class="fas fa-briefcase"></i>
+                                Enseñanza
+                            </span>
+                        </div>
+                        <div class="card-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="rating-text">4.8 (89 reseñas)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="opportunity-card">
+                    <div class="card-image">
+                        <div class="image-placeholder">
+                            <i class="fas fa-hotel"></i>
+                        </div>
+                        <div class="card-badge">Hostelería</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Hostel en Barcelona</h3>
+                        <p class="location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Barcelona, España
+                        </p>
+                        <p class="description">
+                            Ayuda en un hostel vibrante en el corazón de Barcelona y conoce viajeros de todo el mundo.
+                        </p>
+                        <div class="card-details">
+                            <span class="duration">
+                                <i class="fas fa-clock"></i>
+                                2-6 semanas
+                            </span>
+                            <span class="work-type">
+                                <i class="fas fa-briefcase"></i>
+                                Hostelería
+                            </span>
+                        </div>
+                        <div class="card-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="rating-text">4.7 (156 reseñas)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="section-footer">
+                <button class="btn-outline">Ver todas las oportunidades</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <h2 class="section-title">Lo que dicen nuestros viajeros</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Una experiencia increíble que cambió mi perspectiva del mundo. Conocí gente maravillosa y aprendí mucho sobre sostenibilidad."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>María González</h4>
+                            <span>Voluntaria en Costa Rica</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Teaching English in Thailand was the best decision I ever made. The kids were amazing and the host family treated me like family."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>James Smith</h4>
+                            <span>Volunteer in Thailand</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"Barcelona me encantó! Trabajar en el hostel me permitió conocer gente de todas partes y mejorar mi español."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="author-info">
+                            <h4>Sophie Martin</h4>
+                            <span>Voluntaria en España</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2 class="section-title">Planes para todos</h2>
+            <p class="section-subtitle">Elige el plan que mejor se adapte a tus necesidades</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Explorador</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">0</span>
+                            <span class="period">/mes</span>
+                        </div>
+                        <p>Perfecto para empezar</p>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Acceso a 100+ oportunidades</li>
+                            <li><i class="fas fa-check"></i> Perfil básico</li>
+                            <li><i class="fas fa-check"></i> Soporte por email</li>
+                            <li><i class="fas fa-check"></i> 3 aplicaciones por mes</li>
+                        </ul>
+                    </div>
+                    <button class="btn-outline">Comenzar gratis</button>
+                </div>
+                
+                <div class="pricing-card featured">
+                    <div class="pricing-badge">Más popular</div>
+                    <div class="pricing-header">
+                        <h3>Viajero</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">29</span>
+                            <span class="period">/mes</span>
+                        </div>
+                        <p>Para viajeros frecuentes</p>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Acceso a todas las oportunidades</li>
+                            <li><i class="fas fa-check"></i> Perfil premium</li>
+                            <li><i class="fas fa-check"></i> Soporte prioritario 24/7</li>
+                            <li><i class="fas fa-check"></i> Aplicaciones ilimitadas</li>
+                            <li><i class="fas fa-check"></i> Certificados de participación</li>
+                            <li><i class="fas fa-check"></i> Seguro de viaje incluido</li>
+                        </ul>
+                    </div>
+                    <button class="btn-primary">Elegir plan</button>
+                </div>
+                
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Anfitrión</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">49</span>
+                            <span class="period">/mes</span>
+                        </div>
+                        <p>Para organizaciones</p>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li><i class="fas fa-check"></i> Todo lo de Viajero</li>
+                            <li><i class="fas fa-check"></i> Publicar oportunidades</li>
+                            <li><i class="fas fa-check"></i> Panel de administración</li>
+                            <li><i class="fas fa-check"></i> Estadísticas detalladas</li>
+                            <li><i class="fas fa-check"></i> Verificación premium</li>
+                            <li><i class="fas fa-check"></i> Soporte dedicado</li>
+                        </ul>
+                    </div>
+                    <button class="btn-outline">Contactar ventas</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services-section">
+        <div class="container">
+            <h2 class="section-title">Servicios INJUV</h2>
+            <div class="services-grid">
+                <div class="service-item">
+                    <div class="service-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <h3>Trámites INJUV</h3>
+                    <p>Accede a todos los trámites y servicios disponibles para jóvenes</p>
+                    <a href="#" class="service-link">Ver trámites</a>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Programas de Formación</h3>
+                    <p>Cursos y talleres para el desarrollo de habilidades juveniles</p>
+                    <a href="#" class="service-link">Ver programas</a>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Participación Ciudadana</h3>
+                    <p>Espacios de participación y compromiso social para jóvenes</p>
+                    <a href="#" class="service-link">Participar</a>
+                </div>
+                <div class="service-item">
+                    <div class="service-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Bienestar Juvenil</h3>
+                    <p>Apoyo en salud mental y bienestar integral de los jóvenes</p>
+                    <a href="#" class="service-link">Conocer más</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>¿Listo para tu próxima aventura internacional?</h2>
+                <p>Únete a miles de jóvenes chilenos que ya están cambiando el mundo a través del voluntariado internacional con INJUV.</p>
+                <div class="cta-buttons">
+                    <button class="btn-primary btn-large">Postular ahora</button>
+                    <button class="btn-outline btn-large">Conocer más</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMDA2NkNDIi8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPklOSlVWPC90ZXh0Pgo8L3N2Zz4K" alt="INJUV Logo">
+                        <span>INJUV Connect</span>
+                    </div>
+                    <p>Instituto Nacional de la Juventud - Conectando jóvenes chilenos con oportunidades de voluntariado internacional para el desarrollo sostenible.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Voluntariado Internacional</h4>
+                    <ul>
+                        <li><a href="#explore">Oportunidades</a></li>
+                        <li><a href="#how-it-works">Cómo funciona</a></li>
+                        <li><a href="#features">Características</a></li>
+                        <li><a href="#pricing">Planes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Servicios INJUV</h4>
+                    <ul>
+                        <li><a href="#">Trámites INJUV</a></li>
+                        <li><a href="#">Programas de Formación</a></li>
+                        <li><a href="#">Participación Ciudadana</a></li>
+                        <li><a href="#">Bienestar Juvenil</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Institucional</h4>
+                    <ul>
+                        <li><a href="#">Quiénes Somos</a></li>
+                        <li><a href="#">Dirección Nacional</a></li>
+                        <li><a href="#">Estudios</a></li>
+                        <li><a href="#">Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Instituto Nacional de la Juventud. Todos los derechos reservados.</p>
+                <div class="footer-links">
+                    <a href="#">Gobierno Transparente</a>
+                    <a href="#">Política de Privacidad</a>
+                    <a href="#">Términos de Uso</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
-</html> 
+</html>
