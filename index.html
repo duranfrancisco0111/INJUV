@@ -9,8 +9,113 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="top-bar-content">
+                <div class="top-links">
+                    <a href="#" class="top-link">Consejo de la Sociedad Civil (COSOC)</a>
+                    <a href="#" class="top-link">Personas</a>
+                    <a href="#" class="top-link">Empresas</a>
+                    <a href="#" class="top-link">Organismos</a>
+                    <a href="#" class="top-link">Sobre Sence</a>
+                </div>
+                <div class="search-toggle">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
-    <div id="header-container"></div>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMDA2NkNDIi8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPklOSlVWPC90ZXh0Pgo8L3N2Zz4K" alt="INJUV Logo">
+                    <span>INJUV Connect</span>
+                </div>
+                
+                <nav class="main-nav">
+                    <ul class="nav-menu">
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">INJUV <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Quiénes Somos</a></li>
+                                <li><a href="#">Dirección Nacional</a></li>
+                                <li><a href="#">Estudios</a></li>
+                                <li><a href="#">Noticias</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Voluntariado <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#explore">Oportunidades</a></li>
+                                <li><a href="#how-it-works">Cómo funciona</a></li>
+                                <li><a href="#features">Características</a></li>
+                                <li><a href="#pricing">Planes</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Participación <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Compromiso Joven</a></li>
+                                <li><a href="#">Espacios de participación</a></li>
+                                <li><a href="#">COSOC</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Bienestar <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Hablemos de Todo</a></li>
+                                <li><a href="#">Comunidad Joven</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down"></i></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Trámites INJUV</a></li>
+                                <li><a href="#">Gobierno Transparente</a></li>
+                                <li><a href="#">OIRS</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="header-actions">
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <div class="nav-buttons">
+                        <a href="inicio de sesion/login.html" class="btn-secondary">Iniciar sesión</a>
+                        <button class="btn-primary">Registrarse</button>
+                    </div>
+                    <button class="menu-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Bar -->
+    <div class="search-bar" id="searchBar">
+        <div class="container">
+            <div class="search-content">
+                <div class="search-input-group">
+                    <input type="text" placeholder="¿Qué deseas buscar?" class="search-input">
+                    <button class="search-submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <button class="search-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -810,14 +915,5 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
-        // Cargar header dinámicamente
-        fetch('header-main.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('header-container').innerHTML = data;
-            })
-            .catch(error => console.error('Error loading header:', error));
-    </script>
 </body>
 </html>
