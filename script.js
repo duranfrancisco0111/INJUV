@@ -1,40 +1,46 @@
-// Search functionality
+// Search functionality (solo si los elementos existen)
 const searchToggle = document.querySelector('.search-toggle');
 const searchBar = document.getElementById('searchBar');
 const searchClose = document.querySelector('.search-close');
 const searchInput = document.querySelector('.search-input');
 const searchSubmit = document.querySelector('.search-submit');
 
-// Toggle search bar
-searchToggle.addEventListener('click', () => {
-    searchBar.classList.toggle('active');
-    if (searchBar.classList.contains('active')) {
-        searchInput.focus();
-    }
-});
+// Toggle search bar (solo si existe)
+if (searchToggle && searchBar) {
+    searchToggle.addEventListener('click', () => {
+        searchBar.classList.toggle('active');
+        if (searchBar.classList.contains('active') && searchInput) {
+            searchInput.focus();
+        }
+    });
+}
 
-searchClose.addEventListener('click', () => {
-    searchBar.classList.remove('active');
-});
+if (searchClose && searchBar) {
+    searchClose.addEventListener('click', () => {
+        searchBar.classList.remove('active');
+    });
+}
 
-// Search functionality
-searchSubmit.addEventListener('click', (e) => {
-    e.preventDefault();
-    const query = searchInput.value.trim();
-    if (query) {
-        performSearch(query);
-    }
-});
-
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+// Search functionality (solo si los elementos existen)
+if (searchSubmit && searchInput) {
+    searchSubmit.addEventListener('click', (e) => {
         e.preventDefault();
         const query = searchInput.value.trim();
         if (query) {
             performSearch(query);
         }
-    }
-});
+    });
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                performSearch(query);
+            }
+        }
+    });
+}
 
 function performSearch(query) {
     // Simulate search functionality
@@ -90,14 +96,16 @@ function showSearchResults(query) {
     });
 }
 
-// Mobile menu toggle
+// Mobile menu toggle (solo si los elementos existen)
 const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 
-menuToggle.addEventListener('click', () => {
-    menuToggle.classList.toggle('active');
-    mainNav.classList.toggle('active');
-});
+if (menuToggle && mainNav) {
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        mainNav.classList.toggle('active');
+    });
+}
 
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -127,27 +135,32 @@ window.addEventListener('scroll', () => {
 
 // Search functionality
 const searchBtn = document.querySelector('.search-btn');
-const destinationInput = document.getElementById('destination');
-const datesInput = document.getElementById('dates');
-const workTypeSelect = document.getElementById('work-type');
+const regionSelect = document.getElementById('region');
+const tematicaSelect = document.getElementById('tematica');
+const dateStartInput = document.getElementById('date-start');
+const dateEndInput = document.getElementById('date-end');
 
-searchBtn.addEventListener('click', () => {
-    const destination = destinationInput.value;
-    const dates = datesInput.value;
-    const workType = workTypeSelect.value;
-    
-    if (destination || dates || workType) {
-        // Simulate search functionality
-        showSearchResults(destination, dates, workType);
-    } else {
-        showNotification('Por favor, completa al menos un campo de búsqueda', 'warning');
-    }
-});
+if (searchBtn && regionSelect && tematicaSelect) {
+    searchBtn.addEventListener('click', () => {
+        const region = regionSelect.value;
+        const tematica = tematicaSelect.value;
+        const dateStart = dateStartInput ? dateStartInput.value : '';
+        const dateEnd = dateEndInput ? dateEndInput.value : '';
+        
+        if (region || tematica || dateStart || dateEnd) {
+            // Simulate search functionality
+            showSearchResults(region, tematica, dateStart, dateEnd);
+        } else {
+            showNotification('Por favor, completa al menos un campo de búsqueda', 'warning');
+        }
+    });
+}
 
-function showSearchResults(destination, dates, workType) {
+function showSearchResults(region, tematica, dateStart, dateEnd) {
     // Create a simple search results modal
     const modal = document.createElement('div');
     modal.className = 'search-modal';
+    const dateRange = dateStart && dateEnd ? `${dateStart} - ${dateEnd}` : (dateStart || dateEnd || 'Cualquier fecha');
     modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
@@ -155,9 +168,9 @@ function showSearchResults(destination, dates, workType) {
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <p><strong>Destino:</strong> ${destination || 'Cualquier destino'}</p>
-                <p><strong>Fechas:</strong> ${dates || 'Cualquier fecha'}</p>
-                <p><strong>Tipo de trabajo:</strong> ${workType || 'Cualquier tipo'}</p>
+                <p><strong>Región:</strong> ${region || 'Cualquier región'}</p>
+                <p><strong>Temática:</strong> ${tematica || 'Cualquier temática'}</p>
+                <p><strong>Rango de fechas:</strong> ${dateRange}</p>
                 <div class="search-results">
                     <p>Se encontraron 15 oportunidades que coinciden con tu búsqueda.</p>
                     <button class="btn-primary">Ver oportunidades</button>
@@ -611,120 +624,97 @@ rippleStyle.textContent = `
 
 document.head.appendChild(rippleStyle);
 
-// Carousel functionality
-class VolunteeringCarousel {
-    constructor() {
-        this.track = document.getElementById('carouselTrack');
-        this.slides = document.querySelectorAll('.carousel-slide');
-        this.indicators = document.querySelectorAll('.indicator');
-        this.prevBtn = document.getElementById('prevBtn');
-        this.nextBtn = document.getElementById('nextBtn');
-        this.currentSlide = 0;
-        this.totalSlides = this.slides.length;
-        this.autoPlayInterval = null;
-        
-        this.init();
+// Carrusel - Versión simplificada y robusta
+window.currentSlideIndex = 0;
+
+function moveCarousel(direction) {
+    const track = document.getElementById('carouselTrack');
+    const slides = document.querySelectorAll('.carousel-slide');
+    const indicators = document.querySelectorAll('.indicator');
+    
+    if (!track || !slides || slides.length === 0) {
+        console.log('Elementos del carrusel no encontrados');
+        return;
     }
     
-    init() {
-        this.setupEventListeners();
-        this.startAutoPlay();
-        this.updateCarousel();
+    // Cambiar índice
+    if (direction === 'next') {
+        window.currentSlideIndex = (window.currentSlideIndex + 1) % slides.length;
+    } else if (direction === 'prev') {
+        window.currentSlideIndex = (window.currentSlideIndex - 1 + slides.length) % slides.length;
+    } else if (typeof direction === 'number') {
+        window.currentSlideIndex = direction;
     }
     
-    setupEventListeners() {
-        this.prevBtn.addEventListener('click', () => this.prevSlide());
-        this.nextBtn.addEventListener('click', () => this.nextSlide());
-        
-        this.indicators.forEach((indicator, index) => {
-            indicator.addEventListener('click', () => this.goToSlide(index));
-        });
-        
-        // Pause auto-play on hover
-        const carouselContainer = document.querySelector('.carousel-container');
-        if (carouselContainer) {
-            carouselContainer.addEventListener('mouseenter', () => this.stopAutoPlay());
-            carouselContainer.addEventListener('mouseleave', () => this.startAutoPlay());
+    // Calcular posición
+    const translateX = -window.currentSlideIndex * 100;
+    
+    // Aplicar transformación
+    track.style.transform = 'translateX(' + translateX + '%)';
+    track.style.webkitTransform = 'translateX(' + translateX + '%)';
+    track.style.MozTransform = 'translateX(' + translateX + '%)';
+    track.style.msTransform = 'translateX(' + translateX + '%)';
+    
+    // Actualizar indicadores
+    indicators.forEach(function(indicator, index) {
+        if (index === window.currentSlideIndex) {
+            indicator.classList.add('active');
+        } else {
+            indicator.classList.remove('active');
         }
-        
-        // Touch/swipe support
-        this.addTouchSupport();
-    }
+    });
     
-    addTouchSupport() {
-        let startX = 0;
-        let endX = 0;
-        
-        this.track.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-        });
-        
-        this.track.addEventListener('touchend', (e) => {
-            endX = e.changedTouches[0].clientX;
-            this.handleSwipe(startX, endX);
-        });
-    }
-    
-    handleSwipe(startX, endX) {
-        const threshold = 50;
-        const diff = startX - endX;
-        
-        if (Math.abs(diff) > threshold) {
-            if (diff > 0) {
-                this.nextSlide();
-            } else {
-                this.prevSlide();
-            }
-        }
-    }
-    
-    nextSlide() {
-        this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
-        this.updateCarousel();
-    }
-    
-    prevSlide() {
-        this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-        this.updateCarousel();
-    }
-    
-    goToSlide(index) {
-        this.currentSlide = index;
-        this.updateCarousel();
-    }
-    
-    updateCarousel() {
-        const translateX = -this.currentSlide * 100;
-        this.track.style.transform = `translateX(${translateX}%)`;
-        
-        // Update indicators
-        this.indicators.forEach((indicator, index) => {
-            indicator.classList.toggle('active', index === this.currentSlide);
-        });
-        
-        // Update slides
-        this.slides.forEach((slide, index) => {
-            slide.classList.toggle('active', index === this.currentSlide);
-        });
-    }
-    
-    startAutoPlay() {
-        this.stopAutoPlay();
-        this.autoPlayInterval = setInterval(() => {
-            this.nextSlide();
-        }, 5000);
-    }
-    
-    stopAutoPlay() {
-        if (this.autoPlayInterval) {
-            clearInterval(this.autoPlayInterval);
-            this.autoPlayInterval = null;
-        }
-    }
+    console.log('Carrusel movido a slide', window.currentSlideIndex + 1);
 }
 
-// Initialize carousel when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize carousel
-    new VolunteeringCarousel();
-});
+// Inicializar carrusel cuando el DOM esté listo
+function initCarouselButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const indicators = document.querySelectorAll('.indicator');
+    
+    // Botón anterior
+    if (prevBtn) {
+        prevBtn.onclick = function() {
+            moveCarousel('prev');
+            return false;
+        };
+        console.log('Botón anterior configurado');
+    }
+    
+    // Botón siguiente
+    if (nextBtn) {
+        nextBtn.onclick = function() {
+            moveCarousel('next');
+            return false;
+        };
+        console.log('Botón siguiente configurado');
+    }
+    
+    // Indicadores
+    indicators.forEach(function(indicator, index) {
+        indicator.onclick = function() {
+            moveCarousel(index);
+            return false;
+        };
+    });
+    
+    if (indicators.length > 0) {
+        console.log('Indicadores configurados:', indicators.length);
+    }
+    
+    // Inicializar posición
+    moveCarousel(0);
+}
+
+// Intentar inicializar múltiples veces para asegurar que funcione
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCarouselButtons);
+} else {
+    initCarouselButtons();
+}
+
+// Intentos adicionales
+setTimeout(initCarouselButtons, 300);
+setTimeout(initCarouselButtons, 800);
+setTimeout(initCarouselButtons, 1500);

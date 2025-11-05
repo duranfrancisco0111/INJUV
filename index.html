@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INJUV Connect - Juventud y Voluntariado Internacional</title>
+    <title>INJUV - Juventud y Voluntariado</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -11,101 +11,14 @@
 <body>
    
     <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMDA2NkNDIi8+Cjx0ZXh0IHg9IjUwIiB5PSIyNSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiPklOSlVWPC90ZXh0Pgo8L3N2Zz4K" alt="INJUV Logo">
-                    <span>INJUV Connect</span>
-                </div>
-                
-                <nav class="main-nav">
-                    <ul class="nav-menu">
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">INJUV <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Quiénes Somos</a></li>
-                                <li><a href="#">Dirección Nacional</a></li>
-                                <li><a href="#">Estudios</a></li>
-                                <li><a href="#">Noticias</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">Voluntariado <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#explore">Oportunidades</a></li>
-                                <li><a href="#how-it-works">Cómo funciona</a></li>
-                                <li><a href="#features">Características</a></li>
-                                <li><a href="#pricing">Planes</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">Participación <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Compromiso Joven</a></li>
-                                <li><a href="#">Espacios de participación</a></li>
-                                <li><a href="#">COSOC</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">Bienestar <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Hablemos de Todo</a></li>
-                                <li><a href="#">Comunidad Joven</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Trámites INJUV</a></li>
-                                <li><a href="#">Gobierno Transparente</a></li>
-                                <li><a href="#">OIRS</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
-
-                <div class="header-actions">
-                    <button class="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
-                    <div class="nav-buttons">
-                        <a href="inicio de sesion/login.html" class="btn-secondary">Iniciar sesión</a>
-                        <button class="btn-primary">Registrarse</button>
-                    </div>
-                    <button class="menu-toggle">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Search Bar -->
-    <div class="search-bar" id="searchBar">
-        <div class="container">
-            <div class="search-content">
-                <div class="search-input-group">
-                    <input type="text" placeholder="¿Qué deseas buscar?" class="search-input">
-                    <button class="search-submit">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </div>
-                <button class="search-close">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+    <div id="header-container"></div>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
                 <h1 class="hero-title">
-                    Lanzamiento Programa de <span class="highlight">Voluntariado Internacional</span>
+                    Voluntariado <span class="highlight"> <br>para Chile</span>
                 </h1>
                 <p class="hero-subtitle">
                     Conecta con oportunidades de voluntariado en más de 140 países mientras desarrollas habilidades 
@@ -115,22 +28,50 @@
                     <div class="search-container">
                         <div class="search-field">
                             <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" placeholder="¿A dónde quieres viajar?" id="destination">
-                        </div>
-                        <div class="search-field">
-                            <i class="fas fa-calendar"></i>
-                            <input type="text" placeholder="¿Cuándo?" id="dates">
-                        </div>
-                        <div class="search-field">
-                            <i class="fas fa-briefcase"></i>
-                            <select id="work-type">
-                                <option value="">Tipo de trabajo</option>
-                                <option value="teaching">Enseñanza</option>
-                                <option value="agriculture">Agricultura</option>
-                                <option value="construction">Construcción</option>
-                                <option value="hospitality">Hostelería</option>
-                                <option value="marketing">Marketing</option>
+                            <select id="region" name="region" tabindex="0">
+                                <option value="">Región</option>
+                                <option value="arica">Arica y Parinacota</option>
+                                <option value="tarapaca">Tarapacá</option>
+                                <option value="antofagasta">Antofagasta</option>
+                                <option value="atacama">Atacama</option>
+                                <option value="coquimbo">Coquimbo</option>
+                                <option value="valparaiso">Valparaíso</option>
+                                <option value="metropolitana">Región Metropolitana</option>
+                                <option value="ohiggins">O'Higgins</option>
+                                <option value="maule">Maule</option>
+                                <option value="nuble">Ñuble</option>
+                                <option value="biobio">Biobío</option>
+                                <option value="araucania">La Araucanía</option>
+                                <option value="rios">Los Ríos</option>
+                                <option value="lagos">Los Lagos</option>
+                                <option value="aysen">Aysén</option>
+                                <option value="magallanes">Magallanes</option>
+                                <option value="internacional">Internacional</option>
+                                <option value="virtual">Virtual</option>
                             </select>
+                        </div>
+                        <div class="search-field">
+                            <i class="fas fa-tags"></i>
+                            <select id="tematica" name="tematica" tabindex="0">
+                                <option value="">Temática</option>
+                                <option value="camping">Camping</option>
+                                <option value="educacion">Educación</option>
+                                <option value="medioambiente">Medio Ambiente</option>
+                                <option value="salud">Salud</option>
+                                <option value="social">Social</option>
+                                <option value="comunidad">Comunidad</option>
+                                <option value="cultura">Cultura</option>
+                                <option value="deportes">Deportes</option>
+                                <option value="emergencia">Emergencia</option>
+                                <option value="reforestacion">Reforestación</option>
+                                <option value="animales">Cuidado de Animales</option>
+                                <option value="construccion">Construcción</option>
+                            </select>
+                        </div>
+                        <div class="search-field date-range-field">
+                            <i class="fas fa-calendar"></i>
+                            <input type="date" id="date-start" aria-label="Fecha de inicio">
+                            <input type="date" id="date-end" aria-label="Fecha de fin">
                         </div>
                         <button class="search-btn">
                             <i class="fas fa-search"></i>
@@ -140,16 +81,16 @@
                 </div>
                 <div class="hero-stats">
                     <div class="stat">
-                        <span class="stat-number">50,000+</span>
-                        <span class="stat-label">Viajeros</span>
+                        <span class="stat-number">12,456</span>
+                        <span class="stat-label">Usuarios Registrados</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-number">140+</span>
-                        <span class="stat-label">Países</span>
+                        <span class="stat-number">3,247</span>
+                        <span class="stat-label">Oportunidades Subidas</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-number">10,000+</span>
-                        <span class="stat-label">Oportunidades</span>
+                        <span class="stat-number">156,789</span>
+                        <span class="stat-label">Horas de Voluntariado</span>
                     </div>
                 </div>
             </div>
@@ -219,60 +160,50 @@
                     <div class="carousel-track" id="carouselTrack">
                         <div class="carousel-slide active">
                             <div class="slide-image">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-seedling"></i>
-                                </div>
+                                <img src="Fotos_injuv/54281547351_0aaa628927_b.jpg" alt="Experiencia de voluntariado INJUV">
                                 <div class="slide-overlay">
-                                    <h3>Conservación en Costa Rica</h3>
-                                    <p>María, 22 años - Proyecto de reforestación</p>
+                                    <h3>Experiencias de Voluntariado</h3>
+                                    <p>Jóvenes chilenos participando en proyectos de desarrollo</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="carousel-slide">
                             <div class="slide-image">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-chalkboard-teacher"></i>
-                                </div>
+                                <img src="Fotos_injuv/54368589547_757eda7fe6_b.jpg" alt="Experiencia de voluntariado INJUV">
                                 <div class="slide-overlay">
-                                    <h3>Enseñanza en Tailandia</h3>
-                                    <p>Carlos, 24 años - Educación rural</p>
+                                    <h3>Programas de Voluntariado</h3>
+                                    <p>Oportunidades de servicio comunitario e internacional</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="carousel-slide">
                             <div class="slide-image">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-hands-helping"></i>
-                                </div>
+                                <img src="Fotos_injuv/54730068199_d866975486_b.jpg" alt="Experiencia de voluntariado INJUV">
                                 <div class="slide-overlay">
-                                    <h3>Desarrollo Comunitario en India</h3>
-                                    <p>Ana, 21 años - Construcción de escuelas</p>
+                                    <h3>Compromiso Juvenil</h3>
+                                    <p>Jóvenes transformando comunidades a través del voluntariado</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="carousel-slide">
                             <div class="slide-image">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-heart"></i>
-                                </div>
+                                <img src="Fotos_injuv/54751927332_a8c92169f5_b.jpg" alt="Experiencia de voluntariado INJUV">
                                 <div class="slide-overlay">
-                                    <h3>Salud en Nepal</h3>
-                                    <p>Diego, 23 años - Atención médica rural</p>
+                                    <h3>Participación Activa</h3>
+                                    <p>Jóvenes comprometidos con el cambio social y comunitario</p>
                                 </div>
                             </div>
                         </div>
                         
                         <div class="carousel-slide">
                             <div class="slide-image">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-globe"></i>
-                                </div>
+                                <img src="Fotos_injuv/54853109430_9945f5fb9c_b.jpg" alt="Experiencia de voluntariado INJUV">
                                 <div class="slide-overlay">
-                                    <h3>Turismo Sostenible en Perú</h3>
-                                    <p>Valentina, 20 años - Ecoturismo</p>
+                                    <h3>Desarrollo Comunitario</h3>
+                                    <p>Construyendo un futuro mejor para nuestras comunidades</p>
                                 </div>
                             </div>
                         </div>
@@ -300,27 +231,27 @@
     </section>
 
     <!-- News Section -->
-    <section class="news-section">
+    <section class="news-section" id="news">
         <div class="container">
             <div class="section-header">
-                <h2>Noticias INJUV</h2>
+                <h2>Noticias</h2>
                 <a href="#" class="view-all">Ver todas las noticias</a>
             </div>
             
             <div class="news-grid">
-                <article class="news-card featured">
+                <article class="news-card">
                     <div class="news-image">
                         <div class="image-placeholder">
                             <i class="fas fa-leaf"></i>
                         </div>
                         <div class="news-categories">
-                            <span class="category">INJUV</span>
+                            <span class="category organization">INJUV</span>
                             <span class="category">Voluntariado</span>
                             <span class="category">Internacional</span>
                         </div>
                     </div>
                     <div class="news-content">
-                        <h3>INJUV lanza programa de voluntariado internacional para jóvenes chilenos</h3>
+                        <h3>INJUV lanza programa de voluntariado nacionales e internacionales para jóvenes chilenos</h3>
                         <p>Nueva iniciativa permite a jóvenes de 18 a 29 años participar en proyectos de desarrollo sostenible en más de 140 países, con apoyo institucional y certificación oficial.</p>
                         <div class="news-meta">
                             <span class="news-date">Lun, 15 Ene, 10:30 am.</span>
@@ -332,19 +263,19 @@
                 <article class="news-card">
                     <div class="news-image">
                         <div class="image-placeholder">
-                            <i class="fas fa-graduation-cap"></i>
+                            <i class="fas fa-tree"></i>
                         </div>
                         <div class="news-categories">
-                            <span class="category">INJUV</span>
-                            <span class="category">Educación</span>
-                            <span class="category">Juventud</span>
+                            <span class="category organization">Fundación Verde</span>
+                            <span class="category">Medio Ambiente</span>
+                            <span class="category">Reforestación</span>
                         </div>
                     </div>
                     <div class="news-content">
-                        <h3>Convenio con universidades facilita reconocimiento académico de voluntariados</h3>
-                        <p>Los jóvenes podrán obtener créditos académicos por su participación en programas de voluntariado internacional reconocidos por INJUV.</p>
+                        <h3>Fundación Verde lanza campaña de reforestación en la Patagonia</h3>
+                        <p>Iniciativa busca plantar 10,000 árboles nativos en áreas afectadas por incendios forestales, con participación de voluntarios nacionales e internacionales.</p>
                         <div class="news-meta">
-                            <span class="news-date">Vie, 12 Ene, 14:20 pm.</span>
+                            <span class="news-date">Mar, 8 Ene, 11:00 am.</span>
                             <a href="#" class="read-more">Ver más</a>
                         </div>
                     </div>
@@ -353,23 +284,24 @@
                 <article class="news-card">
                     <div class="news-image">
                         <div class="image-placeholder">
-                            <i class="fas fa-handshake"></i>
+                            <i class="fas fa-heart"></i>
                         </div>
                         <div class="news-categories">
-                            <span class="category">INJUV</span>
-                            <span class="category">Alianzas</span>
-                            <span class="category">Internacional</span>
+                            <span class="category organization">Cruz Roja Chile</span>
+                            <span class="category">Emergencia</span>
+                            <span class="category">Ayuda Humanitaria</span>
                         </div>
                     </div>
                     <div class="news-content">
-                        <h3>INJUV firma alianza estratégica con organizaciones internacionales de voluntariado</h3>
-                        <p>Nuevas alianzas permiten ampliar las oportunidades de voluntariado y garantizar mayor seguridad para los participantes chilenos.</p>
+                        <h3>Cruz Roja Chile busca voluntarios para programa de ayuda en emergencias</h3>
+                        <p>Programa de capacitación para jóvenes que deseen ayudar en situaciones de emergencia y desastres naturales en todo el país.</p>
                         <div class="news-meta">
-                            <span class="news-date">Mié, 10 Ene, 09:15 am.</span>
+                            <span class="news-date">Lun, 7 Ene, 16:45 pm.</span>
                             <a href="#" class="read-more">Ver más</a>
                         </div>
                     </div>
                 </article>
+
             </div>
         </div>
     </section>
@@ -377,7 +309,7 @@
     <!-- Features Section -->
     <section class="features" id="features">
         <div class="container">
-            <h2 class="section-title">¿Por qué elegir INJUV Connect?</h2>
+            <h2 class="section-title">¿Por qué elegir INJUV?</h2>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -462,45 +394,45 @@
         </div>
     </section>
 
-    <!-- Popular Countries -->
+    <!-- Popular Organizations -->
     <section class="popular-countries">
         <div class="container">
-            <h2 class="section-title">Países más populares</h2>
+            <h2 class="section-title">Organizaciones</h2>
             <div class="countries-grid">
                 <div class="country-card">
-                    <div class="country-flag">🇨🇷</div>
-                    <h3>Costa Rica</h3>
-                    <p>Eco-turismo y conservación</p>
-                    <span class="country-count">245 oportunidades</span>
-                </div>
-                <div class="country-card">
-                    <div class="country-flag">🇹🇭</div>
-                    <h3>Tailandia</h3>
-                    <p>Enseñanza y cultura</p>
-                    <span class="country-count">189 oportunidades</span>
-                </div>
-                <div class="country-card">
-                    <div class="country-flag">🇪🇸</div>
-                    <h3>España</h3>
-                    <p>Hostelería y turismo</p>
-                    <span class="country-count">156 oportunidades</span>
-                </div>
-                <div class="country-card">
-                    <div class="country-flag">🇮🇳</div>
-                    <h3>India</h3>
-                    <p>Desarrollo comunitario</p>
+                    <div class="country-flag">🏢</div>
+                    <h3>Fundación Verde</h3>
+                    <p>Medio ambiente y conservación</p>
                     <span class="country-count">298 oportunidades</span>
                 </div>
                 <div class="country-card">
-                    <div class="country-flag">🇳🇵</div>
-                    <h3>Nepal</h3>
-                    <p>Construcción y educación</p>
+                    <div class="country-flag">🎓</div>
+                    <h3>ONG Educación para Todos</h3>
+                    <p>Educación y desarrollo</p>
+                    <span class="country-count">245 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">❤️</div>
+                    <h3>Fundación Solidaridad</h3>
+                    <p>Apoyo social y comunitario</p>
+                    <span class="country-count">189 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🌱</div>
+                    <h3>Asociación Ecológica</h3>
+                    <p>Sustentabilidad y ecología</p>
                     <span class="country-count">167 oportunidades</span>
                 </div>
                 <div class="country-card">
-                    <div class="country-flag">🇵🇪</div>
-                    <h3>Perú</h3>
-                    <p>Arqueología y cultura</p>
+                    <div class="country-flag">🏥</div>
+                    <h3>Centro de Salud Comunitario</h3>
+                    <p>Salud y bienestar</p>
+                    <span class="country-count">156 oportunidades</span>
+                </div>
+                <div class="country-card">
+                    <div class="country-flag">🎭</div>
+                    <h3>Colectivo Cultural</h3>
+                    <p>Arte y cultura</p>
                     <span class="country-count">134 oportunidades</span>
                 </div>
             </div>
@@ -821,6 +753,15 @@
         </div>
     </footer>
 
+    <script>
+        // Cargar header dinámicamente
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading header:', error));
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
