@@ -220,7 +220,7 @@
   <header class="header" id="header">
     <div class="header-content">
        <div class="logo">
-         <a href="../../index.html" style="display: block; text-decoration: none;">
+         <a href="../index.html" style="display: block; text-decoration: none;">
            <img src="https://www.injuv.gob.cl/sites/default/files/logo_injuv_2021_portal.png?v=3" alt="INJUV Logo" />
          </a>
        </div>
@@ -228,7 +228,7 @@
       <nav class="main-nav" aria-label="Navegación principal">
         <ul class="nav-menu">
         <li class="nav-item">
-            <a href="../../index.html#como-funciona" class="nav-link">¿Cómo funciona?</a>
+            <a href="../index.html#como-funciona" class="nav-link">¿Cómo funciona?</a>
         </li>
           <li class="nav-item dropdown">
             <a href="#" class="nav-link">Oportunidades de Voluntariado <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
@@ -359,10 +359,10 @@
             </ul>
           </li>
           <li class="nav-item">
-            <a href="../../index.html#experiencias-voluntariado" class="nav-link">Experiencias de Voluntariado</a>
+            <a href="../index.html#experiencias-voluntariado" class="nav-link">Experiencias de Voluntariado</a>
           </li>
           <li class="nav-item">
-            <a href="../../index.html#noticias" class="nav-link">Noticias</a>
+            <a href="../index.html#noticias" class="nav-link">Noticias</a>
           </li>
           <li class="nav-item dropdown">
             <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
@@ -425,6 +425,27 @@
         e.preventDefault();
         window.location.href = '#voluntariado';
         console.log('Ver todas las oportunidades');
+      });
+    });
+
+    // Asegurar que los enlaces de navegación funcionen correctamente
+    document.querySelectorAll('a[href*="#como-funciona"], a[href*="#noticias"], a[href*="#experiencias-voluntariado"]').forEach(link => {
+      link.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        // Si el href contiene una ruta con hash, navegar normalmente
+        if(href.includes('../')) {
+          // Permitir navegación normal
+          return true;
+        }
+        // Si solo tiene hash, hacer scroll suave
+        const hash = href.split('#')[1];
+        if(hash) {
+          const target = document.getElementById(hash);
+          if(target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
       });
     });
   </script>
