@@ -21,8 +21,8 @@
                     Voluntariado <span class="highlight"> <br>para Chile</span>
                 </h1>
                 <p class="hero-subtitle">
-                    Conecta con oportunidades de voluntariado en más de 140 países mientras desarrollas habilidades 
-                    y contribuyes al desarrollo sostenible. Más de 50,000 jóvenes ya han participado.
+                    Conecta con oportunidades de voluntariado en más de 140 Comunas de Chile mientras desarrollas habilidades 
+                    y contribuyes al desarrollo sostenible. Más de 10,000 jóvenes ya han participado.
                 </p>
                 <div class="hero-search">
                     <div class="search-container">
@@ -140,9 +140,21 @@
                     </div>
                     <h3>Perfil de Usuario</h3>
                     <p>Gestiona tu perfil, certificados y experiencia de voluntariado</p>
-                    <a href="Roles/Usuario/index.html" class="nav-btn">
+                    <a href="Roles/Perfil_usuario/index.html" class="nav-btn">
                         <i class="fas fa-arrow-right"></i>
                         Acceder como Usuario
+                    </a>
+                </div>
+                
+                <div class="nav-card">
+                    <div class="nav-icon">
+                        <i class="fas fa-sitemap"></i>
+                    </div>
+                    <h3>Perfil de Organización</h3>
+                    <p>Gestiona el perfil de tu organización, oportunidades y voluntarios</p>
+                    <a href="Roles/Perfil_organizacion/index.html" class="nav-btn">
+                        <i class="fas fa-arrow-right"></i>
+                        Acceder como Organización
                     </a>
                 </div>
             </div>
@@ -317,40 +329,28 @@
                     <h3>Apoyo Institucional</h3>
                     <p>Contamos con el respaldo oficial del Instituto Nacional de la Juventud y alianzas estratégicas internacionales.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <h3>Reconocimiento Académico</h3>
-                    <p>Los voluntariados pueden ser reconocidos como créditos académicos en convenio con universidades chilenas.</p>
-                </div>
+
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-certificate"></i>
                     </div>
                     <h3>Certificación Oficial</h3>
-                    <p>Recibe certificados oficiales de INJUV que validan tu experiencia de voluntariado internacional.</p>
+                    <p>Recibe certificados oficiales de INJUV que validan tu experiencia de voluntariado.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-handshake"></i>
                     </div>
                     <h3>Red de Apoyo</h3>
-                    <p>Accede a una red de apoyo de jóvenes chilenos y mentores en destinos internacionales.</p>
+                    <p>Accede a una red de apoyo de jóvenes chilenos y mentores en destinos.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-globe"></i>
-                    </div>
-                    <h3>140+ Países</h3>
-                    <p>Explora oportunidades de voluntariado en más de 140 países con proyectos verificados.</p>
-                </div>
+
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-heart"></i>
                     </div>
                     <h3>Desarrollo Sostenible</h3>
-                    <p>Contribuye a los Objetivos de Desarrollo Sostenible de la ONU mientras desarrollas habilidades.</p>
+                    <p>Contribuye a los Objetivos de Desarrollo Sostenible del gobierno mientras desarrollas habilidades.</p>
                 </div>
             </div>
         </div>
@@ -684,13 +684,62 @@
     </footer>
 
     <script>
-        // Cargar header dinámicamente
+        // Cargar header y configurar enlaces
         fetch('header.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
+                
+                // Configurar enlaces del header
+                setTimeout(() => {
+                    // Logo - va a página principal
+                    const logo = document.getElementById('logo-link');
+                    if (logo) logo.href = 'index.html';
+                    
+                    // ¿Cómo funciona? - scroll a sección
+                    const howWorks = document.getElementById('how-it-works-link');
+                    if (howWorks) {
+                        howWorks.href = '#how-it-works';
+                        howWorks.onclick = (e) => {
+                            e.preventDefault();
+                            document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        };
+                    }
+                    
+                    // Experiencias - scroll a sección
+                    const experiencias = document.getElementById('experiencias-link');
+                    if (experiencias) {
+                        experiencias.href = '#experiencias-voluntariado';
+                        experiencias.onclick = (e) => {
+                            e.preventDefault();
+                            document.getElementById('experiencias-voluntariado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        };
+                    }
+                    
+                    // Noticias - scroll a sección
+                    const noticias = document.getElementById('news-link');
+                    if (noticias) {
+                        noticias.href = '#news';
+                        noticias.onclick = (e) => {
+                            e.preventDefault();
+                            document.getElementById('news').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        };
+                    }
+                    
+                    // Login
+                    const login = document.getElementById('login-link');
+                    if (login) login.href = 'inicio de sesion/login.html';
+                    
+                    // Scroll automático si hay hash en la URL
+                    if (window.location.hash) {
+                        setTimeout(() => {
+                            const target = document.querySelector(window.location.hash);
+                            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 300);
+                    }
+                }, 100);
             })
-            .catch(error => console.error('Error loading header:', error));
+            .catch(error => console.error('Error:', error));
     </script>
     <script src="script.js"></script>
 </body>

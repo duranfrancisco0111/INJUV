@@ -485,13 +485,32 @@
 
   <script src="admin-modern.js"></script>
   <script>
-    // Cargar header dinámicamente
+    // Cargar header y configurar enlaces
     fetch('../../header.html')
         .then(response => response.text())
         .then(data => {
             document.getElementById('header-container').innerHTML = data;
+            
+            setTimeout(() => {
+              // Logo - va a página principal
+              const logo = document.getElementById('logo-link');
+              if (logo) logo.href = '../../index.html';
+              
+              // Enlaces - van a página principal con hash
+              const howWorks = document.getElementById('how-it-works-link');
+              if (howWorks) howWorks.href = '../../index.html#how-it-works';
+              
+              const experiencias = document.getElementById('experiencias-link');
+              if (experiencias) experiencias.href = '../../index.html#experiencias-voluntariado';
+              
+              const noticias = document.getElementById('news-link');
+              if (noticias) noticias.href = '../../index.html#news';
+              
+              const login = document.getElementById('login-link');
+              if (login) login.href = '../../inicio de sesion/login.html';
+            }, 100);
         })
-        .catch(error => console.error('Error loading header:', error));
+        .catch(error => console.error('Error:', error));
   </script>
 </body>
 </html> 

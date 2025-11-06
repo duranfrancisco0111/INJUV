@@ -1,0 +1,91 @@
+.header {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  padding: 24px 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  background: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+}
+
+.logo-text {
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.logo-info h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.logo-info p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.tab-navigation {
+  display: flex;
+  gap: 0;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+
+.tab-button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tab-button.active {
+  color: white;
+  border-bottom-color: white;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .logo-info h1 {
+    font-size: 18px;
+  }
+  
+  .logo-info p {
+    font-size: 12px;
+  }
+}
+
+
