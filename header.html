@@ -11,359 +11,128 @@
     body{font-family:'Inter',sans-serif;line-height:1.6;color:#333;overflow-x:hidden;background:#f6f7fb}
 
     .header{
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
+      position:fixed;top:0;left:0;width:100%;
       background:rgba(255,255,255,.97);
       backdrop-filter:blur(10px);
       border-bottom:1px solid rgba(0,0,0,.08);
-      z-index:1000;
-      transition:all 0.3s ease;
+      z-index:1000;transition:all .3s ease;
     }
-
-    /* Efecto sombra al hacer scroll */
-    .header.scrolled{
-      box-shadow:0 4px 20px rgba(0,0,0,0.1);
-      background:rgba(255,255,255,0.98);
-    }
+    .header.scrolled{box-shadow:0 4px 20px rgba(0,0,0,.1);background:rgba(255,255,255,.98)}
 
     .header-content{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      max-width:1400px;
-      margin:0 auto;
-      padding:0.75rem 2rem;
-      gap:1.5rem;
+      display:flex;align-items:center;justify-content:space-between;
+      max-width:1400px;margin:0 auto;padding:.75rem 2rem;gap:1.5rem;
     }
 
-     .logo{
-       flex-shrink:0;
-     }
-     .logo img{
-       height:60px;
-       width:auto;
-       border-radius:6px;
-       object-fit:contain;
-       transition: all 0.3s ease;
-       cursor: pointer;
-     }
-     
-     .logo a:hover img{
-       transform: scale(1.05);
-       opacity: 0.9;
-     }
+    .logo{flex-shrink:0}
+    .logo img{height:60px;width:auto;border-radius:6px;object-fit:contain;transition:.3s;cursor:pointer}
+    .logo a:hover img{transform:scale(1.05);opacity:.9}
 
-    .main-nav{flex:1;white-space:nowrap;display:flex;justify-content:center;min-width:0;}
-    .nav-menu{display:flex;list-style:none;gap:1rem;flex-wrap:nowrap;justify-content:center;align-items:center;margin:0;padding:0;}
-    .nav-item{position:relative;white-space:nowrap;flex-shrink:0;}
-    .nav-link{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;color:#333;text-decoration:none;font-weight:500;font-size:0.9rem;transition:all .25s ease;border-radius:6px;white-space:nowrap;}
+    .main-nav{flex:1;white-space:nowrap;display:flex;justify-content:center;min-width:0}
+    .nav-menu{display:flex;list-style:none;gap:1rem;flex-wrap:nowrap;justify-content:center;align-items:center;margin:0;padding:0}
+    .nav-item{position:relative;white-space:nowrap;flex-shrink:0}
+    .nav-link{display:flex;align-items:center;gap:.4rem;padding:.5rem .75rem;color:#333;text-decoration:none;font-weight:500;font-size:.9rem;transition:.25s;border-radius:6px;white-space:nowrap}
     .nav-link:hover{background:#f8f9fa;color:#0066CC}
 
-    .dropdown-menu{position:absolute;top:100%;left:0;background:#fff;min-width:250px;box-shadow:0 10px 30px rgba(0,0,0,.1);border-radius:8px;opacity:0;visibility:hidden;transform:translateY(-10px);transition:all .25s ease;z-index:1000;list-style:none;padding:.5rem 0}
+    .dropdown-menu{position:absolute;top:100%;left:0;background:#fff;min-width:250px;box-shadow:0 10px 30px rgba(0,0,0,.1);border-radius:8px;opacity:0;visibility:hidden;transform:translateY(-10px);transition:.25s;z-index:1000;list-style:none;padding:.5rem 0}
     .nav-item:hover .dropdown-menu{opacity:1;visibility:visible;transform:translateY(0)}
     .dropdown-menu a{display:block;padding:.75rem 1.25rem;color:#333;text-decoration:none}
     .dropdown-menu a:hover{background:#f8f9fa;color:#0066CC}
-    /* Resetear estilos para el filtro de voluntariado */
+
     .volunteer-filter > li{list-style:none}
+    .volunteer-filter{min-width:700px;padding:0;display:flex;background:#fff;border-radius:8px;overflow:hidden}
+    .volunteer-filter-section{flex:1;padding:1.5rem}
+    .volunteer-filter-section:first-child{border-right:1px solid #e0e0e0}
+    .section-title{font-weight:600;font-size:1rem;color:#333;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid #e0e0e0}
+    .destinations-list,.experiences-list{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;list-style:none;margin:0;padding:0}
+    .destination-item,.experience-item{margin:0}
+    .destination-item a,.experience-item a{display:flex;align-items:center;gap:.5rem;padding:.75rem;text-decoration:none;color:#333;transition:.2s;border-radius:6px;font-size:.9rem}
+    .destination-item a:hover,.experience-item a:hover{background:#f0f7ff;color:#0066CC}
+    .experience-item a i{font-size:1.1rem;color:#0066CC;width:20px;text-align:center}
+    .view-all-link{margin-top:1rem;padding-top:1rem;border-top:1px solid #e0e0e0}
+    .view-all-link a{color:#0066CC;font-weight:500;text-decoration:none;font-size:.9rem;transition:color .2s}
+    .view-all-link a:hover{color:#0052CC;text-decoration:underline}
 
-    /* Estilos para el filtro de voluntariado */
-    .volunteer-filter{
-      min-width:700px;
-      padding:0;
-      display:flex;
-      background:#fff;
-      border-radius:8px;
-      overflow:hidden;
-    }
-    .volunteer-filter-section{
-      flex:1;
-      padding:1.5rem;
-    }
-    .volunteer-filter-section:first-child{
-      border-right:1px solid #e0e0e0;
-    }
-    .section-title{
-      font-weight:600;
-      font-size:1rem;
-      color:#333;
-      margin-bottom:1rem;
-      padding-bottom:0.75rem;
-      border-bottom:1px solid #e0e0e0;
-    }
-    .destinations-list, .experiences-list{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:0.5rem;
-      list-style:none;
-      margin:0;
-      padding:0;
-    }
-    .destinations-list li, .experiences-list li{
-      list-style:none;
-      margin:0;
-      padding:0;
-    }
-    .destination-item, .experience-item{
-      margin:0;
-    }
-    .destination-item a, .experience-item a{
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
-      padding:0.75rem;
-      text-decoration:none;
-      color:#333;
-      transition:all 0.2s ease;
-      border-radius:6px;
-      font-size:0.9rem;
-    }
-    .destination-item a:hover, .experience-item a:hover{
-      background:#f0f7ff;
-      color:#0066CC;
-    }
-    .experience-item a i{
-      font-size:1.1rem;
-      color:#0066CC;
-      width:20px;
-      text-align:center;
-    }
-    .view-all-link{
-      margin-top:1rem;
-      padding-top:1rem;
-      border-top:1px solid #e0e0e0;
-    }
-    .view-all-link a{
-      color:#0066CC;
-      font-weight:500;
-      text-decoration:none;
-      font-size:0.9rem;
-      transition:color 0.2s ease;
-    }
-    .view-all-link a:hover{
-      color:#0052CC;
-      text-decoration:underline;
-    }
+    .header-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;justify-content:flex-end}
+    .btn-login,.btn-register{display:inline-flex;justify-content:center;align-items:center;min-width:120px;padding:.65rem 1.25rem;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none;transition:.3s;white-space:nowrap}
+    .btn-login{background:linear-gradient(90deg,#0052CC,#007BFF);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,102,204,.3)}
+    .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,102,204,.35)}
+    .btn-register{background:transparent;color:#0052CC;border:2px solid #0052CC}
+    .btn-register:hover{background:#0052CC;color:#fff}
 
-    .header-actions{
-      display:flex;
-      align-items:center;
-      gap:0.5rem;
-      flex-shrink:0;
-      justify-content:flex-end;
-    }
-
-    .btn-login, .btn-register {
-      display:inline-flex;
-      justify-content:center;
-      align-items:center;
-      width:auto;
-      min-width:120px;
-      padding:0.65rem 1.25rem;
-      border-radius:8px;
-      font-weight:600;
-      font-size:0.9rem;
-      text-decoration:none;
-      transition:all 0.3s ease;
-      white-space:nowrap;
-    }
-
-    .btn-login {
-      background: linear-gradient(90deg, #0052CC, #007BFF);
-      color:#fff;
-      border:none;
-      box-shadow:0 4px 12px rgba(0,102,204,0.3);
-    }
-
-    .btn-login:hover {
-      transform:translateY(-2px);
-      box-shadow:0 8px 18px rgba(0,102,204,0.35);
-    }
-
-    .btn-register {
-      background:transparent;
-      color:#0052CC;
-      border:2px solid #0052CC;
-    }
-
-    .btn-register:hover {
-      background:#0052CC;
-      color:#fff;
-    }
-
-    /* Responsive: ajustar el filtro en pantallas pequeñas */
     @media (max-width:768px){
-      .volunteer-filter{
-        min-width:320px;
-        flex-direction:column;
-      }
-      .volunteer-filter-section:first-child{
-        border-right:none;
-        border-bottom:1px solid #e0e0e0;
-      }
-      .destinations-list, .experiences-list{
-        grid-template-columns:1fr;
-      }
+      .volunteer-filter{min-width:320px;flex-direction:column}
+      .volunteer-filter-section:first-child{border-right:none;border-bottom:1px solid #e0e0e0}
+      .destinations-list,.experiences-list{grid-template-columns:1fr}
     }
 
-    /* Ajustar posicionamiento del dropdown para evitar desbordamiento */
-    .nav-item.dropdown:last-child .dropdown-menu{
-      right:0;
-      left:auto;
-    }
-
+    .nav-item.dropdown:last-child .dropdown-menu{right:0;left:auto}
     @media (max-width:992px){.main-nav{display:none}}
   </style>
 </head>
 <body>
   <header class="header" id="header">
     <div class="header-content">
-       <div class="logo">
-         <a href="../index.html" style="display: block; text-decoration: none;">
-           <img src="https://www.injuv.gob.cl/sites/default/files/logo_injuv_2021_portal.png?v=3" alt="INJUV Logo" />
-         </a>
-       </div>
+      <div class="logo">
+        <a href="index.html" style="display:block;text-decoration:none">
+          <img src="https://www.injuv.gob.cl/sites/default/files/logo_injuv_2021_portal.png?v=3" alt="INJUV Logo" />
+        </a>
+      </div>
 
       <nav class="main-nav" aria-label="Navegación principal">
         <ul class="nav-menu">
-        <li class="nav-item">
-            <a href="../index.html#como-funciona" class="nav-link">¿Cómo funciona?</a>
-        </li>
+          <li class="nav-item">
+            <a href="index.html#como-funciona" class="nav-link">¿Cómo funciona?</a>
+          </li>
+
           <li class="nav-item dropdown">
             <a href="#" class="nav-link">Oportunidades de Voluntariado <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
             <ul class="dropdown-menu volunteer-filter">
-              <!-- Sección izquierda: Destinos destacados -->
               <li class="volunteer-filter-section">
                 <div class="section-title">Destinos destacados</div>
                 <ul class="destinations-list">
-                  <li class="destination-item">
-                    <a href="#" data-location="santiago">Región Metropolitana</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="valparaiso">Valparaíso</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="concepcion">Bío Bío</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="temuco">Araucanía</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="puerto-varas">Los Lagos</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="atacama">Atacama</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="coquimbo">Coquimbo</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="maule">Maule</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="ohiggins">O'Higgins</a>
-                  </li>
-                  <li class="destination-item">
-                    <a href="#" data-location="arica">Arica y Parinacota</a>
-                  </li>
+                  <li class="destination-item"><a href="#" data-location="santiago">Región Metropolitana</a></li>
+                  <li class="destination-item"><a href="#" data-location="valparaiso">Valparaíso</a></li>
+                  <li class="destination-item"><a href="#" data-location="concepcion">Bío Bío</a></li>
+                  <li class="destination-item"><a href="#" data-location="temuco">Araucanía</a></li>
+                  <li class="destination-item"><a href="#" data-location="puerto-varas">Los Lagos</a></li>
+                  <li class="destination-item"><a href="#" data-location="atacama">Atacama</a></li>
+                  <li class="destination-item"><a href="#" data-location="coquimbo">Coquimbo</a></li>
+                  <li class="destination-item"><a href="#" data-location="maule">Maule</a></li>
+                  <li class="destination-item"><a href="#" data-location="ohiggins">O'Higgins</a></li>
+                  <li class="destination-item"><a href="#" data-location="arica">Arica y Parinacota</a></li>
                 </ul>
-                <div class="view-all-link">
-                  <a href="#">Mira todas las oportunidades de voluntariado</a>
-                </div>
+                <div class="view-all-link"><a href="#">Mira todas las oportunidades de voluntariado</a></div>
               </li>
-              <!-- Sección derecha: Tipos de experiencias -->
+
               <li class="volunteer-filter-section">
                 <div class="section-title">¿Qué tipo de experiencias estás buscando?</div>
                 <ul class="experiences-list">
-                  <li class="experience-item">
-                    <a href="#" data-theme="non-profit-school">
-                      <i class="fas fa-chalkboard-teacher" aria-hidden="true"></i>
-                      <span>Escuela sin fines lucrativos</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="community">
-                      <i class="fas fa-users" aria-hidden="true"></i>
-                      <span>Comunidad</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="ngo">
-                      <i class="fas fa-heart" aria-hidden="true"></i>
-                      <span>ONG</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="homestay">
-                      <i class="fas fa-home" aria-hidden="true"></i>
-                      <span>Casa de familia</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="hostel">
-                      <i class="fas fa-building" aria-hidden="true"></i>
-                      <span>Hostel</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="camping">
-                      <i class="fas fa-campground" aria-hidden="true"></i>
-                      <span>Camping</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="inn">
-                      <i class="fas fa-hotel" aria-hidden="true"></i>
-                      <span>Posada</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="farm">
-                      <i class="fas fa-tractor" aria-hidden="true"></i>
-                      <span>Granja</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="permaculture">
-                      <i class="fas fa-seedling" aria-hidden="true"></i>
-                      <span>Permacultura</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="eco-village">
-                      <i class="fas fa-leaf" aria-hidden="true"></i>
-                      <span>Ecoaldea</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="holistic-center">
-                      <i class="fas fa-spa" aria-hidden="true"></i>
-                      <span>Centro holístico</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="guest-house">
-                      <i class="fas fa-door-open" aria-hidden="true"></i>
-                      <span>Casa de huéspedes</span>
-                    </a>
-                  </li>
-                  <li class="experience-item">
-                    <a href="#" data-theme="eco-lodge">
-                      <i class="fas fa-tree" aria-hidden="true"></i>
-                      <span>Eco alojamiento</span>
-                    </a>
-                  </li>
+                  <li class="experience-item"><a href="#" data-theme="non-profit-school"><i class="fas fa-chalkboard-teacher"></i><span>Escuela sin fines lucrativos</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="community"><i class="fas fa-users"></i><span>Comunidad</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="ngo"><i class="fas fa-heart"></i><span>ONG</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="homestay"><i class="fas fa-home"></i><span>Casa de familia</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="hostel"><i class="fas fa-building"></i><span>Hostel</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="camping"><i class="fas fa-campground"></i><span>Camping</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="inn"><i class="fas fa-hotel"></i><span>Posada</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="farm"><i class="fas fa-tractor"></i><span>Granja</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="permaculture"><i class="fas fa-seedling"></i><span>Permacultura</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="eco-village"><i class="fas fa-leaf"></i><span>Ecoaldea</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="holistic-center"><i class="fas fa-spa"></i><span>Centro holístico</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="guest-house"><i class="fas fa-door-open"></i><span>Casa de huéspedes</span></a></li>
+                  <li class="experience-item"><a href="#" data-theme="eco-lodge"><i class="fas fa-tree"></i><span>Eco alojamiento</span></a></li>
                 </ul>
               </li>
             </ul>
           </li>
+
           <li class="nav-item">
-            <a href="../index.html#experiencias-voluntariado" class="nav-link">Experiencias de Voluntariado</a>
+            <a href="index.html#experiencias-voluntariado" class="nav-link">Experiencias de Voluntariado</a>
           </li>
           <li class="nav-item">
-            <a href="../index.html#noticias" class="nav-link">Noticias</a>
+            <a href="index.html#noticias" class="nav-link">Noticias</a>
           </li>
+
           <li class="nav-item dropdown">
             <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
             <ul class="dropdown-menu">
@@ -376,74 +145,56 @@
       </nav>
 
       <div class="header-actions">
-        <a href="inicio de sesion/login.html" class="btn-login">Iniciar sesión</a>
+        <a href="inicio%20de%20sesion/login.html" class="btn-login">Iniciar sesión</a>
         <a class="btn-register" href="#">Registrarse</a>
       </div>
     </div>
   </header>
 
   <script>
-    // Detectar scroll para agregar efecto de sombra
+    // Efecto de sombra al hacer scroll
     const header = document.getElementById('header');
     window.addEventListener('scroll', () => {
-      if(window.scrollY > 20){
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
+      if (window.scrollY > 20) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
     });
 
-    // Manejar clics en los destinos
+    // Destinos -> redirige a un hash de ejemplo (ajusta si tienes página dedicada)
     document.querySelectorAll('.volunteer-filter .destination-item a').forEach(link => {
-      link.addEventListener('click', function(e) {
+      link.addEventListener('click', e => {
         e.preventDefault();
-        const location = this.getAttribute('data-location');
-        const locationName = this.textContent.trim();
-        
-        // Aquí puedes agregar la lógica para filtrar por ubicación
-        window.location.href = `#voluntariado?location=${location}`;
-        console.log(`Destino seleccionado: ${locationName} (${location})`);
+        const location = link.getAttribute('data-location');
+        window.location.href = 'index.html#voluntariado?location=' + encodeURIComponent(location);
       });
     });
 
-    // Manejar clics en los tipos de experiencias
+    // Tipos de experiencias
     document.querySelectorAll('.volunteer-filter .experience-item a').forEach(link => {
-      link.addEventListener('click', function(e) {
+      link.addEventListener('click', e => {
         e.preventDefault();
-        const theme = this.getAttribute('data-theme');
-        const themeName = this.querySelector('span').textContent.trim();
-        
-        // Aquí puedes agregar la lógica para filtrar por tipo de experiencia
-        window.location.href = `#voluntariado?theme=${theme}`;
-        console.log(`Tipo de experiencia seleccionado: ${themeName} (${theme})`);
+        const theme = link.getAttribute('data-theme');
+        window.location.href = 'index.html#voluntariado?theme=' + encodeURIComponent(theme);
       });
     });
 
-    // Manejar clic en "Ver todas las oportunidades"
+    // Ver todas las oportunidades
     document.querySelectorAll('.view-all-link a').forEach(link => {
-      link.addEventListener('click', function(e) {
+      link.addEventListener('click', e => {
         e.preventDefault();
-        window.location.href = '#voluntariado';
-        console.log('Ver todas las oportunidades');
+        window.location.href = 'index.html#voluntariado';
       });
     });
 
-    // Los enlaces de navegación funcionarán naturalmente con el navegador
-    // Solo agregamos scroll suave cuando la página carga con hash
-
-    // Si la página se carga con un hash, hacer scroll al elemento
+    // Scroll suave si se llega con hash
     window.addEventListener('load', () => {
-      if(window.location.hash) {
+      if (window.location.hash) {
         const hash = window.location.hash.substring(1);
         setTimeout(() => {
           const target = document.getElementById(hash);
-          if(target) {
+          if (target) {
             const headerHeight = document.getElementById('header')?.offsetHeight || 0;
             const targetPosition = target.offsetTop - headerHeight - 20;
-            window.scrollTo({
-              top: targetPosition,
-              behavior: 'smooth'
-            });
+            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
           }
         }, 300);
       }
