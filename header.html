@@ -54,11 +54,8 @@
     .view-all-link a:hover{color:#0052CC;text-decoration:underline}
 
     .header-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;justify-content:flex-end;position:relative;z-index:1001;margin-left:1rem}
-    .btn-login,.btn-register{display:inline-flex;justify-content:center;align-items:center;min-width:120px;padding:.65rem 1.25rem;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none;transition:.3s;white-space:nowrap;cursor:pointer;position:relative;z-index:1002;pointer-events:auto}
-    .btn-login{background:linear-gradient(90deg,#0052CC,#007BFF);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,102,204,.3)}
+    .btn-login{display:inline-flex;justify-content:center;align-items:center;min-width:120px;padding:.6rem 1.2rem;border-radius:8px;font-weight:600;font-size:.9rem;text-decoration:none;transition:.3s;white-space:nowrap;cursor:pointer;position:relative;z-index:1002;pointer-events:auto;background:linear-gradient(90deg,#0052CC,#007BFF);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,102,204,.3)}
     .btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,102,204,.35)}
-    .btn-register{background:transparent;color:#0052CC;border:2px solid #0052CC}
-    .btn-register:hover{background:#0052CC;color:#fff}
 
     .menu-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.5rem;margin-left:auto}
     .menu-toggle span{width:26px;height:2px;background:#1f2937;border-radius:2px;transition:transform .3s ease,opacity .3s ease}
@@ -94,7 +91,7 @@
 
     @media (max-width:640px){
       .header-actions{flex-direction:column;align-items:stretch}
-      .btn-login,.btn-register{width:100%}
+      .btn-login{width:100%}
     }
   </style>
 </head>
@@ -177,10 +174,8 @@
           </li>
         </ul>
       </nav>
-
       <div class="header-actions">
         <a href="#" id="login-link" class="btn-login">Iniciar sesión</a>
-        <a class="btn-register" href="#">Registrarse</a>
       </div>
     </div>
   </header>
