@@ -698,6 +698,12 @@ document.head.appendChild(rippleStyle);
 
 // Carrusel - Versión simplificada y robusta
 window.currentSlideIndex = 0;
+window.carouselInterval = null;
+window.carouselAutoPlayDelay = 7000; // 7 segundos entre cambios
+window.carouselPaused = false;
+window.progressBarPaused = false;
+window.progressBarStartTime = null;
+window.progressBarElapsed = 0;
 
 function moveCarousel(direction) {
     const track = document.getElementById('carouselTrack');
@@ -737,6 +743,128 @@ function moveCarousel(direction) {
     });
     
     console.log('Carrusel movido a slide', window.currentSlideIndex + 1);
+    
+    // Reiniciar la barra de progreso después de cada cambio
+    resetProgressBar();
+}
+
+// Función para iniciar el auto-play del carrusel
+function startCarouselAutoPlay(resetBar = true) {
+    // Limpiar intervalo existente si hay uno
+    if (window.carouselInterval) {
+        clearInterval(window.carouselInterval);
+        window.carouselInterval = null;
+    }
+    
+    window.carouselPaused = false;
+    
+    // Reiniciar la barra de progreso solo si se solicita
+    if (resetBar) {
+        resetProgressBar();
+    } else {
+        resumeProgressBar();
+    }
+    
+    // Crear nuevo intervalo
+    window.carouselInterval = setInterval(function() {
+        if (!window.carouselPaused) {
+            console.log('Auto-play: cambiando al siguiente slide');
+            moveCarousel('next');
+        }
+    }, window.carouselAutoPlayDelay);
+    
+    console.log('Auto-play iniciado, intervalo:', window.carouselAutoPlayDelay, 'ms');
+}
+
+// Función para animar la barra de progreso
+function resetProgressBar() {
+    const progressFill = document.querySelector('.carousel-progress-fill');
+    if (progressFill) {
+        window.progressBarPaused = false;
+        window.progressBarElapsed = 0;
+        window.progressBarStartTime = Date.now();
+        
+        // Detener cualquier animación en curso
+        progressFill.style.transition = 'none';
+        progressFill.style.width = '0%';
+        
+        // Forzar reflow para aplicar el cambio inmediatamente
+        void progressFill.offsetWidth;
+        
+        // Pequeño delay para asegurar que el reset se aplique
+        setTimeout(function() {
+            // Iniciar nueva animación
+            progressFill.style.transition = 'width ' + (window.carouselAutoPlayDelay / 1000) + 's linear';
+            progressFill.style.width = '100%';
+            window.progressBarStartTime = Date.now();
+        }, 10);
+    }
+}
+
+// Función para pausar la barra de progreso
+function pauseProgressBar() {
+    const progressFill = document.querySelector('.carousel-progress-fill');
+    if (progressFill && !window.progressBarPaused) {
+        window.progressBarPaused = true;
+        const computedStyle = getComputedStyle(progressFill);
+        const currentWidth = parseFloat(computedStyle.width) || 0;
+        const containerWidth = progressFill.parentElement.offsetWidth;
+        const percentage = (currentWidth / containerWidth) * 100;
+        
+        // Calcular tiempo transcurrido
+        if (window.progressBarStartTime) {
+            const elapsed = Date.now() - window.progressBarStartTime;
+            window.progressBarElapsed = (percentage / 100) * window.carouselAutoPlayDelay;
+        }
+        
+        // Pausar la animación
+        progressFill.style.transition = 'none';
+        progressFill.style.width = percentage + '%';
+    }
+}
+
+// Función para reanudar la barra de progreso
+function resumeProgressBar() {
+    const progressFill = document.querySelector('.carousel-progress-fill');
+    if (progressFill && window.progressBarPaused) {
+        window.progressBarPaused = false;
+        const computedStyle = getComputedStyle(progressFill);
+        const currentWidth = parseFloat(computedStyle.width) || 0;
+        const containerWidth = progressFill.parentElement.offsetWidth;
+        const percentage = (currentWidth / containerWidth) * 100;
+        
+        // Calcular tiempo restante
+        const remainingTime = window.carouselAutoPlayDelay - window.progressBarElapsed;
+        
+        if (remainingTime > 0 && percentage < 100) {
+            // Forzar reflow
+            void progressFill.offsetWidth;
+            
+            // Continuar desde donde estaba
+            progressFill.style.transition = 'width ' + (remainingTime / 1000) + 's linear';
+            progressFill.style.width = '100%';
+            window.progressBarStartTime = Date.now() - window.progressBarElapsed;
+        } else {
+            // Si ya pasó el tiempo o está completa, reiniciar
+            resetProgressBar();
+        }
+    }
+}
+
+// Función para detener el auto-play
+function stopCarouselAutoPlay() {
+    if (window.carouselInterval) {
+        clearInterval(window.carouselInterval);
+        window.carouselInterval = null;
+    }
+    window.carouselPaused = true;
+    pauseProgressBar();
+}
+
+// Función para reiniciar el auto-play (útil después de interacciones manuales)
+function resetCarouselAutoPlay() {
+    stopCarouselAutoPlay();
+    startCarouselAutoPlay();
 }
 
 // Inicializar carrusel cuando el DOM esté listo
@@ -744,10 +872,12 @@ function initCarouselButtons() {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const indicators = document.querySelectorAll('.indicator');
+    const carouselContainer = document.querySelector('.carousel-container');
     
     // Botón anterior
     if (prevBtn) {
         prevBtn.onclick = function() {
+            resetCarouselAutoPlay();
             moveCarousel('prev');
             return false;
         };
@@ -757,6 +887,7 @@ function initCarouselButtons() {
     // Botón siguiente
     if (nextBtn) {
         nextBtn.onclick = function() {
+            resetCarouselAutoPlay();
             moveCarousel('next');
             return false;
         };
@@ -766,6 +897,7 @@ function initCarouselButtons() {
     // Indicadores
     indicators.forEach(function(indicator, index) {
         indicator.onclick = function() {
+            resetCarouselAutoPlay();
             moveCarousel(index);
             return false;
         };
@@ -775,18 +907,33 @@ function initCarouselButtons() {
         console.log('Indicadores configurados:', indicators.length);
     }
     
+    // No pausar al hacer hover - el carrusel sigue funcionando normalmente
+    
     // Inicializar posición
     moveCarousel(0);
+    
+    // Iniciar auto-play
+    startCarouselAutoPlay();
 }
 
-// Intentar inicializar múltiples veces para asegurar que funcione
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCarouselButtons);
-} else {
-    initCarouselButtons();
-}
+// Inicializar el carrusel cuando el DOM esté listo
+(function() {
+    'use strict';
+    let carouselInitialized = false;
 
-// Intentos adicionales
-setTimeout(initCarouselButtons, 300);
-setTimeout(initCarouselButtons, 800);
-setTimeout(initCarouselButtons, 1500);
+    function tryInitCarousel() {
+        if (!carouselInitialized) {
+            const track = document.getElementById('carouselTrack');
+            if (track) {
+                initCarouselButtons();
+                carouselInitialized = true;
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryInitCarousel);
+    } else {
+        tryInitCarousel();
+    }
+})();
