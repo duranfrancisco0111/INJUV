@@ -49,6 +49,17 @@ const hide = (el) => el?.classList.add('hidden');
         imgNaturalW = cropImg.naturalWidth;
         imgNaturalH = cropImg.naturalHeight;
         scale = 1; rotation = 0; pos = { x: 0, y: 0 }; cropZoom.value = '1';
+        
+        // Cerrar temporalmente el modal de editar perfil si está abierto
+        const editProfileModal = $('#editProfileModal');
+        let wasEditModalOpen = false;
+        if (editProfileModal && !editProfileModal.classList.contains('hidden')) {
+          wasEditModalOpen = true;
+          editProfileModal.classList.add('hidden');
+          // Guardar el estado para reabrirlo después
+          cropper.dataset.wasEditModalOpen = 'true';
+        }
+        
         show(cropper);
         requestAnimationFrame(updateCropTransform);
       };
@@ -132,6 +143,13 @@ const hide = (el) => el?.classList.add('hidden');
   cropCancel?.addEventListener('click', () => {
     hide(cropper);
     avatarInput.value = '';
+    
+    // Reabrir el modal de editar perfil si estaba abierto
+    const editProfileModal = $('#editProfileModal');
+    if (cropper.dataset.wasEditModalOpen === 'true' && editProfileModal) {
+      editProfileModal.classList.remove('hidden');
+      cropper.dataset.wasEditModalOpen = 'false';
+    }
   });
 
   // Guardar recorte
@@ -168,68 +186,32 @@ const hide = (el) => el?.classList.add('hidden');
     try { localStorage.setItem('injuv_avatar_b64', b64); } catch {}
     hide(cropper);
     avatarInput.value = '';
+    
+    // Reabrir el modal de editar perfil si estaba abierto
+    const editProfileModal = $('#editProfileModal');
+    if (cropper.dataset.wasEditModalOpen === 'true' && editProfileModal) {
+      editProfileModal.classList.remove('hidden');
+      cropper.dataset.wasEditModalOpen = 'false';
+    }
   });
 })();
 
 // ==========================================================
-// ======== Editar: Contacto & Acerca de Mí (✎) ============
+// ============== Cargar datos guardados ===================
 // ==========================================================
 (() => {
-  document.addEventListener('click', (e) => {
-    const editBtn   = e.target.closest('[data-edit]');
-    const cancelBtn = e.target.closest('[data-cancel]');
-
-    // Abrir edición
-    if (editBtn) {
-      const which = editBtn.getAttribute('data-edit');
-      if (which === 'contact') {
-        hide($('#contactView')); show($('#contactForm'));
-        $('#emailInput').value    = $('#contactEmail')?.textContent.trim() || '';
-        $('#phoneInput').value    = $('#contactPhone')?.textContent.trim() || '';
-        $('#locationInput').value = $('#contactLocation')?.textContent.trim() || '';
-      }
-      if (which === 'about') {
-        hide($('#aboutText')); show($('#aboutForm'));
-        $('#aboutInput').value = $('#aboutText')?.textContent.trim() || '';
-      }
-    }
-
-    // Cancelar edición
-    if (cancelBtn) {
-      const which = cancelBtn.getAttribute('data-cancel');
-      if (which === 'contact') { hide($('#contactForm')); show($('#contactView')); }
-      if (which === 'about')   { hide($('#aboutForm'));   show($('#aboutText'));  }
-    }
-  });
-
-  // Guardar CONTACTO
-  $('#contactForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    $('#contactEmail').textContent    = $('#emailInput').value.trim();
-    $('#contactPhone').textContent    = $('#phoneInput').value.trim();
-    $('#contactLocation').textContent = $('#locationInput').value.trim();
-    localStorage.setItem('contactData', JSON.stringify({
-      email: $('#emailInput').value,
-      phone: $('#phoneInput').value,
-      location: $('#locationInput').value
-    }));
-    hide($('#contactForm')); show($('#contactView'));
-  });
-
-  // Guardar ABOUT
-  $('#aboutForm')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    $('#aboutText').textContent = $('#aboutInput').value.trim();
-    localStorage.setItem('aboutText', $('#aboutInput').value);
-    hide($('#aboutForm')); show($('#aboutText'));
-  });
-
-  // Cargar datos guardados
+  // Cargar datos guardados al cargar la página
   (function loadEditableData(){
-    const c = JSON.parse(localStorage.getItem('contactData') || '{}');
-    if (c.email)    $('#contactEmail').textContent    = c.email;
-    if (c.phone)    $('#contactPhone').textContent    = c.phone;
-    if (c.location) $('#contactLocation').textContent = c.location;
+    // Cargar datos de contacto desde localStorage individual
+    const savedEmail = localStorage.getItem('contactEmail');
+    const savedPhone = localStorage.getItem('contactPhone');
+    const savedLocation = localStorage.getItem('contactLocation');
+    
+    if (savedEmail) $('#contactEmail').textContent = savedEmail;
+    if (savedPhone) $('#contactPhone').textContent = savedPhone;
+    if (savedLocation) $('#contactLocation').textContent = savedLocation;
+    
+    // Cargar datos de "Acerca de mí"
     const a = localStorage.getItem('aboutText');
     if (a) $('#aboutText').textContent = a;
   })();
@@ -341,24 +323,40 @@ const hide = (el) => el?.classList.add('hidden');
 // ===== Habilidades: arrastrar + añadir + eliminar (limpio)
 // ==========================================================
 (() => {
-  const list   = $('#skillsBars');
-  const addBtn = $('#skillQuickAdd');
+  const list = $('#skillsBars');
   if (!list) return;
+  
+  // El botón de agregar habilidades se movió al modal "Editar perfil"
+  // Este código solo renderiza las habilidades de forma estática en el perfil
 
   const LS_KEY = 'injuv_skills_v4';
   let skills = [];
 
-  const readInitialSkills = () =>
-    Array.from(list.querySelectorAll('li[data-id]')).map(li => ({
-      id: li.getAttribute('data-id') || 'id-'+Math.random().toString(36).slice(2,9),
-      name: li.querySelector('.text-gray-900')?.textContent.trim() || 'Habilidad',
-      level: Number(li.getAttribute('data-level')) || 0
-    }));
+  // Habilidades por defecto
+  const defaultSkills = [
+    { id: 'team', name: 'Trabajo en Equipo', level: 50 },
+    { id: 'comm', name: 'Comunicación Efectiva', level: 50 },
+    { id: 'lead', name: 'Liderazgo', level: 50 },
+    { id: 'empathy', name: 'Empatía', level: 50 },
+    { id: 'solve', name: 'Resolución de Problemas', level: 50 }
+  ];
+
+  const readInitialSkills = () => {
+    // Siempre usar las habilidades por defecto con nivel 50%
+    // Ignorar los valores del HTML ya que pueden estar desactualizados
+    return [...defaultSkills];
+  };
 
   function load() {
-    try { skills = JSON.parse(localStorage.getItem(LS_KEY)) || readInitialSkills(); }
-    catch { skills = readInitialSkills(); }
-    save(); // normaliza
+    try { 
+      const saved = localStorage.getItem(LS_KEY);
+      // Si no hay nada guardado, usar las habilidades iniciales
+      skills = saved ? JSON.parse(saved) : readInitialSkills();
+    }
+    catch { 
+      skills = readInitialSkills(); 
+    }
+    save(); // normaliza y guarda las habilidades por defecto si no había nada
   }
   const save = () => localStorage.setItem(LS_KEY, JSON.stringify(skills));
 
@@ -369,30 +367,338 @@ const hide = (el) => el?.classList.add('hidden');
       li.className = 'space-y-2';
       li.dataset.id = s.id;
       li.innerHTML = `
-        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between">
           <span class="text-sm md:text-base text-gray-900">${s.name}</span>
-          <button class="delete-btn" title="Eliminar" aria-label="Eliminar">❌</button>
         </div>
-        <div class="bar-track"><div class="bar-fill" style="width:${s.level}%"></div></div>
+        <div class="bar-track" style="cursor: default; pointer-events: none;"><div class="bar-fill" style="width:${s.level}%"></div></div>
       `;
 
-      // Eliminar
-      li.querySelector('.delete-btn')?.addEventListener('click', () => {
-        if (confirm(`¿Eliminar "${s.name}"?`)) {
-          skills = skills.filter(x => x.id !== s.id);
-          save(); render();
+      // Las habilidades en el perfil son solo de visualización
+      // Toda la edición (agregar, editar nombre, cambiar nivel, eliminar) se hace desde el modal "Editar perfil"
+
+      list.appendChild(li);
+    });
+  }
+
+  // El botón de agregar ya no existe en el perfil, se agregó al modal
+  // La edición completa de habilidades se hace desde "Editar perfil"
+
+  // Escuchar actualizaciones desde el modal
+  window.addEventListener('skillsUpdated', () => {
+    load(); render();
+  });
+
+  load(); render();
+})();
+
+// ==========================================================
+// ========== Modal Editar Perfil (Estilo Facebook) ========
+// ==========================================================
+(() => {
+  const editProfileBtn = $('#editProfileBtn');
+  const editProfileModal = $('#editProfileModal');
+  const closeEditProfileModal = $('#closeEditProfileModal');
+  const cancelEditProfile = $('#cancelEditProfile');
+  const saveEditProfile = $('#saveEditProfile');
+  const openPhotoPicker = $('#openPhotoPicker');
+  const avatarInput = $('#avatarInput');
+  
+  // Elementos del perfil
+  const profileBanner = $('#profileBanner');
+  const profileName = $('#profileName');
+  const profileLocation = $('#profileLocation');
+  const profileAge = $('#profileAge');
+  
+  // Formularios y elementos de edición
+  const bannerColorPicker = $('#bannerColorPicker');
+  const bannerColorHex = $('#bannerColorHex');
+  const bannerPreview = $('#bannerPreview');
+  const bannerColorInput = $('#bannerColorInput');
+
+  // Variables de estado
+  let currentSection = 'photo';
+  let unsavedChanges = false;
+
+  // Cargar datos guardados
+  function loadProfileData() {
+    const savedBannerColor = localStorage.getItem('injuv_banner_color') || '#1e40af';
+    const savedName = localStorage.getItem('injuv_profile_name');
+    const savedLocation = localStorage.getItem('injuv_profile_location');
+    const savedAge = localStorage.getItem('injuv_profile_age');
+
+    if (savedBannerColor && profileBanner) {
+      profileBanner.style.backgroundColor = savedBannerColor;
+      if (bannerColorPicker) bannerColorPicker.value = savedBannerColor;
+      if (bannerColorHex) bannerColorHex.value = savedBannerColor;
+      if (bannerPreview) bannerPreview.style.backgroundColor = savedBannerColor;
+      if (bannerColorInput) bannerColorInput.value = savedBannerColor;
+    }
+    
+    if (savedName && profileName) profileName.textContent = savedName;
+    if (savedLocation && profileLocation) profileLocation.textContent = savedLocation;
+    if (savedAge && profileAge) profileAge.textContent = savedAge;
+  }
+
+  // Abrir modal
+  editProfileBtn?.addEventListener('click', () => {
+    if (editProfileModal) {
+      editProfileModal.classList.remove('hidden');
+      showSection('photo');
+      loadCurrentValues();
+    }
+  });
+
+  // Cerrar modal
+  function closeModal() {
+    if (editProfileModal) {
+      editProfileModal.classList.add('hidden');
+      unsavedChanges = false;
+    }
+  }
+
+  closeEditProfileModal?.addEventListener('click', closeModal);
+  cancelEditProfile?.addEventListener('click', () => {
+    // Restaurar valores de privacidad al cancelar
+    restorePrivacyValues();
+    closeModal();
+  });
+  
+  // Función para restaurar los valores guardados de privacidad
+  function restorePrivacyValues() {
+    const privacyKeys = ['location', 'hours', 'age', 'email', 'phone', 'about', 'experience', 'skills', 'reviews'];
+    privacyKeys.forEach(key => {
+      const checkbox = document.getElementById(`privacy-${key}`);
+      if (checkbox) {
+        const saved = localStorage.getItem(`injuv_privacy_${key}`);
+        if (saved !== null) {
+          checkbox.checked = saved === 'true';
+        } else {
+          checkbox.checked = true; // Por defecto visible
         }
+      }
+    });
+  }
+
+  // Cerrar al hacer clic fuera
+  editProfileModal?.addEventListener('click', (e) => {
+    if (e.target === editProfileModal) closeModal();
+  });
+
+  // Cambiar de sección
+  function showSection(sectionName) {
+    // Ocultar todas las secciones
+    document.querySelectorAll('.edit-profile-section').forEach(section => {
+      section.classList.add('hidden');
+    });
+
+    // Mostrar la sección seleccionada
+    const section = $(`#section-${sectionName}`);
+    if (section) section.classList.remove('hidden');
+
+    // Actualizar menú activo
+    document.querySelectorAll('.edit-profile-menu-item').forEach(item => {
+      item.classList.remove('active', 'bg-blue-100', 'text-blue-700');
+      item.classList.add('text-gray-700');
+    });
+
+    const menuItem = $(`[data-section="${sectionName}"]`);
+    if (menuItem) {
+      menuItem.classList.add('active', 'bg-blue-100', 'text-blue-700');
+      menuItem.classList.remove('text-gray-700');
+    }
+
+    // Ocultar/mostrar footer según la sección
+    const footer = $('#editProfileFooter');
+    if (footer) {
+      // Ocultar footer en la sección de foto ya que el cropper tiene sus propios botones
+      if (sectionName === 'photo') {
+        footer.classList.add('hidden');
+      } else {
+        footer.classList.remove('hidden');
+      }
+    }
+
+    currentSection = sectionName;
+    
+    // Cargar valores específicos de la sección
+    if (sectionName === 'privacy') {
+      loadPrivacyCheckboxValues();
+    }
+    
+    // Cargar habilidades cuando se muestra la sección de habilidades
+    if (sectionName === 'skills') {
+      loadSkillsInModal();
+    }
+  }
+  
+  // Cargar valores de los checkboxes de privacidad
+  function loadPrivacyCheckboxValues() {
+    const privacyKeys = ['name', 'location', 'age', 'email', 'phone', 'about', 'experience', 'skills', 'reviews'];
+    privacyKeys.forEach(key => {
+      const checkbox = document.getElementById(`privacy-${key}`);
+      if (checkbox) {
+        const saved = localStorage.getItem(`injuv_privacy_${key}`);
+        if (saved !== null) {
+          checkbox.checked = saved === 'true';
+        } else {
+          checkbox.checked = true; // Por defecto visible
+        }
+      }
+    });
+  }
+
+  // Event listeners para los botones del menú
+  document.querySelectorAll('.edit-profile-menu-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const section = btn.getAttribute('data-section');
+      if (section) showSection(section);
+    });
+  });
+
+  // Cargar valores actuales al abrir modal
+  function loadCurrentValues() {
+    // Cargar información de contacto
+    const contactEmailEl = $('#contactEmail');
+    const contactPhoneEl = $('#contactPhone');
+    const contactLocationEl = $('#contactLocation');
+    const contactEmailInput = $('#contactEmailInput');
+    const contactPhoneInput = $('#contactPhoneInput');
+    const contactLocationInput = $('#contactLocationInput');
+    
+    if (contactEmailInput && contactEmailEl) {
+      contactEmailInput.value = contactEmailEl.textContent.trim() || '';
+    }
+    if (contactPhoneInput && contactPhoneEl) {
+      contactPhoneInput.value = contactPhoneEl.textContent.trim() || '';
+    }
+    if (contactLocationInput && contactLocationEl) {
+      contactLocationInput.value = contactLocationEl.textContent.trim() || '';
+    }
+
+    // Cargar "Acerca de mí"
+    const aboutTextEl = $('#aboutText');
+    const aboutInput = $('#aboutInput');
+    if (aboutInput && aboutTextEl) {
+      aboutInput.value = aboutTextEl.textContent.trim() || '';
+    }
+
+    // Cargar color del banner
+    if (profileBanner && bannerColorPicker) {
+      const currentColor = getComputedStyle(profileBanner).backgroundColor;
+      const hexColor = rgbToHex(currentColor);
+      bannerColorPicker.value = hexColor;
+      if (bannerColorHex) bannerColorHex.value = hexColor;
+      if (bannerPreview) bannerPreview.style.backgroundColor = hexColor;
+    }
+
+    // Cargar preferencias de privacidad al abrir la sección
+    // Nota: Ya se carga en showSection() cuando se cambia la sección
+  }
+
+  // Gestión de habilidades en el modal
+  const LS_KEY_SKILLS = 'injuv_skills_v4';
+  let modalSkills = []; // Variable para mantener las habilidades en el modal
+  
+  function loadSkillsInModal() {
+    const skillsEditList = $('#skillsEditList');
+    if (!skillsEditList) {
+      console.error('No se encontró el elemento skillsEditList');
+      return;
+    }
+
+    // Habilidades por defecto (mismas que en el perfil)
+    const defaultSkills = [
+      { id: 'team', name: 'Trabajo en Equipo', level: 50 },
+      { id: 'comm', name: 'Comunicación Efectiva', level: 50 },
+      { id: 'lead', name: 'Liderazgo', level: 50 },
+      { id: 'empathy', name: 'Empatía', level: 50 },
+      { id: 'solve', name: 'Resolución de Problemas', level: 50 }
+    ];
+
+    try {
+      const saved = localStorage.getItem(LS_KEY_SKILLS);
+      // Si no hay nada guardado o es un array vacío, usar las habilidades por defecto
+      if (!saved || saved === '[]' || saved === 'null' || saved.trim() === '') {
+        modalSkills = [...defaultSkills]; // Crear copia del array
+      } else {
+        const parsed = JSON.parse(saved);
+        // Si el array parseado está vacío o no es un array válido, usar las habilidades por defecto
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          modalSkills = parsed;
+        } else {
+          modalSkills = [...defaultSkills]; // Crear copia del array
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar habilidades:', error);
+      modalSkills = [...defaultSkills]; // Crear copia del array
+    }
+
+    renderSkillsInModal(modalSkills);
+  }
+
+  function renderSkillsInModal(skills) {
+    modalSkills = skills; // Actualizar la variable global
+    const skillsEditList = $('#skillsEditList');
+    if (!skillsEditList) return;
+
+    skillsEditList.innerHTML = '';
+
+    if (skills.length === 0) {
+      skillsEditList.innerHTML = '<li class="text-gray-500 text-center py-4">No hay habilidades agregadas aún.</li>';
+      return;
+    }
+
+    skills.forEach((skill) => {
+      const li = document.createElement('li');
+      li.className = 'border rounded-lg p-4 space-y-3';
+      li.dataset.skillId = skill.id;
+      li.innerHTML = `
+        <div class="flex items-center justify-between">
+          <input type="text" 
+                 class="skill-name-input flex-1 border rounded-lg px-3 py-2 text-gray-900" 
+                 value="${skill.name || ''}" 
+                 placeholder="Nombre de la habilidad">
+          <button class="delete-skill-btn px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg" title="Eliminar">
+            Eliminar
+          </button>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600">Nivel</span>
+            <span class="skill-level-value font-semibold text-blue-600">${skill.level || 0}%</span>
+          </div>
+          <div class="bar-track-modal" style="height: 12px; background-color: #e5e7eb; border-radius: 9999px; position: relative; cursor: pointer;">
+            <div class="bar-fill-modal" style="height: 100%; background-color: #2563eb; border-radius: 9999px; width: ${skill.level || 0}%; transition: width .2s ease;"></div>
+          </div>
+        </div>
+      `;
+
+      // Event listeners para editar nombre
+      const nameInput = li.querySelector('.skill-name-input');
+      nameInput.addEventListener('input', () => {
+        const skillIndex = modalSkills.findIndex(s => s.id === skill.id);
+        if (skillIndex !== -1) {
+          modalSkills[skillIndex].name = nameInput.value.trim();
+        }
+        unsavedChanges = true;
       });
 
-      // Barra (click + drag + touch)
-      const track = li.querySelector('.bar-track');
-      const fill  = li.querySelector('.bar-fill');
+      // Barra arrastrable (click + drag + touch)
+      const track = li.querySelector('.bar-track-modal');
+      const fill = li.querySelector('.bar-fill-modal');
+      const levelValue = li.querySelector('.skill-level-value');
 
       const setLevelFromX = (rect, clientX) => {
         const pct = Math.round(((clientX - rect.left) / rect.width) * 100);
         const level = Math.max(0, Math.min(100, pct));
         fill.style.width = `${level}%`;
-        s.level = level; save();
+        levelValue.textContent = `${level}%`;
+        const skillIndex = modalSkills.findIndex(s => s.id === skill.id);
+        if (skillIndex !== -1) {
+          modalSkills[skillIndex].level = level;
+        }
+        unsavedChanges = true;
       };
 
       track.addEventListener('click', (e) => {
@@ -410,38 +716,380 @@ const hide = (el) => el?.classList.add('hidden');
         window.removeEventListener('touchend', touchEnd);
       };
       const mouseMove = (e) => onMove(e.clientX);
-      const mouseUp   = () => onUp();
+      const mouseUp = () => onUp();
       const touchMove = (e) => onMove(e.touches[0].clientX);
-      const touchEnd  = () => onUp();
+      const touchEnd = () => onUp();
 
       track.addEventListener('mousedown', (e) => {
-        dragging = true; rectCache = track.getBoundingClientRect();
+        dragging = true;
+        rectCache = track.getBoundingClientRect();
         setLevelFromX(rectCache, e.clientX);
         window.addEventListener('mousemove', mouseMove);
         window.addEventListener('mouseup', mouseUp);
       });
+
       track.addEventListener('touchstart', (e) => {
-        dragging = true; rectCache = track.getBoundingClientRect();
+        dragging = true;
+        rectCache = track.getBoundingClientRect();
         setLevelFromX(rectCache, e.touches[0].clientX);
         window.addEventListener('touchmove', touchMove, { passive: true });
         window.addEventListener('touchend', touchEnd, { passive: true });
       }, { passive: true });
 
-      list.appendChild(li);
+      // Event listener para eliminar
+      const deleteBtn = li.querySelector('.delete-skill-btn');
+      deleteBtn.addEventListener('click', () => {
+        if (confirm(`¿Eliminar "${skill.name || 'esta habilidad'}"?`)) {
+          modalSkills = modalSkills.filter(s => s.id !== skill.id);
+          renderSkillsInModal(modalSkills);
+          unsavedChanges = true;
+        }
+      });
+
+      skillsEditList.appendChild(li);
     });
   }
 
-  addBtn?.addEventListener('click', () => {
+  // Función para obtener habilidades actuales desde localStorage
+  function getCurrentSkills() {
+    let skills = [];
+    try {
+      skills = JSON.parse(localStorage.getItem(LS_KEY_SKILLS)) || [];
+    } catch {
+      skills = [];
+    }
+    return skills;
+  }
+
+  // Función para guardar habilidades desde el modal
+  function saveSkillsFromModal() {
+    // Leer los valores actuales de los inputs (nombre) y usar modalSkills para los niveles
+    const skillsEditList = $('#skillsEditList');
+    if (!skillsEditList) return;
+
+    const skillItems = skillsEditList.querySelectorAll('li[data-skill-id]');
+    const skills = [];
+
+    skillItems.forEach((li) => {
+      const skillId = li.getAttribute('data-skill-id');
+      const nameInput = li.querySelector('.skill-name-input');
+
+      if (nameInput) {
+        const name = nameInput.value.trim();
+        // Buscar el nivel en modalSkills que ya está actualizado por el arrastre
+        const skillData = modalSkills.find(s => s.id === skillId);
+        const level = skillData ? skillData.level : 0;
+
+        if (name) {
+          skills.push({
+            id: skillId,
+            name: name,
+            level: Math.max(0, Math.min(100, level))
+          });
+        }
+      }
+    });
+
+    // Guardar en localStorage
+    localStorage.setItem(LS_KEY_SKILLS, JSON.stringify(skills));
+    
+    // Actualizar la variable modalSkills
+    modalSkills = skills;
+
+    // Disparar evento personalizado para actualizar el renderizado del perfil
+    window.dispatchEvent(new CustomEvent('skillsUpdated'));
+  }
+
+  // Botón para agregar nueva habilidad
+  $('#addSkillBtn')?.addEventListener('click', () => {
     const name = prompt('Nombre de la nueva habilidad:', 'Nueva habilidad');
-    if (name === null) return;
-    skills.push({ id: 'id-'+Math.random().toString(36).slice(2,9), name: (name.trim() || 'Habilidad'), level: 50 });
-    save(); render();
+    if (!name || name.trim() === '') return;
+
+    let skills = getCurrentSkills();
+    const newSkill = {
+      id: 'id-' + Math.random().toString(36).slice(2, 9),
+      name: name.trim(),
+      level: 50
+    };
+    skills.push(newSkill);
+    renderSkillsInModal(skills);
+    unsavedChanges = true;
   });
 
-  load(); render();
+  // Cargar valores de los checkboxes de privacidad
+  function loadPrivacyCheckboxValues() {
+    const privacyKeys = ['name', 'location', 'age', 'email', 'phone', 'about', 'experience', 'skills', 'reviews'];
+    privacyKeys.forEach(key => {
+      const checkbox = document.getElementById(`privacy-${key}`);
+      if (checkbox) {
+        const saved = localStorage.getItem(`injuv_privacy_${key}`);
+        if (saved !== null) {
+          checkbox.checked = saved === 'true';
+        }
+      }
+    });
+  }
+
+  // Abrir selector de foto
+  openPhotoPicker?.addEventListener('click', () => {
+    if (avatarInput) {
+      avatarInput.click();
+    }
+  });
+
+  // Actualizar vista previa del color del banner
+  bannerColorPicker?.addEventListener('input', (e) => {
+    const color = e.target.value;
+    if (bannerColorHex) bannerColorHex.value = color;
+    if (bannerPreview) bannerPreview.style.backgroundColor = color;
+    unsavedChanges = true;
+  });
+
+  bannerColorHex?.addEventListener('input', (e) => {
+    const color = e.target.value;
+    if (/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
+      if (bannerColorPicker) bannerColorPicker.value = color;
+      if (bannerPreview) bannerPreview.style.backgroundColor = color;
+      unsavedChanges = true;
+    }
+  });
+
+  // Guardar cambios
+  saveEditProfile?.addEventListener('click', () => {
+    // Guardar color del banner
+    const bannerColor = bannerColorPicker?.value || '#1e40af';
+    if (profileBanner) {
+      profileBanner.style.backgroundColor = bannerColor;
+      localStorage.setItem('injuv_banner_color', bannerColor);
+    }
+
+    // Guardar información de contacto
+    const contactEmailInput = $('#contactEmailInput');
+    const contactPhoneInput = $('#contactPhoneInput');
+    const contactLocationInput = $('#contactLocationInput');
+    const contactEmailEl = $('#contactEmail');
+    const contactPhoneEl = $('#contactPhone');
+    const contactLocationEl = $('#contactLocation');
+
+    if (contactEmailInput && contactEmailEl) {
+      const email = contactEmailInput.value.trim();
+      if (email) {
+        contactEmailEl.textContent = email;
+        localStorage.setItem('contactEmail', email);
+      }
+    }
+    if (contactPhoneInput && contactPhoneEl) {
+      const phone = contactPhoneInput.value.trim();
+      if (phone) {
+        contactPhoneEl.textContent = phone;
+        localStorage.setItem('contactPhone', phone);
+      }
+    }
+    if (contactLocationInput && contactLocationEl) {
+      const location = contactLocationInput.value.trim();
+      if (location) {
+        contactLocationEl.textContent = location;
+        localStorage.setItem('contactLocation', location);
+      }
+    }
+
+    // Guardar "Acerca de mí"
+    const aboutInput = $('#aboutInput');
+    const aboutTextEl = $('#aboutText');
+    if (aboutInput && aboutTextEl) {
+      const aboutText = aboutInput.value.trim();
+      if (aboutText) {
+        aboutTextEl.textContent = aboutText;
+        localStorage.setItem('aboutText', aboutText);
+      }
+    }
+
+    // Guardar habilidades
+    saveSkillsFromModal();
+
+    // Guardar y aplicar cambios de privacidad (solo se aplican cuando se presiona Guardar)
+    if (window.savePrivacySettings) {
+      window.savePrivacySettings();
+    }
+
+    unsavedChanges = false;
+    closeModal();
+  });
+
+  // Marcar cambios no guardados en información de contacto
+  $('#contactEmailInput')?.addEventListener('input', () => { unsavedChanges = true; });
+  $('#contactPhoneInput')?.addEventListener('input', () => { unsavedChanges = true; });
+  $('#contactLocationInput')?.addEventListener('input', () => { unsavedChanges = true; });
+  
+  // Marcar cambios no guardados en "Acerca de mí"
+  $('#aboutInput')?.addEventListener('input', () => { unsavedChanges = true; });
+
+  // Función auxiliar para convertir RGB a HEX
+  function rgbToHex(rgb) {
+    if (rgb.startsWith('#')) return rgb;
+    
+    const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    if (!match) return '#1e40af';
+    
+    const r = parseInt(match[1], 10).toString(16).padStart(2, '0');
+    const g = parseInt(match[2], 10).toString(16).padStart(2, '0');
+    const b = parseInt(match[3], 10).toString(16).padStart(2, '0');
+    
+    return `#${r}${g}${b}`;
+  }
+
+  // Cargar datos al iniciar
+  loadProfileData();
+})();
+
+// ==========================================================
+// ========== Gestión de Privacidad ========================
+// ==========================================================
+(() => {
+  const privacyCheckboxes = {
+    location: $('#privacy-location'),
+    hours: $('#privacy-hours'),
+    age: $('#privacy-age'),
+    email: $('#privacy-email'),
+    phone: $('#privacy-phone'),
+    about: $('#privacy-about'),
+    experience: $('#privacy-experience'),
+    skills: $('#privacy-skills'),
+    reviews: $('#privacy-reviews')
+  };
+
+  // Aplicar configuración de privacidad
+  function applyPrivacySetting(key, isVisible) {
+    const displayValue = isVisible ? '' : 'none';
+    
+    switch(key) {
+      case 'location':
+        const locationEl = $('#profileLocation');
+        if (locationEl) {
+          // Ocultar el span completo que contiene el ícono 📍 y el texto
+          // Estructura: <span>📍 <span id="profileLocation">...</span></span>
+          // El parentElement es el span externo que contiene el ícono
+          const locationParent = locationEl.parentElement;
+          if (locationParent) {
+            locationParent.style.display = displayValue;
+          }
+        }
+        break;
+        
+      case 'hours':
+        const hoursEl = $('#profileHours');
+        if (hoursEl) {
+          // Ocultar el span completo que contiene el ícono ⏱ y el texto
+          hoursEl.style.display = displayValue;
+        }
+        break;
+        
+      case 'age':
+        const ageEl = $('#profileAge');
+        if (ageEl) {
+          // Ocultar el span completo que contiene el ícono 🎂 y el texto
+          // Estructura: <span>🎂 <span id="profileAge">27</span> años</span>
+          // El parentElement del span con id="profileAge" es el span externo con el ícono
+          const ageParent = ageEl.parentElement;
+          if (ageParent) {
+            ageParent.style.display = displayValue;
+          }
+        }
+        break;
+        
+      case 'email':
+        const emailEl = $('#contactEmail');
+        if (emailEl) {
+          const emailP = emailEl.closest('p');
+          if (emailP) emailP.style.display = displayValue;
+        }
+        break;
+        
+      case 'phone':
+        const phoneEl = $('#contactPhone');
+        if (phoneEl) {
+          const phoneP = phoneEl.closest('p');
+          if (phoneP) phoneP.style.display = displayValue;
+        }
+        break;
+        
+      case 'about':
+        const aboutEl = $('#aboutText');
+        if (aboutEl) {
+          const aboutSection = aboutEl.closest('.section-card');
+          if (aboutSection) aboutSection.style.display = displayValue;
+        }
+        break;
+        
+      case 'experience':
+        // Buscar por el texto del h3
+        const allDivs = Array.from(document.querySelectorAll('.bg-white.rounded-xl'));
+        const experienceDiv = allDivs.find(div => {
+          const h3 = div.querySelector('h3');
+          return h3 && h3.textContent.trim() === 'Experiencia de Voluntariados';
+        });
+        if (experienceDiv) experienceDiv.style.display = displayValue;
+        break;
+        
+      case 'skills':
+        const skillsEl = $('#skillsBars');
+        if (skillsEl) {
+          const skillsSection = skillsEl.closest('.bg-white.rounded-xl');
+          if (skillsSection) skillsSection.style.display = displayValue;
+        }
+        break;
+        
+      case 'reviews':
+        const allSections = Array.from(document.querySelectorAll('section.bg-white.rounded-xl'));
+        const reviewsSection = allSections.find(section => {
+          const h3 = section.querySelector('h3');
+          return h3 && h3.textContent.includes('Reseñas');
+        });
+        if (reviewsSection) reviewsSection.style.display = displayValue;
+        break;
+    }
+  }
+
+  // Cargar preferencias de privacidad
+  function loadPrivacySettings() {
+    Object.keys(privacyCheckboxes).forEach(key => {
+      const checkbox = privacyCheckboxes[key];
+      if (checkbox) {
+        const saved = localStorage.getItem(`injuv_privacy_${key}`);
+        if (saved !== null) {
+          checkbox.checked = saved === 'true';
+        } else {
+          // Por defecto todo visible
+          checkbox.checked = true;
+        }
+        applyPrivacySetting(key, checkbox.checked);
+      }
+    });
+  }
+
+  // Guardar preferencias de privacidad
+  function savePrivacySettings() {
+    Object.keys(privacyCheckboxes).forEach(key => {
+      const checkbox = privacyCheckboxes[key];
+      if (checkbox) {
+        localStorage.setItem(`injuv_privacy_${key}`, checkbox.checked.toString());
+        applyPrivacySetting(key, checkbox.checked);
+      }
+    });
+  }
+
+  // NO aplicar cambios inmediatamente al cambiar los toggles
+  // Los cambios solo se aplicarán cuando se presione el botón "Guardar" del modal
+  // Se removieron los event listeners que aplicaban cambios inmediatamente
+
+  // Hacer la función accesible globalmente para que el modal pueda llamarla
+  window.savePrivacySettings = savePrivacySettings;
+
+  // Cargar preferencias al iniciar (solo para aplicar la configuración guardada)
+  loadPrivacySettings();
 })();
 
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('INJUV listo ✅ (recorte, edición, certificados, reseñas, habilidades).');
+  console.log('INJUV listo ✅ (recorte, edición, certificados, reseñas, habilidades, menú editar perfil).');
 });
