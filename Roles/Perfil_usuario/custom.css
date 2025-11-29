@@ -66,6 +66,32 @@ body { font-family: 'Inter', system-ui, sans-serif; }
 /* ---------- Modales ---------- */
 #modal, #cropper { backdrop-filter: blur(2px); }
 
+/* ---------- Modal Editar Perfil (Estilo Facebook) ---------- */
+#editProfileModal {
+  z-index: 9999;
+}
+
+#editProfileModal .edit-profile-menu-item.active {
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-weight: 500;
+}
+
+.edit-profile-section {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ---------- Scrollbar (WebKit) ---------- */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
