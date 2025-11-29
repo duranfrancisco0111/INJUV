@@ -27,18 +27,18 @@
   <!-- PERFIL (banner + avatar + nombre) -->
   <section class="max-w-7xl mx-auto mt-6 rounded-2xl overflow-hidden shadow-sm">
     <!-- Banner azul -->
-    <div class="relative bg-blue-700 h-40">
-      <!-- Input de foto (oculto) -->
-      <input id="avatarInput" type="file" accept="image/*" class="hidden">
+    <div id="profileBanner" class="relative bg-blue-700 h-40">
+      <!-- Input de color de banner (oculto) -->
+      <input id="bannerColorInput" type="color" class="hidden" value="#1e40af">
     </div>
 
     <!-- Franja blanca con nombre -->
     <div class="relative bg-white">
-      <!-- Botón editar foto -->
-      <label for="avatarInput"
+      <!-- Botón editar perfil -->
+      <button id="editProfileBtn"
         class="absolute right-4 top-3 inline-flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 cursor-pointer text-sm shadow">
-        ✎ Editar foto
-      </label>
+        ✎ Editar perfil
+      </button>
 
       <!-- Avatar superpuesto -->
       <div id="avatarContainer" class="absolute -top-12 left-8 h-28 w-28 rounded-full ring-4 ring-white overflow-hidden bg-white avatar-default">
@@ -51,11 +51,11 @@
       <!-- Nombre y meta -->
       <div class="pl-40 pr-4 py-4 flex items-center justify-between">
         <div>
-          <h2 class="text-2xl font-semibold text-gray-900">María Alejandra González</h2>
+          <h2 id="profileName" class="text-2xl font-semibold text-gray-900">María Alejandra González</h2>
           <div class="mt-1 text-sm text-gray-600 flex flex-wrap gap-x-6 gap-y-1">
-            <span>📍 Santiago, Región Metropolitana</span>
-            <span>⏱ 157 horas de voluntariado</span>
-            <span>🎂 27 años</span>
+            <span>📍 <span id="profileLocation">Santiago, Región Metropolitana</span></span>
+            <span id="profileHours">⏱ 157 horas de voluntariado</span>
+            <span>🎂 <span id="profileAge">27</span> años</span>
           </div>
         </div>
       </div>
@@ -72,42 +72,22 @@
         <!-- INFORMACIÓN DE CONTACTO -->
         <div class="bg-white rounded-xl shadow-sm border p-6 section-card">
           <h3 class="text-xl font-semibold mb-4">Información de Contacto</h3>
-          <button data-edit="contact" class="edit-btn text-blue-600 hover:text-blue-800" title="Editar información" aria-label="Editar información">✎</button>
 
           <div id="contactView" class="space-y-2 text-gray-700">
             <p>📧 <span id="contactEmail">maria.gonzalez@email.com</span></p>
             <p>📞 <span id="contactPhone">+56 9 8765 4321</span></p>
             <p>📍 <span id="contactLocation">Santiago, Región Metropolitana</span></p>
           </div>
-
-          <form id="contactForm" class="hidden mt-1 space-y-3" autocomplete="off">
-            <input id="emailInput" type="email" class="w-full border rounded-lg p-2" placeholder="Correo electrónico">
-            <input id="phoneInput" type="text" class="w-full border rounded-lg p-2" placeholder="Teléfono">
-            <input id="locationInput" type="text" class="w-full border rounded-lg p-2" placeholder="Ubicación">
-            <div class="flex justify-end gap-2">
-              <button type="button" data-cancel="contact" class="px-3 py-1 border rounded-lg">Cancelar</button>
-              <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
-            </div>
-          </form>
         </div>
 
         <!-- ACERCA DE MÍ -->
         <div class="bg-white rounded-xl shadow-sm border p-6 section-card">
           <h3 class="text-xl font-semibold mb-3">Acerca de Mí</h3>
-          <button data-edit="about" class="edit-btn text-blue-600 hover:text-blue-800" title="Editar descripción" aria-label="Editar descripción">✎</button>
 
           <p id="aboutText" class="text-gray-700 leading-relaxed">
             Soy una persona comprometida con el servicio comunitario y el desarrollo social.
             Me apasiona ayudar a otros y contribuir al bienestar de mi comunidad a través del voluntariado.
           </p>
-
-          <form id="aboutForm" class="hidden mt-1">
-            <textarea id="aboutInput" rows="4" class="w-full border rounded-lg p-2"></textarea>
-            <div class="flex justify-end gap-2 mt-2">
-              <button type="button" data-cancel="about" class="px-3 py-1 border rounded-lg">Cancelar</button>
-              <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
-            </div>
-          </form>
         </div>
 
         <!-- EXPERIENCIA -->
@@ -198,41 +178,38 @@
               <span class="text-xl">◎</span>
               <h3 class="text-xl font-semibold">Habilidades</h3>
             </div>
-            <button id="skillQuickAdd"
-              class="rounded-full w-7 h-7 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700"
-              title="Añadir habilidad" aria-label="Añadir habilidad">+</button>
           </div>
 
           <ul id="skillsBars" class="space-y-5">
-            <li class="space-y-2" data-id="team" data-level="90">
+            <li class="space-y-2" data-id="team" data-level="50">
               <div class="flex items-center justify-between">
                 <span class="text-sm md:text-base text-gray-900">Trabajo en Equipo</span>
               </div>
               <div class="bar-track"><div class="bar-fill"></div></div>
             </li>
 
-            <li class="space-y-2" data-id="comm" data-level="78">
+            <li class="space-y-2" data-id="comm" data-level="50">
               <div class="flex items-center justify-between">
                 <span class="text-sm md:text-base text-gray-900">Comunicación Efectiva</span>
               </div>
               <div class="bar-track"><div class="bar-fill"></div></div>
             </li>
 
-            <li class="space-y-2" data-id="lead" data-level="45">
+            <li class="space-y-2" data-id="lead" data-level="50">
               <div class="flex items-center justify-between">
                 <span class="text-sm md:text-base text-gray-900">Liderazgo</span>
               </div>
               <div class="bar-track"><div class="bar-fill"></div></div>
             </li>
 
-            <li class="space-y-2" data-id="empathy" data-level="85">
+            <li class="space-y-2" data-id="empathy" data-level="50">
               <div class="flex items-center justify-between">
                 <span class="text-sm md:text-base text-gray-900">Empatía</span>
               </div>
               <div class="bar-track"><div class="bar-fill"></div></div>
             </li>
 
-            <li class="space-y-2" data-id="solve" data-level="70">
+            <li class="space-y-2" data-id="solve" data-level="50">
               <div class="flex items-center justify-between">
                 <span class="text-sm md:text-base text-gray-900">Resolución de Problemas</span>
               </div>
@@ -321,8 +298,262 @@
     </div>
   </div>
 
+  <!-- MODAL EDITAR PERFIL (ESTILO FACEBOOK) -->
+  <div id="editProfileModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-5xl h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
+      <!-- Header del Modal -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900">Editar perfil</h2>
+        <button id="closeEditProfileModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Izquierdo - Menú de opciones -->
+        <div class="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2 px-3">Información</h3>
+            <nav class="space-y-1">
+              <button data-section="photo" class="edit-profile-menu-item active w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>📷</span> Editar foto
+              </button>
+              <button data-section="banner" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>🎨</span> Color del banner
+              </button>
+              <button data-section="contact" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>📧</span> Información de contacto
+              </button>
+              <button data-section="about" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>📝</span> Acerca de mí
+              </button>
+              <button data-section="skills" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>◎</span> Habilidades
+              </button>
+              <button data-section="privacy" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>🔒</span> Privacidad
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Panel Derecho - Contenido de edición -->
+        <div class="flex-1 overflow-y-auto bg-white">
+          <div class="p-6">
+            <!-- Sección: Editar Foto -->
+            <div id="section-photo" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Editar foto</h3>
+              <div class="space-y-4">
+                <p class="text-gray-600">Cambia tu foto de perfil. La imagen será recortada de forma circular.</p>
+                <button id="openPhotoPicker" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Elegir foto
+                </button>
+                <input id="avatarInput" type="file" accept="image/*" class="hidden">
+              </div>
+            </div>
+
+            <!-- Sección: Color del Banner -->
+            <div id="section-banner" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Color del banner</h3>
+              <div class="space-y-4">
+                <p class="text-gray-600">Personaliza el color del banner de tu perfil.</p>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Selecciona un color</label>
+                  <div class="flex items-center gap-4">
+                    <input type="color" id="bannerColorPicker" value="#1e40af" class="w-20 h-12 rounded cursor-pointer border border-gray-300">
+                    <input type="text" id="bannerColorHex" value="#1e40af" class="flex-1 border rounded-lg p-2 font-mono" placeholder="#1e40af">
+                  </div>
+                </div>
+                <div class="p-4 rounded-lg border bg-gray-50">
+                  <p class="text-sm text-gray-600 mb-2">Vista previa:</p>
+                  <div id="bannerPreview" class="h-20 rounded-lg" style="background-color: #1e40af;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección: Información de Contacto -->
+            <div id="section-contact" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Información de contacto</h3>
+              <form id="contactInfoForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Correo electrónico</label>
+                  <input type="email" id="contactEmailInput" class="w-full border rounded-lg p-2" placeholder="Correo electrónico">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Teléfono</label>
+                  <input type="text" id="contactPhoneInput" class="w-full border rounded-lg p-2" placeholder="Teléfono">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Ubicación</label>
+                  <input type="text" id="contactLocationInput" class="w-full border rounded-lg p-2" placeholder="Ciudad, Región">
+                </div>
+              </form>
+            </div>
+
+            <!-- Sección: Acerca de Mí -->
+            <div id="section-about" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Acerca de mí</h3>
+              <form id="aboutInfoForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Descripción</label>
+                  <textarea id="aboutInput" rows="6" class="w-full border rounded-lg p-2" placeholder="Escribe una descripción sobre ti..."></textarea>
+                </div>
+              </form>
+            </div>
+
+            <!-- Sección: Habilidades -->
+            <div id="section-skills" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Habilidades</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center mb-4">
+                  <p class="text-gray-600">Gestiona tus habilidades y su nivel de dominio.</p>
+                  <button id="addSkillBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                    <span>+</span> Agregar habilidad
+                  </button>
+                </div>
+                <ul id="skillsEditList" class="space-y-4">
+                  <!-- Las habilidades se cargarán dinámicamente aquí -->
+                </ul>
+              </div>
+            </div>
+
+            <!-- Sección: Privacidad -->
+            <div id="section-privacy" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Privacidad</h3>
+              <p class="text-gray-600 mb-6">Controla qué información de tu perfil es visible para otros usuarios.</p>
+              
+              <div class="space-y-6">
+                <!-- Información Personal -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-3">Información Personal</h4>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Ubicación</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tu ubicación (incluyendo el ícono)</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-location" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Horas de voluntariado</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar las horas de voluntariado (incluyendo el ícono)</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-hours" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Edad</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tu edad (incluyendo el ícono)</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-age" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Información de Contacto -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-3">Información de Contacto</h4>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Correo electrónico</p>
+                        <p class="text-xs text-gray-500">Controla la visibilidad de tu email</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-email" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Teléfono</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tu número de teléfono</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-phone" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contenido del Perfil -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-3">Contenido del Perfil</h4>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Acerca de mí</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tu descripción personal</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-about" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Experiencia de Voluntariados</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tu historial de voluntariados</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-experience" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Habilidades</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tus habilidades</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-skills" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Reseñas y Referencias</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar las reseñas de organizaciones</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-reviews" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer con botones -->
+          <div id="editProfileFooter" class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-3">
+            <button id="cancelEditProfile" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Cancelar</button>
+            <button id="saveEditProfile" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL RECORTE AVATAR -->
-  <div id="cropper" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+  <div id="cropper" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-xl">
       <h3 class="text-lg font-semibold">Recortar foto de perfil</h3>
 
