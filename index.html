@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INJUV - Juventud y Voluntariado</title>
+    <link rel="stylesheet" href="typography.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="chatbot/styles_bot.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
    
@@ -634,7 +634,27 @@
         fetch('header.html')
             .then(response => response.text())
             .then(data => {
-                document.getElementById('header-container').innerHTML = data;
+                // Extraer solo el contenido del body (el header)
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+                const headerContent = doc.querySelector('header');
+                const styles = doc.querySelector('style');
+                
+                // Insertar estilos si existen
+                if (styles) {
+                    const styleElement = document.createElement('style');
+                    styleElement.textContent = styles.textContent;
+                    document.head.appendChild(styleElement);
+                }
+                
+                // Insertar el header
+                if (headerContent) {
+                    document.getElementById('header-container').innerHTML = headerContent.outerHTML;
+                } else {
+                    // Fallback: extraer solo el contenido del body
+                    const bodyContent = doc.body.innerHTML;
+                    document.getElementById('header-container').innerHTML = bodyContent;
+                }
                 
                 // Configurar enlaces del header
                 setTimeout(() => {
@@ -675,6 +695,53 @@
                     // Login
                     const login = document.getElementById('login-link');
                     if (login) login.href = 'inicio de sesion/login.html';
+                    
+                    // Menú móvil toggle
+                    const menuToggle = document.getElementById('menuToggle');
+                    const mainNav = document.querySelector('.main-nav');
+                    if (menuToggle && mainNav) {
+                        menuToggle.addEventListener('click', () => {
+                            menuToggle.classList.toggle('active');
+                            mainNav.classList.toggle('active');
+                            menuToggle.setAttribute('aria-expanded', menuToggle.classList.contains('active'));
+                        });
+                        
+                        // Cerrar menú al hacer clic en un enlace
+                        const navLinks = mainNav.querySelectorAll('.nav-link');
+                        navLinks.forEach(link => {
+                            link.addEventListener('click', () => {
+                                if (window.innerWidth <= 1024) {
+                                    menuToggle.classList.remove('active');
+                                    mainNav.classList.remove('active');
+                                    menuToggle.setAttribute('aria-expanded', 'false');
+                                }
+                            });
+                        });
+                    }
+                    
+                    // Dropdowns móviles
+                    const dropdownItems = document.querySelectorAll('.nav-item.dropdown');
+                    dropdownItems.forEach(item => {
+                        const link = item.querySelector('.nav-link');
+                        if (link && window.innerWidth <= 1024) {
+                            link.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                item.classList.toggle('open');
+                            });
+                        }
+                    });
+                    
+                    // Header scroll effect
+                    const header = document.getElementById('header');
+                    if (header) {
+                        window.addEventListener('scroll', () => {
+                            if (window.scrollY > 20) {
+                                header.classList.add('scrolled');
+                            } else {
+                                header.classList.remove('scrolled');
+                            }
+                        });
+                    }
                     
                     // Scroll automático si hay hash en la URL
                     if (window.location.hash) {

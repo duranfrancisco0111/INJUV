@@ -4,7 +4,7 @@
 
 /* Reset mínimo */
 * { box-sizing: border-box; }
-body { font-family: 'Inter', system-ui, sans-serif; }
+body { font-family: var(--font-body); }
 
 /* ---------- Avatar y cropper ---------- */
 .avatar-default #avatarCard {
