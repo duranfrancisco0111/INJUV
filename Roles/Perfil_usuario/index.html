@@ -53,7 +53,6 @@
         <div>
           <h2 id="profileName" class="text-2xl font-semibold text-gray-900">María Alejandra González</h2>
           <div class="mt-1 text-sm text-gray-600 flex flex-wrap gap-x-6 gap-y-1">
-            <span>📍 <span id="profileLocation">Santiago, Región Metropolitana</span></span>
             <span id="profileHours">⏱ 157 horas de voluntariado</span>
             <span>🎂 <span id="profileAge">27</span> años</span>
           </div>
@@ -344,9 +343,22 @@
               <h3 class="text-xl font-semibold mb-4">Editar foto</h3>
               <div class="space-y-4">
                 <p class="text-gray-600">Cambia tu foto de perfil. La imagen será recortada de forma circular.</p>
-                <button id="openPhotoPicker" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  Elegir foto
-                </button>
+                
+                <!-- Zona de arrastre -->
+                <div id="photoDropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 cursor-pointer">
+                  <div class="flex flex-col items-center gap-3">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <div>
+                      <p class="text-sm text-gray-600">
+                        <span class="font-semibold text-blue-600">Haz clic para seleccionar</span> o arrastra una imagen aquí
+                      </p>
+                      <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF hasta 10MB</p>
+                    </div>
+                  </div>
+                </div>
+                
                 <input id="avatarInput" type="file" accept="image/*" class="hidden">
               </div>
             </div>
@@ -428,17 +440,6 @@
                   <div class="space-y-3">
                     <div class="flex items-center justify-between">
                       <div>
-                        <p class="text-sm font-medium text-gray-700">Ubicación</p>
-                        <p class="text-xs text-gray-500">Mostrar o ocultar tu ubicación (incluyendo el ícono)</p>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="privacy-location" class="sr-only peer" checked>
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                      <div>
                         <p class="text-sm font-medium text-gray-700">Horas de voluntariado</p>
                         <p class="text-xs text-gray-500">Mostrar o ocultar las horas de voluntariado (incluyendo el ícono)</p>
                       </div>
@@ -483,6 +484,17 @@
                       </div>
                       <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="privacy-phone" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="text-sm font-medium text-gray-700">Ubicación</p>
+                        <p class="text-xs text-gray-500">Mostrar o ocultar tu ubicación (incluyendo el ícono)</p>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="privacy-location" class="sr-only peer" checked>
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                       </label>
                     </div>
