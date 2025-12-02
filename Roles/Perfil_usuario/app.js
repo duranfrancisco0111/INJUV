@@ -360,15 +360,125 @@ const hide = (el) => el?.classList.add('hidden');
 })();
 
 // ==========================================================
-// ================== Reseñas: Estrellas ====================
+// ================== Reseñas: Paginación ==================
 // ==========================================================
 (() => {
+  const reviews = [
+    {
+      organization: "Fundación Educación para Todos",
+      volunteerTitle: "Apoyo Educacional",
+      rating: 5,
+      comment: "Excelente voluntaria, muy comprometida y dedicada. Los niños la adoran.",
+      date: "2024-08-20"
+    },
+    {
+      organization: "Hogar San José",
+      volunteerTitle: "Cuidado de Adultos Mayores",
+      rating: 4,
+      comment: "Muy responsable y cariñosa con los residentes. Siempre puntual.",
+      date: "2023-12-28"
+    },
+    {
+      organization: "Cruz Roja Chilena",
+      volunteerTitle: "Respuesta Solidaria en Emergencias",
+      rating: 5,
+      comment: "Voluntaria excepcional, muy profesional y con gran capacidad de trabajo en equipo.",
+      date: "2024-09-15"
+    },
+    {
+      organization: "Techo Chile",
+      volunteerTitle: "Construcción de Viviendas de Emergencia",
+      rating: 5,
+      comment: "Excelente trabajo y dedicación. Muy comprometida con la causa.",
+      date: "2024-07-10"
+    },
+    {
+      organization: "Fundación Digital",
+      volunteerTitle: "Programa de Alfabetización Digital",
+      rating: 4,
+      comment: "Muy paciente y didáctica. Los beneficiarios aprendieron mucho gracias a su apoyo.",
+      date: "2024-06-22"
+    },
+    {
+      organization: "Banco de Alimentos",
+      volunteerTitle: "Apoyo en Comedores Comunitarios",
+      rating: 5,
+      comment: "Voluntaria muy organizada y eficiente. Gran aporte a la organización.",
+      date: "2024-05-18"
+    }
+  ];
+
+  const itemsPerPage = 2;
+  let currentPage = 1;
+  const totalPages = Math.ceil(reviews.length / itemsPerPage);
+
+  const container = document.getElementById('reviewsContainer');
+  const prevBtn = document.getElementById('prevReviewsBtn');
+  const nextBtn = document.getElementById('nextReviewsBtn');
+  const currentPageSpan = document.getElementById('currentReviewsPage');
+  const totalPagesSpan = document.getElementById('totalReviewsPages');
+
   const STAR_FILLED = `<svg viewBox="0 0 20 20" class="h-5 w-5 text-yellow-400 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>`;
   const STAR_EMPTY  = `<svg viewBox="0 0 20 20" class="h-5 w-5 text-gray-300 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>`;
-  document.querySelectorAll('[data-rating]').forEach(node => {
-    const rating = Math.max(0, Math.min(5, parseInt(node.getAttribute('data-rating'), 10) || 0));
-    node.innerHTML = STAR_FILLED.repeat(rating) + STAR_EMPTY.repeat(5 - rating);
+
+  function renderStars(rating) {
+    return STAR_FILLED.repeat(rating) + STAR_EMPTY.repeat(5 - rating);
+  }
+
+  function renderReviews() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageReviews = reviews.slice(startIndex, endIndex);
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    pageReviews.forEach(review => {
+      const article = document.createElement('article');
+      article.className = 'border border-gray-200 rounded-lg px-4 py-3 mb-4';
+      
+      article.innerHTML = `
+        <div class="flex items-start justify-between">
+          <div>
+            <a href="#" class="font-semibold text-gray-900 hover:underline">${review.organization}</a>
+            <p class="text-sm text-gray-600">${review.volunteerTitle}</p>
+          </div>
+          <div class="flex items-center gap-1">
+            ${renderStars(review.rating)}
+          </div>
+        </div>
+        <p class="mt-3 italic text-gray-800">"${review.comment}"</p>
+        <p class="mt-3 text-xs text-gray-500">${review.date}</p>
+      `;
+
+      container.appendChild(article);
+    });
+
+    // Actualizar información de página
+    if (currentPageSpan) currentPageSpan.textContent = currentPage;
+    if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
+
+    // Actualizar estado de botones
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+  }
+
+  prevBtn?.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderReviews();
+    }
   });
+
+  nextBtn?.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderReviews();
+    }
+  });
+
+  // Renderizar inicialmente
+  renderReviews();
 })();
 
 // ==========================================================

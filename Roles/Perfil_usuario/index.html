@@ -123,29 +123,20 @@
             <h3 class="text-xl font-semibold">Reseñas y Referencias</h3>
           </div>
 
-          <article class="border rounded-lg px-4 py-3 mb-4">
-            <div class="flex items-start justify-between">
-              <div>
-                <a href="#" class="font-semibold text-gray-900 hover:underline">Fundación Educación para Todos</a>
-                <p class="text-sm text-gray-600">Apoyo Educacional</p>
-              </div>
-              <div class="flex items-center gap-1" data-rating="5"></div>
-            </div>
-            <p class="mt-3 italic text-gray-800">“Excelente voluntaria, muy comprometida y dedicada. Los niños la adoran.”</p>
-            <p class="mt-3 text-xs text-gray-500">2024-08-20</p>
-          </article>
+          <div id="reviewsContainer">
+            <!-- Las reseñas se cargarán dinámicamente aquí -->
+          </div>
 
-          <article class="border rounded-lg px-4 py-3">
-            <div class="flex items-start justify-between">
-              <div>
-                <a href="#" class="font-semibold text-gray-900 hover:underline">Hogar San José</a>
-                <p class="text-sm text-gray-600">Cuidado de Adultos Mayores</p>
-              </div>
-              <div class="flex items-center gap-1" data-rating="4"></div>
-            </div>
-            <p class="mt-3 italic text-gray-800">“Muy responsable y cariñosa con los residentes. Siempre puntual.”</p>
-            <p class="mt-3 text-xs text-gray-500">2023-12-28</p>
-          </article>
+          <!-- Botones de paginación -->
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <button id="prevReviewsBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+              ← Anterior
+            </button>
+            <span id="reviewsPageInfo" class="text-sm text-gray-600">Página <span id="currentReviewsPage">1</span> de <span id="totalReviewsPages">1</span></span>
+            <button id="nextReviewsBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+              Siguiente →
+            </button>
+          </div>
         </section>
       </section>
 

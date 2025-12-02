@@ -864,3 +864,130 @@ const hide = (el) => el?.classList.add('hidden');
   loadProfileData();
 })();
 
+// ==========================================================
+// ========== Paginación de Reseñas ========================
+// ==========================================================
+(() => {
+  const reviews = [
+    {
+      userName: "María González",
+      volunteerTitle: "Tutor de Matemáticas",
+      rating: 5,
+      comment: "Excelente organización, muy profesional y comprometida con la educación. Los voluntarios son muy bien recibidos y el ambiente es muy positivo.",
+      date: "2024-11-15"
+    },
+    {
+      userName: "Carlos Rodríguez",
+      volunteerTitle: "Coordinador de Talleres Recreativos",
+      rating: 5,
+      comment: "Una experiencia increíble. La organización valora mucho el trabajo de los voluntarios y siempre está dispuesta a ayudar.",
+      date: "2024-10-28"
+    },
+    {
+      userName: "Ana Martínez",
+      volunteerTitle: "Mentor de Orientación Vocacional",
+      rating: 4,
+      comment: "Buen ambiente de trabajo y proyectos muy significativos. Recomiendo totalmente esta organización.",
+      date: "2024-09-12"
+    },
+    {
+      userName: "Luis Fernández",
+      volunteerTitle: "Apoyo en Biblioteca Comunitaria",
+      rating: 5,
+      comment: "Organización muy seria y comprometida. Los beneficiarios están muy agradecidos con el trabajo realizado.",
+      date: "2024-08-20"
+    },
+    {
+      userName: "Sofía Pérez",
+      volunteerTitle: "Voluntario en Refugio de Animales",
+      rating: 4,
+      comment: "Excelente experiencia. El equipo es muy profesional y el impacto en la comunidad es evidente.",
+      date: "2024-07-05"
+    },
+    {
+      userName: "Diego Torres",
+      volunteerTitle: "Asistente en Talleres de Cocina",
+      rating: 5,
+      comment: "Una de las mejores experiencias de voluntariado que he tenido. La organización realmente hace la diferencia.",
+      date: "2024-06-18"
+    }
+  ];
+
+  const itemsPerPage = 2;
+  let currentPage = 1;
+  const totalPages = Math.ceil(reviews.length / itemsPerPage);
+
+  const container = document.getElementById('reviewsContainer');
+  const prevBtn = document.getElementById('prevReviewsBtn');
+  const nextBtn = document.getElementById('nextReviewsBtn');
+  const currentPageSpan = document.getElementById('currentReviewsPage');
+  const totalPagesSpan = document.getElementById('totalReviewsPages');
+
+  function renderStars(rating) {
+    let starsHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        starsHTML += '<span class="text-yellow-400">★</span>';
+      } else {
+        starsHTML += '<span class="text-gray-300">★</span>';
+      }
+    }
+    return starsHTML;
+  }
+
+  function renderReviews() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageReviews = reviews.slice(startIndex, endIndex);
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    pageReviews.forEach(review => {
+      const article = document.createElement('article');
+      article.className = 'border border-gray-200 rounded-lg px-4 py-3 mb-4';
+      
+      article.innerHTML = `
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="font-semibold text-gray-900">${review.userName}</p>
+            <p class="text-sm text-gray-600">${review.volunteerTitle}</p>
+          </div>
+          <div class="flex items-center gap-1">
+            ${renderStars(review.rating)}
+          </div>
+        </div>
+        <p class="mt-3 italic text-gray-800">"${review.comment}"</p>
+        <p class="mt-3 text-xs text-gray-500">${review.date}</p>
+      `;
+
+      container.appendChild(article);
+    });
+
+    // Actualizar información de página
+    if (currentPageSpan) currentPageSpan.textContent = currentPage;
+    if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
+
+    // Actualizar estado de botones
+    if (prevBtn) prevBtn.disabled = currentPage === 1;
+    if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+  }
+
+  prevBtn?.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderReviews();
+    }
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderReviews();
+    }
+  });
+
+  // Renderizar inicialmente
+  renderReviews();
+})();
+
