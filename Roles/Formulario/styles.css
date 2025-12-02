@@ -100,6 +100,11 @@ body{
   align-items: center;
   justify-content: center;
   width: 100%;
+  color: white;
+}
+
+.hero-inner * {
+  color: inherit;
 }
 
 .hero-icon{ 
@@ -127,6 +132,7 @@ body{
   text-align: center;
   width: 100%;
   max-width: 900px;
+  color: white !important;
 }
 
 .hero p{ 
@@ -134,7 +140,7 @@ body{
   font-size: 20px;
   opacity: 0.95;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.95);
+  color: white !important;
   max-width: 700px;
   text-align: center;
   width: 100%;
@@ -285,6 +291,7 @@ body{
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    color: white !important;
   }
   
   .hero p {
@@ -293,6 +300,7 @@ body{
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    color: white !important;
   }
 }
 
@@ -320,6 +328,7 @@ body{
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    color: white !important;
   }
   
   .hero p {
@@ -327,6 +336,7 @@ body{
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    color: white !important;
   }
 }
 }
