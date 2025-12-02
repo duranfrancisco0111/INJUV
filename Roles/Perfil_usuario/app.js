@@ -40,9 +40,16 @@ const hide = (el) => el?.classList.add('hidden');
   let posStart  = { x: 0, y: 0 };
 
   // Abrir cropper al elegir archivo
-  avatarInput?.addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
+  // Función reutilizable para procesar un archivo de imagen
+  function processImageFile(file) {
     if (!file) return;
+    
+    // Validar que sea una imagen
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecciona un archivo de imagen válido.');
+      return;
+    }
+    
     const reader = new FileReader();
     reader.onload = () => {
       cropImg.onload = () => {
@@ -66,6 +73,11 @@ const hide = (el) => el?.classList.add('hidden');
       cropImg.src = reader.result;
     };
     reader.readAsDataURL(file);
+  }
+
+  avatarInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    processImageFile(file);
   });
 
   // Recalcular on resize si está abierto
@@ -194,6 +206,46 @@ const hide = (el) => el?.classList.add('hidden');
       cropper.dataset.wasEditModalOpen = 'false';
     }
   });
+
+  // Funcionalidad de arrastrar y soltar para la foto
+  const photoDropZone = $('#photoDropZone');
+  
+  if (photoDropZone) {
+    // Hacer clic en la zona también abre el selector de archivos
+    photoDropZone.addEventListener('click', () => {
+      if (avatarInput) {
+        avatarInput.click();
+      }
+    });
+
+    // Prevenir el comportamiento por defecto del navegador
+    photoDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      photoDropZone.classList.add('border-blue-500', 'bg-blue-100');
+      photoDropZone.classList.remove('border-gray-300', 'hover:border-blue-400', 'hover:bg-blue-50');
+    });
+
+    photoDropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      photoDropZone.classList.remove('border-blue-500', 'bg-blue-100');
+      photoDropZone.classList.add('border-gray-300', 'hover:border-blue-400', 'hover:bg-blue-50');
+    });
+
+    photoDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      photoDropZone.classList.remove('border-blue-500', 'bg-blue-100');
+      photoDropZone.classList.add('border-gray-300', 'hover:border-blue-400', 'hover:bg-blue-50');
+      
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        processImageFile(file);
+      }
+    });
+  }
 })();
 
 // ==========================================================
@@ -400,13 +452,11 @@ const hide = (el) => el?.classList.add('hidden');
   const closeEditProfileModal = $('#closeEditProfileModal');
   const cancelEditProfile = $('#cancelEditProfile');
   const saveEditProfile = $('#saveEditProfile');
-  const openPhotoPicker = $('#openPhotoPicker');
   const avatarInput = $('#avatarInput');
   
   // Elementos del perfil
   const profileBanner = $('#profileBanner');
   const profileName = $('#profileName');
-  const profileLocation = $('#profileLocation');
   const profileAge = $('#profileAge');
   
   // Formularios y elementos de edición
@@ -423,7 +473,6 @@ const hide = (el) => el?.classList.add('hidden');
   function loadProfileData() {
     const savedBannerColor = localStorage.getItem('injuv_banner_color') || '#1e40af';
     const savedName = localStorage.getItem('injuv_profile_name');
-    const savedLocation = localStorage.getItem('injuv_profile_location');
     const savedAge = localStorage.getItem('injuv_profile_age');
 
     if (savedBannerColor && profileBanner) {
@@ -435,7 +484,6 @@ const hide = (el) => el?.classList.add('hidden');
     }
     
     if (savedName && profileName) profileName.textContent = savedName;
-    if (savedLocation && profileLocation) profileLocation.textContent = savedLocation;
     if (savedAge && profileAge) profileAge.textContent = savedAge;
   }
 
@@ -830,13 +878,6 @@ const hide = (el) => el?.classList.add('hidden');
     });
   }
 
-  // Abrir selector de foto
-  openPhotoPicker?.addEventListener('click', () => {
-    if (avatarInput) {
-      avatarInput.click();
-    }
-  });
-
   // Actualizar vista previa del color del banner
   bannerColorPicker?.addEventListener('input', (e) => {
     const color = e.target.value;
@@ -964,14 +1005,14 @@ const hide = (el) => el?.classList.add('hidden');
     
     switch(key) {
       case 'location':
-        const locationEl = $('#profileLocation');
-        if (locationEl) {
-          // Ocultar el span completo que contiene el ícono 📍 y el texto
-          // Estructura: <span>📍 <span id="profileLocation">...</span></span>
-          // El parentElement es el span externo que contiene el ícono
-          const locationParent = locationEl.parentElement;
-          if (locationParent) {
-            locationParent.style.display = displayValue;
+        // Ocultar la ubicación en la sección "Información de Contacto"
+        const contactLocationEl = $('#contactLocation');
+        if (contactLocationEl) {
+          // Ocultar el <p> completo que contiene el ícono 📍 y el texto
+          // Estructura: <p>📍 <span id="contactLocation">...</span></p>
+          const contactLocationP = contactLocationEl.closest('p');
+          if (contactLocationP) {
+            contactLocationP.style.display = displayValue;
           }
         }
         break;

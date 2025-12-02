@@ -1,184 +1,378 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Plataforma de Voluntariados INJUV</title>
-  <link rel="stylesheet" href="../../typography.css">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- CSS propio -->
+  <link rel="stylesheet" href="../../typography.css" />
+  <link rel="stylesheet" href="custom.css" />
+  <link rel="stylesheet" href="../../styles.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="../../styles.css">
   <style>
     body {
       padding-top: 80px;
     }
   </style>
 </head>
-<body>
+<body class="min-h-screen bg-gray-50 text-gray-900">
 
-  <!-- ======= HEADER ======= -->
+  <!-- HEADER -->
   <div id="header-container"></div>
-  <!-- ======= /HEADER ======= -->
 
-  <!-- ======= MAIN ======= -->
-  <main class="main-content">
-    <div class="container">
+  <!-- PERFIL (banner + avatar + nombre) -->
+  <section class="max-w-7xl mx-auto mt-6 rounded-2xl overflow-hidden shadow-sm">
+    <!-- Banner azul -->
+    <div id="profileBanner" class="relative bg-blue-700 h-40" style="background-color: #262c5f;">
+      <!-- Input de color de banner (oculto) -->
+      <input id="bannerColorInput" type="color" class="hidden" value="#262c5f">
+    </div>
 
-      <!-- ======= PERFIL (Solo HTML y CSS) ======= -->
-      <div id="profile" class="profile-content">
-        <div class="organization-profile">
-          <!-- Profile Header -->
-          <div class="profile-header">
-            <div class="profile-info">
-              <div class="profile-avatar-container">
-                <div class="profile-avatar">📄</div>
-                <div class="green-dot"></div>
+    <!-- Franja blanca con nombre -->
+    <div class="relative bg-white">
+      <!-- Botón editar perfil -->
+      <button id="editProfileBtn"
+        class="absolute right-4 top-3 inline-flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 cursor-pointer text-sm shadow">
+        ✎ Editar perfil
+      </button>
+
+      <!-- Avatar superpuesto -->
+      <div id="avatarContainer" class="absolute -top-12 left-8 h-28 w-28 rounded-full ring-4 ring-white overflow-hidden bg-white avatar-default">
+        <img id="avatarCard"
+          src="avatar-default-org.png"
+          alt="Logo de la organización"
+          class="w-full h-full object-cover object-center">
+      </div>
+
+      <!-- Nombre y meta -->
+      <div class="pl-40 pr-4 py-4 flex items-center justify-between">
+        <div>
+          <h2 id="profileName" class="text-2xl font-semibold text-gray-900">Fundación Educación para Todos</h2>
+          <p id="organizationType" class="text-sm text-gray-600 mt-1">Organización certificada sin fines de lucro</p>
+          <div class="mt-1 text-sm text-gray-600 flex flex-wrap gap-x-6 gap-y-1">
+            <span id="profileHours">⏱ 157 horas de voluntariado</span>
+            <span>📅 Activa desde <span id="activeSince">2015</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <section class="lg:col-span-2 space-y-6">
+
+        <!-- ACERCA DE LA ORGANIZACIÓN -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 section-card">
+          <h3 class="text-xl font-semibold mb-3">Acerca de la Organización</h3>
+
+          <p id="aboutText" class="text-gray-700 leading-relaxed">
+            Somos una fundación comprometida con el desarrollo educativo y social de niños, niñas y jóvenes en situación de vulnerabilidad. Trabajamos para reducir las brechas educativas y promover la igualdad de oportunidades en todo Chile.
+          </p>
+        </div>
+
+        <!-- VOLUNTARIADOS DISPONIBLES -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold">Voluntariados Disponibles</h3>
+            <button id="createVolunteerBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm">
+              <span>+</span> Crear voluntariado
+            </button>
+          </div>
+
+          <div id="volunteerOpportunitiesContainer">
+            <!-- Los voluntariados se cargarán dinámicamente aquí -->
+          </div>
+
+          <!-- Botones de paginación -->
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <button id="prevPageBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+              ← Anterior
+            </button>
+            <span id="pageInfo" class="text-sm text-gray-600">Página <span id="currentPage">1</span> de <span id="totalPages">1</span></span>
+            <button id="nextPageBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+              Siguiente →
+            </button>
+          </div>
+        </div>
+
+        <!-- HISTORIAS DE VOLUNTARIADOS -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <h3 class="text-xl font-semibold mb-4">Historias de Voluntariados</h3>
+
+          <div id="volunteerStoriesContainer">
+            <!-- Las historias se cargarán dinámicamente aquí -->
+          </div>
+
+          <!-- Botones de paginación -->
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <button id="prevStoriesBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+              ← Anterior
+            </button>
+            <span id="storiesPageInfo" class="text-sm text-gray-600">Página <span id="currentStoriesPage">1</span> de <span id="totalStoriesPages">1</span></span>
+            <button id="nextStoriesBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+              Siguiente →
+            </button>
+          </div>
+        </div>
+
+        <!-- VOLUNTARIADOS CERRADOS -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <h3 class="text-xl font-semibold mb-4">Voluntariados Cerrados</h3>
+
+          <div id="closedOpportunitiesContainer">
+            <!-- Los voluntariados cerrados se cargarán dinámicamente aquí -->
+          </div>
+
+          <!-- Botones de paginación -->
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+            <button id="prevClosedBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+              ← Anterior
+            </button>
+            <span id="closedPageInfo" class="text-sm text-gray-600">Página <span id="currentClosedPage">1</span> de <span id="totalClosedPages">1</span></span>
+            <button id="nextClosedBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+              Siguiente →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMNA DERECHA -->
+      <aside class="space-y-6">
+        <!-- INFORMACIÓN DE CONTACTO -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 section-card">
+          <h3 class="text-xl font-semibold mb-4">Información de Contacto</h3>
+
+          <div id="contactView" class="space-y-2 text-gray-700">
+            <p>📧 <span id="contactEmail">contacto@educacionparatodos.cl</span></p>
+            <p>📞 <span id="contactPhone">+56 2 2345 6789</span></p>
+            <p>📍 <span id="contactLocation">Santiago, Región Metropolitana</span></p>
+          </div>
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <h3 class="text-xl font-semibold mb-4">Estadísticas de Voluntariado</h3>
+          <div class="grid grid-cols-1 gap-3">
+            <div class="rounded-lg bg-blue-50 p-4 text-center">
+              <div class="text-3xl font-bold text-blue-700">6</div>
+              <div class="text-xs text-blue-800 mt-1">Voluntariados Activos</div>
+            </div>
+            <div class="rounded-lg bg-green-50 p-4 text-center">
+              <div class="text-3xl font-bold text-green-700">850</div>
+              <div class="text-xs text-green-800 mt-1">Beneficiarios Alcanzados</div>
+            </div>
+            <div class="rounded-lg bg-yellow-50 p-4 text-center">
+              <div class="text-3xl font-bold text-yellow-700">157</div>
+              <div class="text-xs text-yellow-800 mt-1">Horas de Voluntariado</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CERTIFICACIONES -->
+        <div class="bg-white rounded-xl shadow-sm border p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">🏆</span>
+            <h3 class="text-xl font-semibold">Certificaciones</h3>
+          </div>
+
+          <div class="space-y-4">
+            <div class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+              <span class="text-2xl">📄</span>
+              <div>
+                <h4 class="font-semibold text-gray-900">Registro INJUV</h4>
+                <p class="text-sm text-gray-600">Organización Certificada</p>
               </div>
-              <div class="profile-details">
-                <h2>Fundación Educación para Todos</h2>
-                <p class="organization-type">Organización certificada sin fines de lucro</p>
-                <div class="profile-stats">
-                  <span class="stat">157 horas de voluntariado</span>
-                  <span class="stat">Activa desde 2015</span>
-                </div>
+            </div>
+
+            <div class="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+              <span class="text-2xl">🛡️</span>
+              <div>
+                <h4 class="font-semibold text-gray-900">Sello de Calidad</h4>
+                <p class="text-sm text-gray-600">Ministerio de Educación</p>
               </div>
             </div>
           </div>
+        </div>
+      </aside>
+    </main>
+  </div>
 
-          <div class="grid grid-2">
-            <!-- Columna Izquierda -->
-            <div class="left-column">
-              <!-- About -->
-              <div class="card">
-                <div class="section-header">
-                  <h3>🏢 Acerca de la Organización</h3>
+  <!-- MODAL EDITAR PERFIL -->
+  <div id="editProfileModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div class="w-full max-w-5xl h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
+      <!-- Header del Modal -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-900">Editar perfil</h2>
+        <button id="closeEditProfileModal" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Izquierdo - Menú de opciones -->
+        <div class="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+          <div class="p-4">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase mb-2 px-3">Información</h3>
+            <nav class="space-y-1">
+              <button data-section="photo" class="edit-profile-menu-item active w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>📷</span> Editar logo
+              </button>
+              <button data-section="banner" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>🎨</span> Color del banner
+              </button>
+              <button data-section="organization" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>🏢</span> Información de la organización
+              </button>
+              <button data-section="contact" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>📧</span> Información de contacto
+              </button>
+              <button data-section="about" class="edit-profile-menu-item w-full text-left px-3 py-2 rounded-lg hover:bg-gray-200 text-gray-700 flex items-center gap-2 transition">
+                <span>📝</span> Acerca de la organización
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Panel Derecho - Contenido de edición -->
+        <div class="flex-1 overflow-y-auto bg-white">
+          <div class="p-6">
+            <!-- Sección: Editar Logo -->
+            <div id="section-photo" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Editar logo</h3>
+              <div class="space-y-4">
+                <p class="text-gray-600">Cambia el logo de tu organización. La imagen será recortada de forma circular.</p>
+                
+                <!-- Zona de arrastre -->
+                <div id="photoDropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50 cursor-pointer">
+                  <div class="flex flex-col items-center gap-3">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <div>
+                      <p class="text-sm text-gray-600">
+                        <span class="font-semibold text-blue-600">Haz clic para seleccionar</span> o arrastra una imagen aquí
+                      </p>
+                      <p class="text-xs text-gray-500 mt-1">PNG, JPG, GIF hasta 10MB</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="section-content">
-                  <p>Somos una fundación comprometida con el desarrollo educativo y social de niños, niñas y jóvenes en situación de vulnerabilidad. Trabajamos para reducir las brechas educativas y promover la igualdad de oportunidades en todo Chile.</p>
-                </div>
+                
+                <input id="avatarInput" type="file" accept="image/*" class="hidden">
               </div>
+            </div>
 
-              <!-- Historias -->
-              <div class="card">
-                <div class="section-header">
-                  <h3>📖 Historias de Voluntariados</h3>
-                </div>
-                <div class="experience-list">
-                  <div class="experience-item">
-                    <div class="experience-header"><h4>Transformando Vidas a través de la Educación</h4></div>
-                    <p class="experience-organization">Fundación Educación para Todos</p>
-                    <p class="experience-period">Enero 2024 - Presente</p>
-                    <p class="experience-description">Nuestro programa de tutorías ha impactado positivamente a más de 200 estudiantes de educación básica, mejorando sus calificaciones en un 85%.</p>
-                    <div class="experience-tags"><span class="tag">Educación</span><span class="tag">Impacto Social</span><span class="tag">Presencial</span></div>
-                  </div>
-
-                  <div class="experience-item">
-                    <div class="experience-header"><h4>Compañía y Dignidad para Adultos Mayores</h4></div>
-                    <p class="experience-organization">Hogar San José</p>
-                    <p class="experience-period">Mar 2023 - Dic 2023</p>
-                    <p class="experience-description">Acompañamiento emocional y actividades recreativas a 150 residentes, mejorando su bienestar.</p>
-                    <div class="experience-tags"><span class="tag">Adulto Mayor</span><span class="tag">Bienestar</span><span class="tag">Presencial</span></div>
-                  </div>
-
-                  <div class="experience-item">
-                    <div class="experience-header"><h4>Respuesta Solidaria en Emergencias</h4></div>
-                    <p class="experience-organization">Cruz Roja Chilena</p>
-                    <p class="experience-period">Ene 2023 - Mar 2023</p>
-                    <p class="experience-description">Distribución de ayuda humanitaria a más de 500 familias afectadas por incendios forestales.</p>
-                    <div class="experience-tags"><span class="tag">Emergencias</span><span class="tag">Ayuda Humanitaria</span><span class="tag">Presencial</span></div>
+            <!-- Sección: Color del Banner -->
+            <div id="section-banner" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Color del banner</h3>
+              <div class="space-y-4">
+                <p class="text-gray-600">Personaliza el color del banner de tu perfil.</p>
+                <div>
+                  <label class="block text-sm font-medium mb-2">Selecciona un color</label>
+                  <div class="flex items-center gap-4">
+                    <input type="color" id="bannerColorPicker" value="#262c5f" class="w-20 h-12 rounded cursor-pointer border border-gray-300">
+                    <input type="text" id="bannerColorHex" value="#262c5f" class="flex-1 border rounded-lg p-2 font-mono" placeholder="#262c5f">
                   </div>
                 </div>
-              </div>
-
-              <!-- Disponibles (resumen en perfil) -->
-              <div class="card">
-                <div class="section-header"><h3>🎯 Nuestros Voluntariados Disponibles</h3></div>
-                <div class="opportunities-list">
-                  <div class="opportunity-item">
-                    <div class="opportunity-header"><h4>Tutor de Matemáticas</h4><span class="status-badge available">DISPONIBLE</span></div>
-                    <p class="opportunity-location">📍 Santiago Centro</p>
-                    <p class="opportunity-description">Apoyo en reforzamiento de matemáticas y física.</p>
-                    <div class="opportunity-tags"><span class="tag">Educación</span><span class="tag">Presencial</span></div>
-                  </div>
-
-                  <div class="opportunity-item">
-                    <div class="opportunity-header"><h4>Coordinador de Talleres Recreativos</h4><span class="status-badge available">DISPONIBLE</span></div>
-                    <p class="opportunity-location">📍 La Florida</p>
-                    <p class="opportunity-description">Actividades deportivas y recreativas fines de semana.</p>
-                    <div class="opportunity-tags"><span class="tag">Recreación</span><span class="tag">Presencial</span></div>
-                  </div>
-
-                  <div class="opportunity-item">
-                    <div class="opportunity-header"><h4>Mentor de Orientación Vocacional</h4><span class="status-badge available">DISPONIBLE</span></div>
-                    <p class="opportunity-location">📍 Modalidad Virtual</p>
-                    <p class="opportunity-description">Acompañamiento a estudiantes de 4° medio.</p>
-                    <div class="opportunity-tags"><span class="tag">Orientación</span><span class="tag">Virtual</span></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Vencidos (resumen en perfil) -->
-              <div class="card">
-                <div class="section-header"><h3>📋 Voluntariados Cerrados</h3></div>
-                <div class="opportunities-list">
-                  <div class="opportunity-item expired">
-                    <div class="opportunity-header"><h4>Apoyo en Campaña de Útiles Escolares</h4><span class="status-badge expired">CERRADO</span></div>
-                    <p class="opportunity-location">📍 Maipú</p>
-                    <div class="opportunity-tags"><span class="tag">Campaña Social</span><span class="tag">Presencial</span></div>
-                  </div>
-                  <!-- ... agrega más si quieres ... -->
+                <div class="p-4 rounded-lg border bg-gray-50">
+                  <p class="text-sm text-gray-600 mb-2">Vista previa:</p>
+                  <div id="bannerPreview" class="h-20 rounded-lg" style="background-color: #262c5f;"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Columna Derecha -->
-            <div class="right-column">
-              <div class="card">
-                <div class="section-header"><h3>✉️ Información de Contacto</h3></div>
-                <div class="contact-info">
-                  <div class="contact-item"><strong>Correo Electrónico</strong><p>contacto@educacionparatodos.cl</p></div>
-                  <div class="contact-item"><strong>Teléfono</strong><p>+56 2 2345 6789</p></div>
-                  <div class="contact-item"><strong>Ubicación</strong><p>Santiago, Región Metropolitana</p></div>
+            <!-- Sección: Información de la Organización -->
+            <div id="section-organization" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Información de la organización</h3>
+              <form id="organizationInfoForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Nombre de la organización</label>
+                  <input type="text" id="organizationNameInput" class="w-full border rounded-lg p-2" placeholder="Nombre de la organización">
                 </div>
-              </div>
-
-              <div class="card">
-                <div class="section-header"><h3>📊 Estadísticas de Voluntariado</h3></div>
-                <div class="statistics">
-                  <div class="stat-main"><span class="stat-number">157</span><span class="stat-label">Horas Totales</span></div>
-                  <div class="stat-breakdown">
-                    <div class="stat-item"><span class="stat-value">12</span><span class="stat-text">Proyectos Activos</span></div>
-                    <div class="stat-item"><span class="stat-value">8</span><span class="stat-text">Certificados</span></div>
-                    <div class="stat-item"><span class="stat-value">15</span><span class="stat-text">Experiencias</span></div>
-                  </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Tipo de organización</label>
+                  <input type="text" id="organizationTypeInput" class="w-full border rounded-lg p-2" placeholder="Ej: Organización certificada sin fines de lucro">
                 </div>
-              </div>
-
-              <div class="card">
-                <div class="section-header"><h3>🏆 Certificaciones</h3></div>
-                <div class="certifications">
-                  <div class="certification-item"><span class="cert-icon">📄</span><div class="cert-details"><h4>Registro INJUV</h4><p>Organización Certificada</p></div></div>
-                  <div class="certification-item"><span class="cert-icon">🛡️</span><div class="cert-details"><h4>Sello de Calidad</h4><p>Ministerio de Educación</p></div></div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Año de inicio</label>
+                  <input type="number" id="activeSinceInput" class="w-full border rounded-lg p-2" placeholder="Ej: 2015" min="1900" max="2099">
                 </div>
-              </div>
+              </form>
             </div>
-          </div> <!-- /grid -->
+
+            <!-- Sección: Información de Contacto -->
+            <div id="section-contact" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Información de contacto</h3>
+              <form id="contactInfoForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Correo electrónico</label>
+                  <input type="email" id="contactEmailInput" class="w-full border rounded-lg p-2" placeholder="Correo electrónico">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Teléfono</label>
+                  <input type="text" id="contactPhoneInput" class="w-full border rounded-lg p-2" placeholder="Teléfono">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Ubicación</label>
+                  <input type="text" id="contactLocationInput" class="w-full border rounded-lg p-2" placeholder="Ciudad, Región">
+                </div>
+              </form>
+            </div>
+
+            <!-- Sección: Acerca de la Organización -->
+            <div id="section-about" class="edit-profile-section hidden">
+              <h3 class="text-xl font-semibold mb-4">Acerca de la organización</h3>
+              <form id="aboutInfoForm" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Descripción</label>
+                  <textarea id="aboutInput" rows="6" class="w-full border rounded-lg p-2" placeholder="Escribe una descripción sobre tu organización..."></textarea>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 
+      <!-- Footer con botones -->
+      <div id="editProfileFooter" class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-3">
+        <button type="button" id="cancelEditProfile" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Cancelar</button>
+        <button type="button" id="saveEditProfile" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>
+      </div>
     </div>
-  </main>
-  <!-- ======= /MAIN ======= -->
+  </div>
 
-  <script>
-    // Header: sombra al hacer scroll
-    const header = document.getElementById('header');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 20) header.classList.add('scrolled');
-      else header.classList.remove('scrolled');
-    });
-  </script>
+  <!-- CROPPER PARA RECORTAR LOGO -->
+  <div id="cropper" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-xl">
+      <h3 class="text-lg font-semibold">Ajustar logo de la organización</h3>
 
+      <!-- Marco circular -->
+      <div id="cropFrame"
+        class="relative mx-auto my-4 h-64 w-64 rounded-full overflow-hidden ring-4 ring-white shadow-lg bg-gray-100">
+        <img id="cropImg" alt="Previsualización" class="absolute select-none cursor-move" draggable="false" />
+      </div>
+
+      <!-- Controles -->
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-600">Zoom</span>
+        <input id="cropZoom" type="range" min="0.5" max="3" step="0.01" value="1" class="w-full">
+        <button id="cropReset" class="px-3 py-1 rounded border text-sm">Reiniciar</button>
+        <div class="flex-1"></div>
+        <button id="cropCancel" class="px-3 py-2 rounded border">Cancelar</button>
+        <button id="cropSave" class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Guardar</button>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-2">Arrastra la imagen para centrarla y usa el control de zoom.</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script>
     // Cargar header y configurar enlaces
     fetch('../../header.html')
@@ -208,5 +402,6 @@
         .catch(error => console.error('Error:', error));
   </script>
   <script src="../../script.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
