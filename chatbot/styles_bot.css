@@ -105,6 +105,11 @@
     margin: 0;
     font-size: 1.1rem;
     font-weight: 600;
+    color: white;
+}
+
+.chatbot-info {
+    color: white;
 }
 
 .chatbot-status {
@@ -113,6 +118,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: white;
 }
 
 .chatbot-status::before {

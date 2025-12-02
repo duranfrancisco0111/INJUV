@@ -439,9 +439,12 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    align-items: flex-start;
+    justify-content: center;
 }
 
 .hero-title {
+    font-family: var(--font-heading);
     font-size: 4rem;
     font-weight: 700;
     line-height: 1.1;
@@ -450,6 +453,8 @@ body {
     color: white;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
     letter-spacing: -0.02em;
+    text-align: left;
+    width: 100%;
 }
 
 .hero-title .highlight {
@@ -483,7 +488,9 @@ body {
     animation: slideInUp 1s ease-out 0.2s both;
     color: rgba(255, 255, 255, 0.95);
     font-weight: 400;
-    max-width: 90%;
+    max-width: 100%;
+    text-align: left;
+    width: 100%;
 }
 
 .hero-search {
@@ -784,6 +791,7 @@ body {
 }
 
 .slide-overlay h3 {
+    font-family: var(--font-heading);
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 0.75rem;
@@ -901,6 +909,7 @@ body {
 }
 
 .section-header h2 {
+    font-family: var(--font-heading);
     font-size: 2rem;
     font-weight: 700;
     color: #333;
@@ -984,6 +993,7 @@ body {
 }
 
 .news-content h3 {
+    font-family: var(--font-heading);
     font-size: 1.3rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -1068,6 +1078,7 @@ body {
 }
 
 .feature-card h3 {
+    font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -1086,6 +1097,7 @@ body {
 }
 
 .section-title {
+    font-family: var(--font-heading);
     text-align: center;
     font-size: 2.5rem;
     font-weight: 700;
@@ -1129,6 +1141,7 @@ body {
 }
 
 .step h3 {
+    font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -1175,6 +1188,7 @@ body {
 }
 
 .country-card h3 {
+    font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -1260,6 +1274,7 @@ body {
 }
 
 .card-content h3 {
+    font-family: var(--font-heading);
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -1395,6 +1410,7 @@ body {
 }
 
 .author-info h4 {
+    font-family: var(--font-heading);
     font-weight: 600;
     color: #1f2937;
     margin-bottom: 0.25rem;
@@ -1469,6 +1485,7 @@ body {
 }
 
 .pricing-header h3 {
+    font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
@@ -1558,6 +1575,7 @@ body {
 }
 
 .cta-content h2 {
+    font-family: var(--font-heading);
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
@@ -1642,6 +1660,7 @@ body {
 }
 
 .footer-section h4 {
+    font-family: var(--font-heading);
     font-size: 1.15rem;
     font-weight: 600;
     margin-bottom: 1.25rem;
@@ -2242,6 +2261,7 @@ body {
 }
 
 .nav-card h3 {
+    font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 1rem;
