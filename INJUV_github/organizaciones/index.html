@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Organizaciones INJUV</title>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Typography -->
+  <link rel="stylesheet" href="../Kit_Gobierno/typography.css">
+  
+  <!-- Sistema de Grilla -->
+  <link rel="stylesheet" href="../Kit_Gobierno/grid-system.css">
+  
+  <!-- Sistema de Botones -->
+  <link rel="stylesheet" href="../Kit_Gobierno/buttons-system.css">
+  
+  <!-- Sistema de Cards -->
+  <link rel="stylesheet" href="../Kit_Gobierno/cards-system.css">
+  
+  <!-- Sistema de Expansion Panel -->
+  <link rel="stylesheet" href="../Kit_Gobierno/expansion-panel-system.css">
+  
+  <!-- Sistema de Stepper -->
+  <link rel="stylesheet" href="../Kit_Gobierno/stepper-system.css">
+  
+  <!-- Sistema de Tooltip -->
+  <link rel="stylesheet" href="../Kit_Gobierno/tooltip-system.css">
+  
+  <!-- Sistema de Controles de Formulario -->
+  <link rel="stylesheet" href="../Kit_Gobierno/form-controls-system.css">
+  
+  <!-- Sistema de OTP Input -->
+  <link rel="stylesheet" href="../Kit_Gobierno/otp-input-system.css">
+  
+  <!-- Sistema de Buscador -->
+  <link rel="stylesheet" href="../Kit_Gobierno/search-input-system.css">
+  
+  <!-- Sistema de Select -->
+  <link rel="stylesheet" href="../Kit_Gobierno/select-system.css">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../chatbot/styles_bot.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['var(--font-body)','ui-sans-serif','system-ui'] },
+          colors: { brand: { blue: '#2151ff' } },
+          boxShadow: { card: '0 10px 16px -8px rgba(15, 23, 42, .08)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { margin: 0; padding-top: 90px; }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .search-highlight {
+      background-color: #fef3c7;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans">
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <!-- Contenido -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 mt-6 mb-16" style="padding-top: 120px; padding-bottom: 80px;">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Sidebar búsqueda -->
+      <aside class="lg:col-span-4">
+        <div class="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-5 shadow-card">
+          <h2 class="text-lg font-semibold">Buscar organizaciones</h2>
+
+          <!-- Search -->
+          <div class="mt-4">
+            <label class="sr-only" for="q">Buscar</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="M21 21l-4.3-4.3" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <input id="searchInput" type="text" placeholder="Nombre o área de trabajo"
+                     class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-[15px] placeholder:text-slate-400">
+            </div>
+          </div>
+
+          <!-- Área de trabajo -->
+          <div class="mt-5">
+            <label for="areaFilter" class="block text-sm font-medium text-slate-700">Área de trabajo</label>
+            <select id="areaFilter"
+                    class="mt-2 w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-8 text-[15px] focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
+              <option value="">Todas</option>
+              <option value="Medio ambiente y conservación">Medio ambiente y conservación</option>
+              <option value="Educación y desarrollo">Educación y desarrollo</option>
+              <option value="Apoyo social y comunitario">Apoyo social y comunitario</option>
+              <option value="Sustentabilidad y ecología">Sustentabilidad y ecología</option>
+              <option value="Salud y bienestar">Salud y bienestar</option>
+            </select>
+          </div>
+
+          <!-- Región -->
+          <div class="mt-5">
+            <label for="regionFilter" class="block text-sm font-medium text-slate-700">Región</label>
+            <select id="regionFilter"
+                    class="mt-2 w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-3 pr-8 text-[15px] focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100">
+              <option value="">Todas</option>
+              <option value="Región Metropolitana">Región Metropolitana</option>
+              <option value="Valparaíso">Valparaíso</option>
+              <option value="Biobío">Biobío</option>
+              <option value="Araucanía">Araucanía</option>
+            </select>
+          </div>
+
+          <div class="mt-5 rounded-xl bg-blue-50 text-slate-700 p-3 leading-5">
+            Explora las organizaciones registradas en nuestra plataforma y descubre sus oportunidades de voluntariado.
+          </div>
+        </div>
+      </aside>
+
+      <!-- Listado -->
+      <section class="lg:col-span-8">
+        <div class="flex items-end justify-between">
+          <h2 class="text-2xl font-semibold">Organizaciones disponibles</h2>
+          <span id="resultCount" class="text-sm text-slate-500">5 resultados</span>
+        </div>
+
+        <!-- Grid de tarjetas -->
+        <div id="organizationCards" class="mt-4 grid sm:grid-cols-1 md:grid-cols-2 gap-6">
+
+          <!-- Card 1 -->
+          <article class="bg-white rounded-2xl ring-1 ring-slate-200 p-5 shadow-card card-hover fade-in" data-name="Fundación Verde" data-area="Medio ambiente y conservación" data-region="Región Metropolitana">
+            <div class="flex items-start gap-4">
+              <div class="text-4xl">🏢</div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold">Fundación Verde</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                  Medio ambiente y conservación
+                </p>
+                <div class="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                  <span class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[16px] w-[16px] text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"></path>
+                      <circle cx="12" cy="11" r="2.5"></circle>
+                    </svg>
+                    Región Metropolitana
+                  </span>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+                    <i class="fas fa-handshake"></i> 298 oportunidades
+                  </span>
+                </div>
+                <div class="mt-5 flex items-center gap-3">
+                  <button class="px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow hover:bg-blue-700 transition" onclick="verOportunidades('Fundación Verde')">Ver oportunidades</button>
+                  <button class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition" onclick="verDetalles('Fundación Verde')">Ver detalles</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 2 -->
+          <article class="bg-white rounded-2xl ring-1 ring-slate-200 p-5 shadow-card card-hover fade-in" data-name="ONG Educación para Todos" data-area="Educación y desarrollo" data-region="Valparaíso">
+            <div class="flex items-start gap-4">
+              <div class="text-4xl">🎓</div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold">ONG Educación para Todos</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                  Educación y desarrollo
+                </p>
+                <div class="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                  <span class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[16px] w-[16px] text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"></path>
+                      <circle cx="12" cy="11" r="2.5"></circle>
+                    </svg>
+                    Valparaíso
+                  </span>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <span class="text-xs font-medium text-green-600 bg-green-50 px-2.5 py-1 rounded-lg">
+                    <i class="fas fa-handshake"></i> 245 oportunidades
+                  </span>
+                </div>
+                <div class="mt-5 flex items-center gap-3">
+                  <button class="px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow hover:bg-blue-700 transition" onclick="verOportunidades('ONG Educación para Todos')">Ver oportunidades</button>
+                  <button class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition" onclick="verDetalles('ONG Educación para Todos')">Ver detalles</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 3 -->
+          <article class="bg-white rounded-2xl ring-1 ring-slate-200 p-5 shadow-card card-hover fade-in" data-name="Fundación Solidaridad" data-area="Apoyo social y comunitario" data-region="Biobío">
+            <div class="flex items-start gap-4">
+              <div class="text-4xl">❤️</div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold">Fundación Solidaridad</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                  Apoyo social y comunitario
+                </p>
+                <div class="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                  <span class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[16px] w-[16px] text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"></path>
+                      <circle cx="12" cy="11" r="2.5"></circle>
+                    </svg>
+                    Biobío
+                  </span>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <span class="text-xs font-medium text-red-600 bg-red-50 px-2.5 py-1 rounded-lg">
+                    <i class="fas fa-handshake"></i> 189 oportunidades
+                  </span>
+                </div>
+                <div class="mt-5 flex items-center gap-3">
+                  <button class="px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow hover:bg-blue-700 transition" onclick="verOportunidades('Fundación Solidaridad')">Ver oportunidades</button>
+                  <button class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition" onclick="verDetalles('Fundación Solidaridad')">Ver detalles</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 4 -->
+          <article class="bg-white rounded-2xl ring-1 ring-slate-200 p-5 shadow-card card-hover fade-in" data-name="Asociación Ecológica" data-area="Sustentabilidad y ecología" data-region="Araucanía">
+            <div class="flex items-start gap-4">
+              <div class="text-4xl">🌱</div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold">Asociación Ecológica</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                  Sustentabilidad y ecología
+                </p>
+                <div class="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                  <span class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[16px] w-[16px] text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"></path>
+                      <circle cx="12" cy="11" r="2.5"></circle>
+                    </svg>
+                    Araucanía
+                  </span>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                    <i class="fas fa-handshake"></i> 167 oportunidades
+                  </span>
+                </div>
+                <div class="mt-5 flex items-center gap-3">
+                  <button class="px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow hover:bg-blue-700 transition" onclick="verOportunidades('Asociación Ecológica')">Ver oportunidades</button>
+                  <button class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition" onclick="verDetalles('Asociación Ecológica')">Ver detalles</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 5 -->
+          <article class="bg-white rounded-2xl ring-1 ring-slate-200 p-5 shadow-card card-hover fade-in" data-name="Centro de Salud Comunitario" data-area="Salud y bienestar" data-region="Región Metropolitana">
+            <div class="flex items-start gap-4">
+              <div class="text-4xl">🏥</div>
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold">Centro de Salud Comunitario</h3>
+                <p class="text-slate-600 text-sm mt-1">
+                  Salud y bienestar
+                </p>
+                <div class="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                  <span class="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[16px] w-[16px] text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s7-4.5 7-11a7 7 0 10-14 0c0 6.5 7 11 7 11z"></path>
+                      <circle cx="12" cy="11" r="2.5"></circle>
+                    </svg>
+                    Región Metropolitana
+                  </span>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <span class="text-xs font-medium text-purple-600 bg-purple-50 px-2.5 py-1 rounded-lg">
+                    <i class="fas fa-handshake"></i> 156 oportunidades
+                  </span>
+                </div>
+                <div class="mt-5 flex items-center gap-3">
+                  <button class="px-4 py-2 rounded-xl bg-brand-blue text-white text-sm font-semibold shadow hover:bg-blue-700 transition" onclick="verOportunidades('Centro de Salud Comunitario')">Ver oportunidades</button>
+                  <button class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition" onclick="verDetalles('Centro de Salud Comunitario')">Ver detalles</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal para detalles -->
+  <div id="modalDetalles" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-4">
+          <h3 id="modalTitulo" class="text-2xl font-bold text-slate-900"></h3>
+          <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="modalContenido" class="text-slate-600"></div>
+        <div class="mt-6 flex gap-3">
+          <button onclick="verOportunidadesDesdeModal()" class="px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition">
+            Ver oportunidades
+          </button>
+          <button onclick="cerrarModal()" class="px-6 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Datos de las organizaciones
+    const organizaciones = {
+      'Fundación Verde': {
+        nombre: 'Fundación Verde',
+        area: 'Medio ambiente y conservación',
+        region: 'Región Metropolitana',
+        oportunidades: 298,
+        detalles: `
+          <h4 class="font-semibold text-lg mb-3">Sobre la organización</h4>
+          <p class="mb-4">Fundación Verde es una organización sin fines de lucro dedicada a la conservación del medio ambiente y la promoción de prácticas sostenibles. Trabajamos en proyectos de reforestación, educación ambiental y protección de ecosistemas.</p>
+          
+          <h4 class="font-semibold text-lg mb-3">Áreas de trabajo</h4>
+          <ul class="list-disc list-inside mb-4 space-y-1">
+            <li>Reforestación urbana y rural</li>
+            <li>Educación ambiental</li>
+            <li>Protección de ecosistemas</li>
+            <li>Reciclaje y gestión de residuos</li>
+            <li>Conservación de especies nativas</li>
+          </ul>
+          
+          <h4 class="font-semibold text-lg mb-3">Proyectos destacados</h4>
+          <ul class="list-disc list-inside mb-4 space-y-1">
+            <li>Programa de reforestación urbana en 15 comunas</li>
+            <li>Talleres de educación ambiental para colegios</li>
+            <li>Campañas de limpieza de espacios públicos</li>
+            <li>Conservación de humedales</li>
+          </ul>
+        `
+      },
+      'ONG Educación para Todos': {
+        nombre: 'ONG Educación para Todos',
+        area: 'Educación y desarrollo',
+        region: 'Valparaíso',
+        oportunidades: 245,
+        detalles: `
+          <h4 class="font-semibold text-lg mb-3">Sobre la organización</h4>
+          <p class="mb-4">ONG Educación para Todos trabaja para reducir las brechas educativas en comunidades vulnerables, brindando apoyo escolar, talleres de desarrollo personal y oportunidades de aprendizaje continuo.</p>
+          
+          <h4 class="font-semibold text-lg mb-3">Áreas de trabajo</h4>
+          <ul class="list-disc list-inside mb-4 space-y-1">
+            <li>Apoyo escolar y nivelación académica</li>
+            <li>Talleres de habilidades blandas</li>
+            <li>Alfabetización digital</li>
+            <li>Preparación para la educación superior</li>
+            <li>Programas de lectura y comprensión</li>
+          </ul>
+          
+          <h4 class="font-semibold text-lg mb-3">Impacto</h4>
+          <p>Hemos apoyado a más de 5,000 estudiantes en toda la región, mejorando sus rendimientos académicos y abriendo nuevas oportunidades educativas.</p>
+        `
+      },
+      'Fundación Solidaridad': {
+        nombre: 'Fundación Solidaridad',
+        area: 'Apoyo social y comunitario',
+        region: 'Biobío',
+        oportunidades: 189,
+        detalles: `
+          <h4 class="font-semibold text-lg mb-3">Sobre la organización</h4>
+          <p class="mb-4">Fundación Solidaridad se dedica a brindar apoyo integral a familias en situación de vulnerabilidad, promoviendo la inclusión social y el desarrollo comunitario.</p>
+          
+          <h4 class="font-semibold text-lg mb-3">Áreas de trabajo</h4>
+          <ul class="list-disc list-inside mb-4 space-y-1">
+            <li>Comedores comunitarios</li>
+            <li>Apoyo a adultos mayores</li>
+            <li>Programas de vivienda</li>
+            <li>Capacitación laboral</li>
+            <li>Apoyo psicológico y social</li>
+          </ul>
+        `
+      },
+      'Asociación Ecológica': {
+        nombre: 'Asociación Ecológica',
+        area: 'Sustentabilidad y ecología',
+        region: 'Araucanía',
+        oportunidades: 167,
+        detalles: `
+          <h4 class="font-semibold text-lg mb-3">Sobre la organización</h4>
+          <p class="mb-4">Asociación Ecológica promueve prácticas sustentables y la protección del medio ambiente a través de proyectos comunitarios y educación ambiental.</p>
+          
+          <h4 class="font-semibold text-lg mb-3">Áreas de trabajo</h4>
+          <ul class="list-disc list-inside mb-4 space-y-1">
+            <li>Agricultura orgánica y huertos comunitarios</li>
+            <li>Energías renovables</li>
+            <li>Conservación de recursos naturales</li>
+            <li>Economía circular</li>
+          </ul>
+        `
+      },
+      'Centro de Salud Comunitario': {
+        nombre: 'Centro de Salud Comunitario',
+        area: 'Salud y bienestar',
+        region: 'Región Metropolitana',
+        oportunidades: 156,
+        detalles: `
+          <h4 class="font-semibold text-lg mb-3">Sobre la organización</h4>
+          <p class="mb-4">Centro de Salud Comunitario brinda atención de salud preventiva y promoción de hábitos saludables en comunidades locales, especialmente en sectores de menores recursos.</p>
+          
+          <h4 class="font-semibold text-lg mb-3">Áreas de trabajo</h4>
+          <ul class="list-disc list-inside mb-4 space-y-1">
+            <li>Atención primaria de salud</li>
+            <li>Prevención de enfermedades</li>
+            <li>Promoción de hábitos saludables</li>
+            <li>Salud mental comunitaria</li>
+            <li>Primeros auxilios y emergencias</li>
+          </ul>
+        `
+      }
+    };
+
+    let organizacionActual = '';
+
+    // Funciones principales
+    function filtrarOrganizaciones() {
+      const busqueda = document.getElementById('searchInput').value.toLowerCase();
+      const area = document.getElementById('areaFilter').value;
+      const region = document.getElementById('regionFilter').value;
+      const cards = document.querySelectorAll('#organizationCards article');
+      let contador = 0;
+
+      cards.forEach(card => {
+        const nombre = card.dataset.name.toLowerCase();
+        const areaCard = card.dataset.area;
+        const regionCard = card.dataset.region;
+        
+        const coincideBusqueda = busqueda === '' || 
+          nombre.includes(busqueda) || 
+          areaCard.toLowerCase().includes(busqueda);
+        
+        const coincideArea = area === '' || areaCard === area;
+        const coincideRegion = region === '' || regionCard === region;
+        
+        if (coincideBusqueda && coincideArea && coincideRegion) {
+          card.style.display = 'block';
+          card.classList.add('fade-in');
+          contador++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      document.getElementById('resultCount').textContent = `${contador} resultado${contador !== 1 ? 's' : ''}`;
+    }
+
+    function verOportunidades(nombre) {
+      // Redirigir a la página de visualización de voluntariados con filtro por organización
+      window.location.href = `../visualizacion-vd/index.html?organizacion=${encodeURIComponent(nombre)}`;
+    }
+
+    function verOportunidadesDesdeModal() {
+      if (organizacionActual) {
+        verOportunidades(organizacionActual);
+      }
+    }
+
+    function verDetalles(nombre) {
+      organizacionActual = nombre;
+      const organizacion = organizaciones[nombre];
+      
+      if (organizacion) {
+        document.getElementById('modalTitulo').textContent = nombre;
+        document.getElementById('modalContenido').innerHTML = `
+          <div class="mb-4">
+            <span class="inline-block px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">${organizacion.area}</span>
+            <span class="inline-block ml-2 px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-sm">${organizacion.region}</span>
+            <span class="inline-block ml-2 px-3 py-1 rounded-lg bg-green-50 text-green-700 text-sm font-medium">
+              <i class="fas fa-handshake"></i> ${organizacion.oportunidades} oportunidades
+            </span>
+          </div>
+          ${organizacion.detalles}
+        `;
+        document.getElementById('modalDetalles').classList.remove('hidden');
+      }
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalDetalles').classList.add('hidden');
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cargar header
+      fetch('../header.html')
+        .then(response => response.text())
+        .then(data => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(data, 'text/html');
+          const headerContent = doc.querySelector('header');
+          const styles = doc.querySelector('style');
+          
+          if (styles) {
+            const styleElement = document.createElement('style');
+            styleElement.textContent = styles.textContent;
+            document.head.appendChild(styleElement);
+          }
+          
+          if (headerContent) {
+            document.getElementById('header-container').innerHTML = headerContent.outerHTML;
+          } else {
+            const bodyContent = doc.body.innerHTML;
+            document.getElementById('header-container').innerHTML = bodyContent;
+          }
+
+          // Configurar enlaces del header
+          setTimeout(() => {
+            const logo = document.getElementById('logo-link');
+            if (logo) logo.href = '../index.html';
+            
+            const login = document.getElementById('login-link');
+            if (login) login.href = '../inicio de sesion/login.html';
+          }, 100);
+        })
+        .catch(error => console.error('Error:', error));
+
+      // Búsqueda en tiempo real
+      document.getElementById('searchInput').addEventListener('input', filtrarOrganizaciones);
+      document.getElementById('areaFilter').addEventListener('change', filtrarOrganizaciones);
+      document.getElementById('regionFilter').addEventListener('change', filtrarOrganizaciones);
+      
+      // Cerrar modal al hacer clic fuera
+      document.getElementById('modalDetalles').addEventListener('click', function(e) {
+        if (e.target === this) {
+          cerrarModal();
+        }
+      });
+
+      // Animación de entrada para las tarjetas
+      const cards = document.querySelectorAll('#organizationCards article');
+      cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+      });
+    });
+  </script>
+
+  <!-- Footer -->
+  <footer class="footer">
+      <div class="footer-wrapper">
+          <!-- Barra superior -->
+          <div class="footer-top-bar">
+              <div class="footer-bar-blue"></div>
+              <div class="footer-bar-red"></div>
+          </div>
+          
+          <div class="footer-content">
+              <!-- Columna 1: Logos -->
+              <div class="footer-section footer-col1">
+                  <div class="footer-logos-container">
+                      <!-- Logo ClaveÚnica -->
+                      <div class="footer-logo-claveunica">
+                          <img src="../Fotos_injuv/ClaveUnica.png" alt="ClaveÚnica" class="footer-logo-img claveunica-logo">
+                      </div>
+                      
+                      <p class="footer-admin-text">Servicio de autenticación administrado por:</p>
+                      
+                      <!-- Logo Secretaría de Gobierno Digital -->
+                      <div class="footer-logo-secretaria">
+                          <img src="../Fotos_injuv/SecretariaGobiernoDigital.png" alt="Secretaría de Gobierno Digital" class="footer-logo-img secretaria-logo">
+                      </div>
+                      
+                      <p class="footer-collab-text">Con la colaboración de:</p>
+                      
+                      <!-- Logo Ministerio -->
+                      <div class="footer-logo-ministerio-small">
+                          <img src="../Fotos_injuv/color_MinDesarrolloSocialYFamilia.jpg" alt="Ministerio de Desarrollo Social y Familia" class="footer-logo-img ministerio-small-logo">
+                      </div>
+                      
+                      <p class="footer-trademark">INJUV®</p>
+                  </div>
+              </div>
+              
+              <!-- Columna 2: Secciones -->
+              <div class="footer-section footer-col2">
+                  <h4>Secciones</h4>
+                  <ul>
+                      <li><a href="../noticias/index.html">Noticias</a></li>
+                      <li><a href="../inicio de sesion/login.html">Postular</a></li>
+                      <li><a href="../index.html#organizaciones">Instituciones públicas</a></li>
+                      <li><a href="#">Términos y condiciones</a></li>
+                  </ul>
+              </div>
+              
+              <!-- Columna 3: Ayuda a Ciudadanos -->
+              <div class="footer-section footer-col3">
+                  <h4>Ayuda a Ciudadanos</h4>
+                  <a href="#" class="contact-link" id="faq-link">Preguntas frecuentes</a>
+                  <p class="contact-info">Horario: Lu - Vi / 9:00hrs - 18:00hrs</p>
+                  <a href="tel:+56226204700" class="contact-phone">+56 2 26204700</a>
+              </div>
+              
+              <!-- Columna 4: Ayuda a Instituciones -->
+              <div class="footer-section footer-col4">
+                  <h4>Ayuda a Instituciones</h4>
+                  <p class="contact-info">Horario: Lu - Vi / 9:00hrs - 18:00hrs</p>
+                  <a href="tel:+56226204700" class="contact-phone">+56 2 26204700</a>
+              </div>
+          </div>
+          
+          <!-- Barra inferior -->
+          <div class="footer-bottom-bar">
+              <div class="footer-bar-blue"></div>
+              <div class="footer-bar-red"></div>
+          </div>
+      </div>
+  </footer>
+
+  <!-- Chatbot de Preguntas Frecuentes -->
+  <div id="chatbot-container" class="chatbot-container">
+      <div class="chatbot-header">
+          <div class="chatbot-header-content">
+              <div class="chatbot-avatar">
+                  <img src="../chatbot/imagenes/chatbot-icon.png" alt="Asistente INJUV" class="chatbot-avatar-img">
+              </div>
+              <div class="chatbot-info">
+                  <h3>Asistente INJUV</h3>
+                  <span class="chatbot-status">👉 Listo para ayudarte...</span>
+              </div>
+          </div>
+          <button id="chatbot-close" class="chatbot-close">
+              <i class="fas fa-times"></i>
+          </button>
+      </div>
+      <div id="chatbot-messages" class="chatbot-messages"></div>
+      <div class="chatbot-input-container">
+          <input 
+              type="text" 
+              id="chatbot-input" 
+              class="chatbot-input" 
+              placeholder="Escribe tu pregunta aquí..."
+              autocomplete="off"
+          >
+          <button type="button" id="chatbot-send" class="chatbot-send">
+              <img src="../chatbot/imagenes/Chatbot-enviar.png" alt="Enviar" class="send-icon-img">
+          </button>
+      </div>
+  </div>
+  
+  <button id="chatbot-toggle" class="chatbot-toggle" aria-label="Abrir chatbot">
+      <img src="../chatbot/imagenes/chatbot-icon.png" alt="Chatbot" class="chatbot-toggle-icon">
+      <span class="chatbot-badge">?</span>
+  </button>
+
+  <link rel="stylesheet" href="../styles.css">
+  <script src="../Kit_Gobierno/expansion-panel-system.js"></script>
+  <script src="../Kit_Gobierno/stepper-system.js"></script>
+  <script src="../Kit_Gobierno/tooltip-system.js"></script>
+  <script src="../Kit_Gobierno/file-input-system.js"></script>
+  <script src="../Kit_Gobierno/otp-input-system.js"></script>
+  <script src="../Kit_Gobierno/search-input-system.js"></script>
+  <script src="../Kit_Gobierno/select-system.js"></script>
+  <script src="../chatbot/chatbot.js"></script>
+  
+  <script>
+      // Configurar enlace de "Preguntas frecuentes" para abrir el chatbot
+      window.addEventListener('load', () => {
+          const faqLink = document.getElementById('faq-link');
+          
+          if (faqLink) {
+              faqLink.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  
+                  setTimeout(() => {
+                      const chatbotToggle = document.getElementById('chatbot-toggle');
+                      const chatbotContainer = document.getElementById('chatbot-container');
+                      
+                      if (chatbotContainer && chatbotToggle) {
+                          if (!chatbotContainer.classList.contains('chatbot-open')) {
+                              chatbotToggle.click();
+                          }
+                      }
+                  }, 300);
+              });
+          }
+      });
+  </script>
+</body>
+</html>
+

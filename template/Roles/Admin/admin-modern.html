@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Administración - INJUV (Diseño Moderno)</title>
+  <link rel="stylesheet" href="../../typography.css">
+  <link rel="stylesheet" href="../../styles.css">
+  <link rel="stylesheet" href="admin-modern.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Header Principal -->
+  <div id="header-container"></div>
+  
+  <!-- Navegación interna del panel (debajo del header principal) -->
+  <nav class="admin-internal-nav">
+    <div class="admin-nav-container">
+      <a href="#" class="admin-nav-link active" data-section="dashboard">
+        <i class="fas fa-chart-line"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="users">
+        <i class="fas fa-users"></i>
+        <span>Usuarios</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="reports">
+        <i class="fas fa-file-alt"></i>
+        <span>Reportes</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="statistics">
+        <i class="fas fa-chart-bar"></i>
+        <span>Estadísticas</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="platform">
+        <i class="fas fa-palette"></i>
+        <span>Plataforma</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="news">
+        <i class="fas fa-newspaper"></i>
+        <span>Noticias</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="opportunities">
+        <i class="fas fa-lightbulb"></i>
+        <span>Oportunidades</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="repository">
+        <i class="fas fa-database"></i>
+        <span>Repositorio</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="content-section active">
+      <div class="section-header">
+        <h1>Dashboard</h1>
+        <p>Vista general de la plataforma INJUV</p>
+      </div>
+      
+      <div class="stats-overview">
+        <div class="stat-card primary clickable-stat" data-type="usuarios">
+          <div class="stat-content">
+            <div class="stat-number" id="stat-usuarios">0</div>
+            <div class="stat-label">Usuarios Registrados</div>
+          </div>
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+        
+        <div class="stat-card secondary clickable-stat" data-type="voluntariados">
+          <div class="stat-content">
+            <div class="stat-number" id="stat-voluntariados">0</div>
+            <div class="stat-label">Voluntariados Creados</div>
+          </div>
+          <div class="stat-icon">
+            <i class="fas fa-lightbulb"></i>
+          </div>
+        </div>
+        
+        <div class="stat-card accent clickable-stat" data-type="organizaciones">
+          <div class="stat-content">
+            <div class="stat-number" id="stat-organizaciones">0</div>
+            <div class="stat-label">Organizaciones Creadas</div>
+          </div>
+          <div class="stat-icon">
+            <i class="fas fa-building"></i>
+          </div>
+        </div>
+        
+        <div class="stat-card neutral">
+          <div class="stat-content">
+            <div class="stat-number" id="stat-noticias">0</div>
+            <div class="stat-label">Noticias Activas</div>
+          </div>
+          <div class="stat-icon">
+            <i class="fas fa-newspaper"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="quick-actions">
+        <h2>Acciones Rápidas</h2>
+        <div class="actions-grid">
+          <button class="action-btn">
+            <i class="fas fa-plus"></i>
+            <span>Agregar Usuario</span>
+          </button>
+          <button class="action-btn" data-section="statistics">
+            <i class="fas fa-chart-bar"></i>
+            <span>Estadísticas</span>
+          </button>
+          <button class="action-btn" onclick="irANoticias()">
+            <i class="fas fa-newspaper"></i>
+            <span>Noticias</span>
+          </button>
+          <button class="action-btn">
+            <i class="fas fa-upload"></i>
+            <span>Subir Documento</span>
+          </button>
+          <button class="action-btn">
+            <i class="fas fa-cog"></i>
+            <span>Configuración</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Section -->
+    <section id="users" class="content-section">
+      <div class="section-header">
+        <h1>Gestión de Usuarios</h1>
+        <button class="btn-primary">
+          <i class="fas fa-plus"></i>
+          Nuevo Usuario
+        </button>
+      </div>
+      
+      <div class="content-card">
+        <div class="table-header">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar usuarios...">
+          </div>
+          <div class="table-filters">
+            <select>
+              <option>Todos los roles</option>
+              <option>Administrador</option>
+              <option>Moderador</option>
+              <option>Editor</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="users-table">
+          <div class="user-row header">
+            <div class="user-avatar">Avatar</div>
+            <div class="user-info">Usuario</div>
+            <div class="user-organization">Organización</div>
+            <div class="user-role">Rol</div>
+            <div class="user-status">Estado</div>
+            <div class="user-actions">Acciones</div>
+          </div>
+          <!-- Los usuarios se cargarán dinámicamente desde el backend -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Reports Section -->
+    <section id="reports" class="content-section">
+      <div class="section-header">
+        <h1>Reportes</h1>
+        <p>Genera reportes personalizados de la plataforma</p>
+      </div>
+      
+      <div class="reports-grid">
+        <div class="report-card">
+          <div class="report-header">
+            <i class="fas fa-users"></i>
+            <h3>Reporte de Usuarios</h3>
+          </div>
+          <p>Listado completo de todos los usuarios registrados con su información y estadísticas</p>
+          <div class="report-form">
+            <div class="form-row">
+              <label>Filtro por Rol</label>
+              <select id="reporte-user-rol">
+                <option value="">Todos los roles</option>
+                <option value="user">Usuario</option>
+                <option value="organizacion">Organización</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Filtro por Región</label>
+              <select id="reporte-user-region">
+                <option value="">Todas las regiones</option>
+                <option value="Arica y Parinacota">Arica y Parinacota</option>
+                <option value="Tarapacá">Tarapacá</option>
+                <option value="Antofagasta">Antofagasta</option>
+                <option value="Atacama">Atacama</option>
+                <option value="Coquimbo">Coquimbo</option>
+                <option value="Valparaíso">Valparaíso</option>
+                <option value="Región Metropolitana de Santiago">Región Metropolitana de Santiago</option>
+                <option value="O'Higgins">O'Higgins</option>
+                <option value="Maule">Maule</option>
+                <option value="Ñuble">Ñuble</option>
+                <option value="Bío Bío">Bío Bío</option>
+                <option value="Araucanía">Araucanía</option>
+                <option value="Los Ríos">Los Ríos</option>
+                <option value="Los Lagos">Los Lagos</option>
+                <option value="Aysén">Aysén</option>
+                <option value="Magallanes">Magallanes</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="generarReporteUsuarios()">Generar Reporte</button>
+          </div>
+        </div>
+        
+        <div class="report-card">
+          <div class="report-header">
+            <i class="fas fa-building"></i>
+            <h3>Reporte de Organizaciones</h3>
+          </div>
+          <p>Listado completo de todas las organizaciones registradas con sus datos y estadísticas</p>
+          <div class="report-form">
+            <div class="form-row">
+              <label>Filtro por Región</label>
+              <select id="reporte-org-region">
+                <option value="">Todas las regiones</option>
+                <option value="Arica y Parinacota">Arica y Parinacota</option>
+                <option value="Tarapacá">Tarapacá</option>
+                <option value="Antofagasta">Antofagasta</option>
+                <option value="Atacama">Atacama</option>
+                <option value="Coquimbo">Coquimbo</option>
+                <option value="Valparaíso">Valparaíso</option>
+                <option value="Región Metropolitana de Santiago">Región Metropolitana de Santiago</option>
+                <option value="O'Higgins">O'Higgins</option>
+                <option value="Maule">Maule</option>
+                <option value="Ñuble">Ñuble</option>
+                <option value="Bío Bío">Bío Bío</option>
+                <option value="Araucanía">Araucanía</option>
+                <option value="Los Ríos">Los Ríos</option>
+                <option value="Los Lagos">Los Lagos</option>
+                <option value="Aysén">Aysén</option>
+                <option value="Magallanes">Magallanes</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="generarReporteOrganizaciones()">Generar Reporte</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section id="statistics" class="content-section">
+      <div class="section-header">
+        <h1>Estadísticas</h1>
+        <p>Visualiza estadísticas detalladas por categoría</p>
+      </div>
+      
+      <!-- Categorías de Estadísticas -->
+      <div class="statistics-categories">
+        <button class="category-btn active" data-category="voluntarios">
+          <i class="fas fa-users"></i>
+          <span>Voluntarios</span>
+        </button>
+        <button class="category-btn" data-category="organizaciones">
+          <i class="fas fa-building"></i>
+          <span>Organizaciones</span>
+        </button>
+        <button class="category-btn" data-category="voluntariados">
+          <i class="fas fa-lightbulb"></i>
+          <span>Voluntariados</span>
+        </button>
+      </div>
+
+      <!-- Contenedor de Estadísticas -->
+      <div class="statistics-content-container">
+        <!-- Filtros (se mostrarán según la categoría) -->
+        <div class="statistics-filters" id="statistics-filters">
+          <div class="filter-group">
+            <label for="filter-month">Mes:</label>
+            <select id="filter-month">
+              <option value="">Todos los meses</option>
+              <option value="01">Enero</option>
+              <option value="02">Febrero</option>
+              <option value="03">Marzo</option>
+              <option value="04">Abril</option>
+              <option value="05">Mayo</option>
+              <option value="06">Junio</option>
+              <option value="07">Julio</option>
+              <option value="08">Agosto</option>
+              <option value="09">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-year">Año:</label>
+            <select id="filter-year">
+              <option value="">Todos los años</option>
+              <!-- Los años se cargarán dinámicamente -->
+            </select>
+          </div>
+          <button class="btn-primary" id="apply-filters">
+            <i class="fas fa-filter"></i>
+            Aplicar Filtros
+          </button>
+        </div>
+
+        <!-- Contenedor del gráfico -->
+        <div class="statistics-card">
+          <div class="statistics-header">
+            <h2 id="statistics-title">Estadísticas</h2>
+            <button class="btn-primary" id="btn-generar-reporte" onclick="generarReporteExcel()">
+              <i class="fas fa-file-excel"></i>
+              Generar Reporte Excel
+            </button>
+          </div>
+          <div class="statistics-chart-wrapper">
+            <div class="statistics-chart-container">
+              <canvas id="statisticsChart"></canvas>
+            </div>
+            <div class="statistics-legend" id="statisticsLegend">
+              <!-- La leyenda se generará dinámicamente -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Platform Section -->
+    <section id="platform" class="content-section">
+      <div class="section-header">
+        <h1>Configuración de la Plataforma</h1>
+        <p>Personaliza la apariencia y funcionalidad</p>
+      </div>
+      
+      <div class="settings-grid">
+        <div class="setting-card">
+          <h3>Colores del Tema</h3>
+          <div class="color-settings">
+            <div class="color-option">
+              <label>Color Principal</label>
+              <input type="color" value="#1976D2">
+            </div>
+            <div class="color-option">
+              <label>Color Secundario</label>
+              <input type="color" value="#D32F2F">
+            </div>
+            <div class="color-option">
+              <label>Color de Fondo</label>
+              <input type="color" value="#FAFAFA">
+            </div>
+          </div>
+        </div>
+        
+        <div class="setting-card">
+          <h3>Logo y Branding</h3>
+          <div class="logo-settings">
+            <div class="upload-area">
+              <i class="fas fa-upload"></i>
+              <p>Arrastra el logo aquí o haz clic para seleccionar</p>
+              <input type="file" accept="image/*">
+            </div>
+          </div>
+        </div>
+        
+        <div class="setting-card">
+          <h3>Texto del Sitio</h3>
+          <div class="text-settings">
+            <div class="form-group">
+              <label>Título Principal</label>
+              <input type="text" value="Plataforma de Voluntariado INJUV">
+            </div>
+            <div class="form-group">
+              <label>Descripción</label>
+              <textarea>Conecta con proyectos que cambian vidas en todo Chile</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-actions">
+        <button class="btn-secondary">Cancelar</button>
+        <button class="btn-primary">Guardar Cambios</button>
+      </div>
+    </section>
+
+    <!-- News Section -->
+    <section id="news" class="content-section">
+      <div class="section-header">
+        <h1>Gestión de Noticias</h1>
+        <button class="btn-primary" onclick="crearNoticia()">
+          <i class="fas fa-plus"></i>
+          Nueva Noticia
+        </button>
+      </div>
+      
+      <div class="news-grid">
+        <!-- Las noticias se cargarán dinámicamente aquí -->
+      </div>
+    </section>
+
+    <!-- Opportunities Section -->
+    <section id="opportunities" class="content-section">
+      <div class="section-header">
+        <h1>Gestión de Oportunidades</h1>
+        <button class="btn-primary">
+          <i class="fas fa-plus"></i>
+          Nueva Oportunidad
+        </button>
+      </div>
+      
+      <div class="opportunities-grid">
+        <!-- Las oportunidades se cargarán dinámicamente desde el backend -->
+      </div>
+    </section>
+
+    <!-- Repository Section -->
+    <section id="repository" class="content-section">
+      <div class="section-header">
+        <h1>Repositorio de Documentos</h1>
+        <button class="btn-primary">
+          <i class="fas fa-upload"></i>
+          Subir Documento
+        </button>
+      </div>
+      
+      <div class="documents-grid">
+        <div class="document-card pending">
+          <div class="document-icon">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <div class="document-info">
+            <h3>Manual de Voluntariado 2024</h3>
+            <p>PDF • 2.3 MB • Subido por: admin_org1</p>
+            <div class="document-status">Pendiente de Aprobación</div>
+          </div>
+          <div class="document-actions">
+            <button class="btn-success">Aprobar</button>
+            <button class="btn-danger">Rechazar</button>
+            <button class="btn-secondary">Descargar</button>
+          </div>
+        </div>
+        
+        <div class="document-card approved">
+          <div class="document-icon">
+            <i class="fas fa-file-word"></i>
+          </div>
+          <div class="document-info">
+            <h3>Formulario de Postulación</h3>
+            <p>DOCX • 156 KB • Subido por: user_org2</p>
+            <div class="document-status">Aprobado</div>
+          </div>
+          <div class="document-actions">
+            <button class="btn-secondary">Editar</button>
+            <button class="btn-danger">Eliminar</button>
+            <button class="btn-secondary">Descargar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal para mostrar detalles -->
+  <div id="detailsModal" class="details-modal">
+    <div class="details-modal-content">
+      <div class="details-modal-header">
+        <h2 id="modalTitle">Detalles</h2>
+        <button class="details-modal-close" id="closeModal">&times;</button>
+      </div>
+      <div class="details-modal-body">
+        <div class="details-search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="detailsSearch" placeholder="Buscar...">
+        </div>
+        <div class="details-table-container" id="detailsTableContainer">
+          <!-- Los datos se cargarán aquí dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para mostrar datos del responsable -->
+  <div id="responsableModal" class="details-modal">
+    <div class="details-modal-content" style="max-width: 600px;">
+      <div class="details-modal-header">
+        <h2>Datos del Responsable</h2>
+        <button class="details-modal-close" id="closeResponsableModal">&times;</button>
+      </div>
+      <div class="details-modal-body">
+        <div id="responsableDataContainer">
+          <!-- Los datos del responsable se cargarán aquí -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin-modern.js"></script>
+  <script>
+    // Cargar header y configurar enlaces
+    fetch('../../header.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('header-container').innerHTML = data;
+            
+            setTimeout(() => {
+              // Logo - va a página principal
+              const logo = document.getElementById('logo-link');
+              if (logo) logo.href = '../../index.html';
+              
+              // Enlaces - van a página principal con hash
+              const howWorks = document.getElementById('how-it-works-link');
+              if (howWorks) howWorks.href = '../../index.html#how-it-works';
+              
+              const experiencias = document.getElementById('experiencias-link');
+              if (experiencias) experiencias.href = '../../index.html#experiencias-voluntariado';
+              
+              const noticias = document.getElementById('news-link');
+              if (noticias) noticias.href = '../../index.html#news';
+              
+              const login = document.getElementById('login-link');
+              if (login) login.href = '../../inicio de sesion/login.html';
+            }, 100);
+        })
+        .catch(error => console.error('Error:', error));
+  </script>
+  <script src="../../script.js"></script>
+</body>
+</html> 
