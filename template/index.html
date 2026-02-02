@@ -142,6 +142,34 @@
         </div>
     </section>
 
+    <!-- Academia de voluntariado -->
+    <section class="news-section" id="academia-voluntariado">
+        <div class="container">
+            <div class="section-header">
+                <h2>Academia de voluntariado</h2>
+                <a href="academia/index.html" class="view-all">Ver todo</a>
+            </div>
+            
+            <div class="news-grid" id="academia-grid-home">
+                <!-- Se cargarán dinámicamente desde el backend cuando exista -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Biblioteca / estudios -->
+    <section class="news-section" id="biblioteca-estudios">
+        <div class="container">
+            <div class="section-header">
+                <h2>Biblioteca / estudios</h2>
+                <a href="biblioteca/index.html" class="view-all">Ver todo</a>
+            </div>
+            
+            <div class="news-grid" id="biblioteca-grid-home">
+                <!-- Se cargarán dinámicamente desde el backend cuando exista -->
+            </div>
+        </div>
+    </section>
+
     <!-- Features Section -->
     <section class="features" id="features">
         <div class="container">
@@ -152,16 +180,9 @@
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <h3>Apoyo Institucional</h3>
-                    <p>Contamos con el respaldo oficial del Instituto Nacional de la Juventud y alianzas estratégicas internacionales.</p>
+                    <p>Contamos con el respaldo oficial del Instituto Nacional de la Juventud y alianzas estratégicas.</p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-certificate"></i>
-                    </div>
-                    <h3>Certificación Oficial</h3>
-                    <p>Recibe certificados oficiales de INJUV que validan tu experiencia de voluntariado.</p>
-                </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fas fa-handshake"></i>
@@ -211,7 +232,7 @@
                     <div class="step-icon">
                         <i class="fas fa-plane"></i>
                     </div>
-                    <h3>4. ¡Viaja y ayuda!</h3>
+                    <h3>4. ¡Vive y ayuda!</h3>
                     <p>Disfruta de una experiencia única mientras contribuyes a una causa</p>
                 </div>
             </div>
@@ -226,6 +247,9 @@
                 <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #666;">
                     <p>Cargando organizaciones...</p>
                 </div>
+            </div>
+            <div class="section-footer">
+                <a class="btn-outline btn-organizaciones" href="organizaciones/organizaciones.html">Ver todas las organizaciones</a>
             </div>
         </div>
     </section>
@@ -250,85 +274,23 @@
     <section class="testimonials" id="testimonials">
         <div class="container">
             <h2 class="section-title">Lo que dicen nuestros voluntarios(as)</h2>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p>"Una experiencia increíble que cambió mi perspectiva del mundo. Conocí gente maravillosa y aprendí mucho sobre sostenibilidad."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="author-info">
-                            <h4>María González</h4>
-                            <span>Fundación Verde Urbano</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p>"Enseñar inglés en Puente Alto fue la mejor decisión que he tomado. Los niños eran increíbles y la familia anfitriona me trató como a un miembro más de la familia."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="author-info">
-                            <h4>Matías López</h4>
-                            <span>Educación Sin Fronteras</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p>"¡San Bernardo me encantó! Ser voluntario allí fue una experiencia increíble: conocí personas de distintas partes y aprendí mucho sobre trabajo en equipo y compromiso social."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="author-info">
-                            <h4>Josefa Riquelme</h4>
-                            <span>Fundación Verde Urbano</span>
-                        </div>
-                    </div>
+            <div class="testimonials-grid" id="testimonialsContainer">
+                <!-- Las reseñas se cargarán dinámicamente aquí -->
+                <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #666;">
+                    <p>Cargando reseñas...</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="cta">
+    <section class="cta" id="cta-section">
         <div class="container">
             <div class="cta-content">
-                <h2>¿Listo para tu próxima aventura internacional?</h2>
-                <p>Únete a miles de jóvenes chilenos que ya están cambiando el mundo a través del voluntariado internacional con INJUV.</p>
+                <h2>¿Listo para tu próxima experiencia de voluntariado?</h2>
+                <p>Únete a miles de jóvenes que ya están cambiando el pais.</p>
                 <div class="cta-buttons">
                     <a href="inicio de sesion/login.html" class="btn-primary btn-large">Postular ahora</a>
-                    <button class="btn-outline btn-large">Conocer más</button>
                 </div>
             </div>
         </div>
@@ -501,6 +463,20 @@
                             userProfileMenu.style.display = 'none';
                             userProfileMenu.classList.remove('active');
                         }
+                        
+                        // Mostrar sección CTA si no hay sesión
+                        const ctaSection = document.getElementById('cta-section');
+                        if (ctaSection) {
+                            ctaSection.style.display = 'block';
+                        }
+                    }
+                    
+                    // Ocultar sección CTA si hay sesión iniciada
+                    if (isLoggedIn) {
+                        const ctaSection = document.getElementById('cta-section');
+                        if (ctaSection) {
+                            ctaSection.style.display = 'none';
+                        }
                     }
                 }, 300);
                 
@@ -530,13 +506,21 @@
                         };
                     }
                     
-                    // Noticias - scroll a sección
+                    // Noticias - usar función del header
                     const noticias = document.getElementById('news-link');
                     if (noticias) {
                         noticias.href = '#news';
-                        noticias.onclick = (e) => {
-                            e.preventDefault();
-                            document.getElementById('news').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        noticias.onclick = function(e) {
+                            if (window.goToNoticias) {
+                                window.goToNoticias(e);
+                            } else {
+                                e.preventDefault();
+                                const section = document.getElementById('news');
+                                if (section) {
+                                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }
+                            return false;
                         };
                     }
                     
@@ -608,6 +592,89 @@
     <script>
         const API_BASE_URL = 'http://127.0.0.1:5000/api';
         
+        // Cargar reseñas públicas desde el backend
+        async function cargarReseñasPublicas() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/reseñas/publicas?limite=3`);
+                const data = await response.json();
+                
+                if (data.success && data.reseñas) {
+                    mostrarReseñas(data.reseñas);
+                } else {
+                    mostrarMensajeSinReseñas();
+                }
+            } catch (error) {
+                console.error('Error al cargar reseñas públicas:', error);
+                mostrarMensajeSinReseñas();
+            }
+        }
+        
+        function mostrarReseñas(reseñas) {
+            const container = document.getElementById('testimonialsContainer');
+            if (!container) return;
+            
+            if (reseñas.length === 0) {
+                mostrarMensajeSinReseñas();
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            reseñas.forEach(reseña => {
+                const card = crearCardReseña(reseña);
+                container.appendChild(card);
+            });
+        }
+        
+        function crearCardReseña(reseña) {
+            const card = document.createElement('div');
+            card.className = 'testimonial-card';
+            
+            // Generar estrellas según la calificación (5 estrellas llenas como en la imagen)
+            const calificacion = reseña.calificacion || 5; // Por defecto 5 estrellas
+            const estrellasHTML = generarEstrellas(calificacion);
+            
+            card.innerHTML = `
+                <div class="testimonial-content">
+                    <div class="stars">
+                        ${estrellasHTML}
+                    </div>
+                    <p>"${reseña.reseña || 'Sin comentario'}"</p>
+                </div>
+                <div class="testimonial-author">
+                    <div class="author-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="author-info">
+                        <h4>${reseña.usuario_nombre || 'Usuario'}</h4>
+                        <span class="author-organization">${reseña.organizacion_nombre || 'Organización'}</span>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function generarEstrellas(calificacion) {
+            // Según la imagen, siempre mostrar 5 estrellas amarillas llenas
+            let estrellasHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                estrellasHTML += '<i class="fas fa-star"></i>';
+            }
+            return estrellasHTML;
+        }
+        
+        function mostrarMensajeSinReseñas() {
+            const container = document.getElementById('testimonialsContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #666;">
+                        <p>Próximamente estarán disponibles las reseñas de nuestros voluntarios.</p>
+                    </div>
+                `;
+            }
+        }
+        
         // Cargar oportunidades destacadas desde el backend
         async function cargarOportunidadesDestacadas() {
             try {
@@ -662,10 +729,20 @@
                 }) : 
                 'Sin fecha límite';
             
-            // Ubicación
-            const ubicacion = [op.organizacion_comuna, op.organizacion_region]
-                .filter(Boolean)
-                .join(', ') || 'Ubicación no especificada';
+            // Ubicación - priorizar campos de la oportunidad, usar organización como fallback
+            let ubicacion = [];
+            if (op.comuna_opor) ubicacion.push(op.comuna_opor);
+            else if (op.organizacion_comuna) ubicacion.push(op.organizacion_comuna);
+            
+            if (op.ciudad_opor) ubicacion.push(op.ciudad_opor);
+            else if (op.organizacion_ciudad) ubicacion.push(op.organizacion_ciudad);
+            
+            if (op.region_opor) ubicacion.push(op.region_opor);
+            else if (op.organizacion_region) ubicacion.push(op.organizacion_region);
+            
+            const ubicacionTexto = ubicacion.length > 0 
+                ? ubicacion.join(', ') 
+                : 'Ubicación no especificada';
             
             card.innerHTML = `
                 <div class="card-content">
@@ -681,7 +758,7 @@
                     <div class="card-details">
                         <div class="detail-item">
                             <i class="fas fa-map-marker-alt"></i>
-                            <span>${ubicacion}</span>
+                            <span>${ubicacionTexto}</span>
                         </div>
                         <div class="detail-item">
                             <i class="fas fa-calendar"></i>
@@ -753,16 +830,30 @@
             const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
             if (!userId) {
                 alert('Debes iniciar sesión para postular a una oportunidad');
-                window.location.href = 'inicio de sesion/login.html';
+                if (typeof window.redirectTo === 'function') {
+                    window.redirectTo('inicio de sesion/login.html');
+                } else {
+                    window.location.href = 'inicio de sesion/login.html';
+                }
                 return;
             }
             // Redirigir a la página de visualización con el ID
-            window.location.href = `visualizacion-vd/index.html?postular=${oportunidadId}`;
+            const redirectPath = `visualizacion-vd/index.html?postular=${oportunidadId}`;
+            if (typeof window.redirectTo === 'function') {
+                window.redirectTo(redirectPath);
+            } else {
+                window.location.href = redirectPath;
+            }
         };
         
         window.verDetallesDesdeDestacadas = function(oportunidadId) {
             // Redirigir a la página de visualización
-            window.location.href = `visualizacion-vd/index.html?ver=${oportunidadId}`;
+            const redirectPath = `visualizacion-vd/index.html?ver=${oportunidadId}`;
+            if (typeof window.redirectTo === 'function') {
+                window.redirectTo(redirectPath);
+            } else {
+                window.location.href = redirectPath;
+            }
         };
         
         // Cargar estadísticas del hero
@@ -864,7 +955,11 @@
                             profileUrl = `template/Roles/Perfil_organizacion/index.html?organizacion_id=${orgId}`;
                         }
                         
-                        window.location.href = profileUrl;
+                        if (typeof window.redirectTo === 'function') {
+                            window.redirectTo(profileUrl);
+                        } else {
+                            window.location.href = profileUrl;
+                        }
                     }
                 });
                 
@@ -885,19 +980,35 @@
         
         // Cargar noticias desde el backend
         async function cargarNoticiasHome() {
+            const newsGrid = document.getElementById('news-grid-home');
+            if (!newsGrid) {
+                console.error('No se encontró el elemento news-grid-home');
+                return;
+            }
+            
             try {
                 console.log('Cargando noticias desde:', `${API_BASE_URL}/noticias?estado=activa`);
                 // Cargar todas las noticias (activas e inactivas) para verificar qué hay
                 let response = await fetch(`${API_BASE_URL}/noticias?estado=todas`);
-                let data = await response.json();
                 
-                console.log('Respuesta del servidor:', data);
-                
-                const newsGrid = document.getElementById('news-grid-home');
-                if (!newsGrid) {
-                    console.error('No se encontró el elemento news-grid-home');
+                // Verificar si la respuesta es OK (status 200-299)
+                if (!response.ok) {
+                    console.error('Error del servidor:', response.status, response.statusText);
+                    mostrarMensajeSinNoticias(newsGrid);
                     return;
                 }
+                
+                // Intentar parsear JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Error al parsear JSON:', jsonError);
+                    mostrarMensajeSinNoticias(newsGrid);
+                    return;
+                }
+                
+                console.log('Respuesta del servidor:', data);
                 
                 if (data.success && data.noticias && data.noticias.length > 0) {
                     // Filtrar solo las activas para mostrar
@@ -910,21 +1021,19 @@
                         console.log('Mostrando noticias reales:', noticiasPrincipales);
                         renderizarNoticiasHome(noticiasPrincipales, newsGrid);
                     } else {
-                        console.log('No hay noticias activas, mostrando noticias de ejemplo');
-                        // Si no hay activas, mostrar noticias de ejemplo
-                        mostrarNoticiasEjemploHome(newsGrid);
+                        console.log('No hay noticias activas disponibles');
+                        // Si no hay activas, mostrar mensaje
+                        mostrarMensajeSinNoticias(newsGrid);
                     }
                 } else {
-                    console.log('No hay noticias en la base de datos, mostrando noticias de ejemplo');
-                    // Si no hay noticias, mostrar noticias de ejemplo
-                    mostrarNoticiasEjemploHome(newsGrid);
+                    console.log('No hay noticias en la base de datos');
+                    // Si no hay noticias, mostrar mensaje
+                    mostrarMensajeSinNoticias(newsGrid);
                 }
             } catch (error) {
-                console.error('Error al cargar noticias:', error);
-                const newsGrid = document.getElementById('news-grid-home');
-                if (newsGrid) {
-                    mostrarNoticiasEjemploHome(newsGrid);
-                }
+                console.error('Error al cargar noticias (backend probablemente apagado):', error);
+                // Si hay un error de red o conexión, mostrar mensaje
+                mostrarMensajeSinNoticias(newsGrid);
             }
         }
         
@@ -1054,41 +1163,55 @@
             container.innerHTML = noticiasHTML;
         }
         
-        // Noticias de ejemplo para mostrar cuando no hay noticias en la BD
-        function mostrarNoticiasEjemploHome(container) {
-            const noticiasEjemplo = [
-                {
-                    titulo: "INJUV abre convocatoria para programa de voluntariado 2025 en 140 comunas de Chile",
-                    contenido: "El Instituto Nacional de la Juventud invita a jóvenes entre 18 y 29 años a participar en proyectos de desarrollo comunitario, medio ambiente y apoyo social. Se espera beneficiar a más de 10,000 jóvenes este año con certificación oficial y experiencia laboral.",
-                    resumen: "El Instituto Nacional de la Juventud invita a jóvenes entre 18 y 29 años a participar en proyectos de desarrollo comunitario, medio ambiente y apoyo social. Se espera beneficiar a más de 10,000 jóvenes este año con certificación oficial y experiencia laboral.",
-                    autor_nombre: "INJUV",
-                    fecha_publicacion: new Date(2024, 11, 9, 9, 0)
-                },
-                {
-                    titulo: "INJUV y CONAF lanzan programa de voluntariado ambiental para la reforestación nacional",
-                    contenido: "Jóvenes voluntarios trabajarán en la restauración de ecosistemas afectados por incendios forestales, con especial énfasis en la Región de Valparaíso y la Araucanía. El programa incluye capacitación en técnicas de reforestación y conservación de especies nativas.",
-                    resumen: "Jóvenes voluntarios trabajarán en la restauración de ecosistemas afectados por incendios forestales, con especial énfasis en la Región de Valparaíso y la Araucanía. El programa incluye capacitación en técnicas de reforestación y conservación de especies nativas.",
-                    autor_nombre: "INJUV",
-                    fecha_publicacion: new Date(2024, 11, 6, 14, 30)
-                },
-                {
-                    titulo: "Programa de voluntariado educativo: INJUV busca tutores para apoyar a estudiantes vulnerables",
-                    contenido: "Iniciativa dirigida a universitarios y profesionales jóvenes para brindar apoyo académico a estudiantes de enseñanza básica y media en situación de vulnerabilidad. Los voluntarios recibirán capacitación pedagógica y certificación oficial de INJUV.",
-                    resumen: "Iniciativa dirigida a universitarios y profesionales jóvenes para brindar apoyo académico a estudiantes de enseñanza básica y media en situación de vulnerabilidad. Los voluntarios recibirán capacitación pedagógica y certificación oficial de INJUV.",
-                    autor_nombre: "INJUV",
-                    fecha_publicacion: new Date(2024, 11, 4, 11, 15)
-                }
-            ];
-            renderizarNoticiasHome(noticiasEjemplo, container);
+        // Mostrar mensaje cuando no hay noticias disponibles
+        function mostrarMensajeSinNoticias(container) {
+            if (!container) return;
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #666;">
+                    <i class="fas fa-newspaper" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 500;">No hay noticias disponibles</p>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">Las noticias se cargarán cuando el servidor esté disponible.</p>
+                </div>
+            `;
+        }
+
+        // Mensaje genérico para secciones nuevas (academia/biblioteca)
+        // Mantiene exactamente el mismo tamaño/espaciado que el vacío de "Noticias"
+        function mostrarMensajeSinContenido(container, titulo = 'Sección en desarrollo') {
+            if (!container) return;
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #666;">
+                    <i class="fas fa-newspaper" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 500;">${titulo}</p>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">El contenido se cargará cuando el servidor esté disponible.</p>
+                </div>
+            `;
+        }
+
+        async function cargarAcademiaHome() {
+            const container = document.getElementById('academia-grid-home');
+            if (!container) return;
+            // No hay endpoint aún → mostrar estado vacío (sin datos predeterminados)
+            mostrarMensajeSinContenido(container, 'Academia de voluntariado');
+        }
+
+        async function cargarBibliotecaHome() {
+            const container = document.getElementById('biblioteca-grid-home');
+            if (!container) return;
+            // No hay endpoint aún → mostrar estado vacío (sin datos predeterminados)
+            mostrarMensajeSinContenido(container, 'Biblioteca / estudios');
         }
         
         // Cargar usuarios registrados
         // Cargar todo cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', () => {
             cargarOportunidadesDestacadas();
+            cargarReseñasPublicas();
             cargarEstadisticasHero();
             cargarOrganizaciones();
             cargarNoticiasHome();
+            cargarAcademiaHome();
+            cargarBibliotecaHome();
         });
     </script>
     

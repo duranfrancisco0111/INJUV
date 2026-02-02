@@ -337,7 +337,22 @@
               if (experiencias) experiencias.href = '../../index.html#experiencias-voluntariado';
               
               const noticias = document.getElementById('news-link');
-              if (noticias) noticias.href = '../../index.html#news';
+              if (noticias) {
+                noticias.href = '../../index.html#news';
+                noticias.onclick = function(e) {
+                  if (window.goToNoticias) {
+                    window.goToNoticias(e);
+                  } else {
+                    e.preventDefault();
+                    if (typeof window.redirectTo === 'function') {
+                      window.redirectTo('../../index.html#news');
+                    } else {
+                      window.location.href = '../../index.html#news';
+                    }
+                  }
+                  return false;
+                };
+              }
               
               const login = document.getElementById('login-link');
               if (login) login.href = '../../inicio de sesion/login.html';

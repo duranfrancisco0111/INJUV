@@ -13,6 +13,10 @@ let currentPageHistorial = 1;
 let currentPagePostulaciones = 1;
 const itemsPerPage = 10;
 
+// Declarar funciones globales para crear oportunidad (se definirán más adelante)
+window.mostrarModalCrearOportunidad = null;
+window.cerrarModalCrearOportunidad = null;
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado, iniciando dashboard...');
@@ -137,7 +141,7 @@ function createBasicHeader() {
                     <div id="profileDropdown" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 8px; min-width: 200px; padding: 0.5rem 0;">
                         <a href="../Perfil_usuario/index.html" style="display: block; padding: 0.75rem 1rem; color: #333; text-decoration: none;">Mi perfil</a>
                         ${userRol === 'organizacion' ? '<a href="dashboard.html" style="display: block; padding: 0.75rem 1rem; color: #333; text-decoration: none;">Mi panel</a>' : ''}
-                        <button onclick="localStorage.clear(); sessionStorage.clear(); window.location.href='../../inicio de sesion/login.html'" style="width: 100%; text-align: left; padding: 0.75rem 1rem; background: none; border: none; color: #dc2626; cursor: pointer;">Cerrar sesión</button>
+                        <button onclick="localStorage.clear(); sessionStorage.clear(); if (typeof window.redirectTo === 'function') { window.redirectTo('../../inicio de sesion/login.html'); } else { window.location.href='../../inicio de sesion/login.html'; }" style="width: 100%; text-align: left; padding: 0.75rem 1rem; background: none; border: none; color: #dc2626; cursor: pointer;">Cerrar sesión</button>
                     </div>
                 </div>
             </div>
@@ -317,6 +321,9 @@ function switchSection(sectionName) {
             case 'reportes':
                 loadReportesImpacto();
                 break;
+            case 'reseñas':
+                loadReseñas();
+                break;
         }
     }
 }
@@ -326,7 +333,11 @@ async function initializeDashboard() {
     // Obtener datos del usuario logueado
     const loggedUser = localStorage.getItem('loggedUser');
     if (!loggedUser) {
-        window.location.href = '../../inicio de sesion/login.html';
+        if (typeof window.redirectTo === 'function') {
+            window.redirectTo('../../inicio de sesion/login.html');
+        } else {
+            window.location.href = '../../inicio de sesion/login.html';
+        }
         return;
     }
     
@@ -342,7 +353,11 @@ async function initializeDashboard() {
         if (!response.ok) {
             if (response.status === 404) {
                 alert('No se encontró una organización asociada a tu cuenta. Por favor, crea una organización primero.');
-                window.location.href = 'index.html';
+                if (typeof window.redirectTo === 'function') {
+                    window.redirectTo('index.html');
+                } else {
+                    window.location.href = 'index.html';
+                }
                 return;
             }
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -371,7 +386,11 @@ async function initializeDashboard() {
             }, 300);
         } else {
             alert('No se encontró una organización asociada a tu cuenta. Por favor, crea una organización primero.');
-            window.location.href = 'index.html';
+            if (typeof window.redirectTo === 'function') {
+                window.redirectTo('index.html');
+            } else {
+                window.location.href = 'index.html';
+            }
         }
     } catch (error) {
         console.error('Error obteniendo organización:', error);
@@ -386,7 +405,7 @@ async function loadHistorialOportunidades() {
         console.warn('No hay organizacionId, no se puede cargar historial');
         const tbody = document.getElementById('tablaHistorialOportunidades');
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-orange-500 py-8">Esperando datos de organización...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-orange-500 py-8">Esperando datos de organización...</td></tr>';
         }
         return;
     }
@@ -396,7 +415,7 @@ async function loadHistorialOportunidades() {
     // Mostrar estado de carga
     const tbody = document.getElementById('tablaHistorialOportunidades');
     if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin"></i> Cargando oportunidades...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin"></i> Cargando oportunidades...</td></tr>';
     }
     
     try {
@@ -437,7 +456,7 @@ async function loadHistorialOportunidades() {
             if (oportunidadesData.length === 0) {
                 console.warn('No se encontraron oportunidades para esta organización');
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">No hay oportunidades registradas. <a href="index.html" style="color: #0066CC; text-decoration: underline;">Crear nueva oportunidad</a></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-8">No hay oportunidades registradas. <a href="index.html" style="color: #0066CC; text-decoration: underline;">Crear nueva oportunidad</a></td></tr>';
                 }
             } else {
                 console.log('Renderizando oportunidades...');
@@ -446,14 +465,14 @@ async function loadHistorialOportunidades() {
         } else {
             console.error('Error en respuesta del servidor:', data.error);
             if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-8">Error: ' + (data.error || 'Error desconocido') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500 py-8">Error: ' + (data.error || 'Error desconocido') + '</td></tr>';
             }
         }
     } catch (error) {
         console.error('Error cargando historial:', error);
         console.error('Error stack:', error.stack);
         if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-red-500 py-8">Error al cargar oportunidades: ' + error.message + '<br><small>Verifica que el servidor esté corriendo en el puerto 5000</small></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500 py-8">Error al cargar oportunidades: ' + error.message + '<br><small>Verifica que el servidor esté corriendo en el puerto 5000</small></td></tr>';
         }
     }
 }
@@ -471,7 +490,7 @@ function renderHistorialOportunidades() {
     
     if (!oportunidadesData || oportunidadesData.length === 0) {
         console.warn('No hay datos de oportunidades para renderizar');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">No hay oportunidades</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-8">No hay oportunidades</td></tr>';
         return;
     }
     
@@ -481,7 +500,7 @@ function renderHistorialOportunidades() {
     
     if (filtered.length === 0) {
         console.log('No hay oportunidades que coincidan con el filtro');
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-8">No hay oportunidades que coincidan con la búsqueda</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-8">No hay oportunidades que coincidan con la búsqueda</td></tr>';
         return;
     }
     
@@ -493,6 +512,13 @@ function renderHistorialOportunidades() {
         const esActiva = estadoNormalizado === 'activa' || estadoNormalizado === 'abierta';
         const esCerrada = estadoNormalizado === 'cerrada';
         
+        const fechasVol = (op.fecha_inicio_voluntariado || op.fecha_fin_voluntariado)
+            ? `${op.fecha_inicio_voluntariado || 'TBD'} - ${op.fecha_fin_voluntariado || 'TBD'}`
+            : 'Sin fechas';
+        const horasVol = (op.horas_voluntariado !== null && op.horas_voluntariado !== undefined && op.horas_voluntariado !== '')
+            ? `${op.horas_voluntariado} hrs`
+            : 'N/A';
+
         return `
         <tr id="row-oportunidad-${op.id}">
             <td><strong>${op.titulo || 'Sin título'}</strong></td>
@@ -500,6 +526,8 @@ function renderHistorialOportunidades() {
                 <span class="badge badge-${esActiva ? 'activa' : 'cerrada'}" id="badge-estado-oportunidad-${op.id}">${op.estado || 'N/A'}</span>
             </td>
             <td>${op.fecha_limite_postulacion || 'Sin fecha límite'}</td>
+            <td>${fechasVol}</td>
+            <td>${horasVol}</td>
             <td id="postulaciones-${op.id}">-</td>
             <td id="seleccionados-${op.id}">-</td>
             <td>
@@ -560,7 +588,7 @@ function setupHistorialEventListeners() {
     
     const filtroEstado = document.getElementById('filtroEstadoHistorial');
     const buscarInput = document.getElementById('buscarHistorial');
-    const btnCrear = document.getElementById('btnCrearOportunidad');
+    const createVolunteerBtn = document.getElementById('createVolunteerBtn');
     
     if (filtroEstado) {
         filtroEstado.removeEventListener('change', loadHistorialOportunidades);
@@ -578,28 +606,43 @@ function setupHistorialEventListeners() {
         console.warn('No se encontró buscarHistorial');
     }
     
-    if (btnCrear) {
-        btnCrear.removeEventListener('click', null);
-        btnCrear.addEventListener('click', () => {
-            // Redirigir a la página principal con el hash para crear oportunidad
-            window.location.href = '../../index.html#crear-oportunidad';
-        });
-        console.log('Event listener agregado a btnCrearOportunidad');
+    // Configurar botón de crear voluntariado (exactamente igual que en app.js)
+    const btnCreateVolunteer = document.getElementById('createVolunteerBtn');
+    if (btnCreateVolunteer) {
+        // Asegurarse de que type="button" para evitar submit y refresh
+        btnCreateVolunteer.type = 'button';
+        
+        // Remover cualquier listener previo
+        const newBtn = btnCreateVolunteer.cloneNode(true);
+        btnCreateVolunteer.parentNode.replaceChild(newBtn, btnCreateVolunteer);
+        
+        // Obtener el nuevo botón y agregar listener
+        const btn = document.getElementById('createVolunteerBtn');
+        if (btn) {
+            btn.type = 'button';
+            
+            // Usar exactamente el mismo código que en app.js
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                console.log('Botón crear voluntariado clickeado - Abriendo modal...');
+                
+                if (typeof window.mostrarModalCrearOportunidad === 'function') {
+                    window.mostrarModalCrearOportunidad();
+                } else {
+                    console.error('mostrarModalCrearOportunidad no está disponible');
+                }
+                
+                return false;
+            });
+        }
+        
+        console.log('Event listener agregado a createVolunteerBtn');
     } else {
-        console.warn('No se encontró btnCrearOportunidad');
+        console.warn('No se encontró createVolunteerBtn');
     }
 }
-
-// Event listeners para filtros de historial (fallback)
-document.addEventListener('DOMContentLoaded', function() {
-    setupHistorialEventListeners();
-    
-    if (btnCrear) {
-        btnCrear.addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-    }
-});
 
 // ==================== POSTULACIONES RECIBIDAS ====================
 
@@ -776,7 +819,7 @@ function renderPostulaciones() {
                             <i class="fas fa-times"></i> Rechazar
                         </button>
                     ` : ''}
-                    ${esRechazado || esNoSeleccionado ? `
+                    ${esNoSeleccionado ? `
                         <button class="btn-success" onclick="cambiarEstadoPostulacionRapido(${post.id}, 'Seleccionado')" style="padding: 6px 12px; font-size: 11px;" title="Aprobar postulación">
                             <i class="fas fa-check"></i> Aprobar
                         </button>
@@ -908,9 +951,9 @@ function renderSeguimiento() {
             <td>
                 <select id="asist-act-${seg.id}" onchange="actualizarAsistenciaActividad(${seg.id}, this.value)" 
                         style="padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; width: 100%;">
-                    <option value="Sí" ${asistActTexto === 'Sí' ? 'selected' : ''}>Sí</option>
-                    <option value="No" ${asistActTexto === 'No' ? 'selected' : ''}>No</option>
-                    <option value="No aplica" ${asistActTexto === 'No aplica' ? 'selected' : ''}>No aplica</option>
+                    <option value="Sí" ${asistenciaAct === true || asistenciaAct === 'Sí' || asistenciaAct === 'Si' || asistenciaAct === 'SI' ? 'selected' : ''}>Sí</option>
+                    <option value="No" ${asistenciaAct === false || asistenciaAct === 'No' || asistenciaAct === 'NO' ? 'selected' : ''}>No</option>
+                    <option value="No aplica" ${asistenciaAct === 'No aplica' || asistenciaAct === 'No aplica' || !asistenciaAct ? 'selected' : ''}>No aplica</option>
                 </select>
             </td>
             <td>${seg.horas_voluntariado || 0} hrs</td>
@@ -1048,6 +1091,263 @@ function generarGraficoImpacto(oportunidades) {
         });
     });
 }
+
+// Cargar reseñas de usuarios sobre la organización
+async function loadReseñas() {
+    if (!organizacionId) {
+        console.warn('No hay organizacionId, no se puede cargar reseñas');
+        return;
+    }
+    
+    const container = document.getElementById('reseñasContainer');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="text-center text-gray-500 py-8">Cargando reseñas...</div>';
+    
+    try {
+        // Cargar oportunidades para el filtro
+        const opResponse = await fetch(`${API_BASE_URL}/oportunidades?organizacion_id=${organizacionId}`, {
+            mode: 'cors'
+        });
+        const opData = await opResponse.json();
+        
+        if (opData.success) {
+            const selectOportunidad = document.getElementById('filtroOportunidadReseñas');
+            if (selectOportunidad) {
+                selectOportunidad.innerHTML = '<option value="todas">Todas las oportunidades</option>' +
+                    opData.oportunidades.map(op => 
+                        `<option value="${op.id}">${op.titulo}</option>`
+                    ).join('');
+            }
+        }
+        
+        // Cargar reseñas (todas para el dashboard interno)
+        const response = await fetch(`${API_BASE_URL}/organizaciones/${organizacionId}/reseñas?solo_publicas=false`, {
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarReseñas(data.reseñas_por_voluntariado || []);
+        } else {
+            container.innerHTML = `<div class="text-center text-red-600 py-8">Error al cargar reseñas: ${data.error || 'Error desconocido'}</div>`;
+        }
+    } catch (error) {
+        console.error('Error cargando reseñas:', error);
+        container.innerHTML = `<div class="text-center text-red-600 py-8">Error de conexión al cargar las reseñas. Verifica tu conexión a internet.</div>`;
+    }
+}
+
+// Función para generar estrellas
+function generarEstrellasReseñas(calificacion) {
+    const cal = Math.max(0, Math.min(5, parseFloat(calificacion)));
+    const estrellasCompletas = Math.floor(cal);
+    const decimal = cal % 1;
+    const tieneMediaEstrella = decimal >= 0.25 && decimal < 0.75;
+    const tieneCuartoEstrella = decimal >= 0.75;
+    
+    let estrellasHtml = '⭐'.repeat(estrellasCompletas);
+    
+    if (tieneMediaEstrella) {
+        estrellasHtml += '<span style="display: inline-block; width: 0.5em; overflow: hidden; position: relative; vertical-align: baseline;"><span style="position: absolute; left: 0;">⭐</span></span>';
+        const estrellasVacias = 5 - estrellasCompletas - 1;
+        if (estrellasVacias > 0) {
+            estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+        }
+    } else if (tieneCuartoEstrella) {
+        estrellasHtml += '⭐';
+        const estrellasVacias = 5 - estrellasCompletas - 1;
+        if (estrellasVacias > 0) {
+            estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+        }
+    } else {
+        const estrellasVacias = 5 - estrellasCompletas;
+        if (estrellasVacias > 0) {
+            estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+        }
+    }
+    
+    return estrellasHtml;
+}
+
+// Mostrar reseñas organizadas por voluntariado
+function mostrarReseñas(reseñasPorVoluntariado) {
+    const container = document.getElementById('reseñasContainer');
+    if (!container) return;
+    
+    if (reseñasPorVoluntariado.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">Aún no tienes reseñas de voluntarios.</div>';
+        return;
+    }
+    
+    // Filtrar según los filtros seleccionados
+    const filtroOportunidad = document.getElementById('filtroOportunidadReseñas')?.value || 'todas';
+    const filtroCalificacion = document.getElementById('filtroCalificacionReseñas')?.value || 'todas';
+    
+    let reseñasFiltradas = reseñasPorVoluntariado;
+    
+    if (filtroOportunidad !== 'todas') {
+        const oportunidadId = parseInt(filtroOportunidad);
+        reseñasFiltradas = reseñasFiltradas.filter(item => item.oportunidad_id === oportunidadId);
+    }
+    
+    // Aplicar filtro de calificación
+    if (filtroCalificacion !== 'todas') {
+        const calificacionMinima = parseInt(filtroCalificacion);
+        reseñasFiltradas = reseñasFiltradas.map(item => ({
+            ...item,
+            reseñas: item.reseñas.filter(reseña => 
+                reseña.calificacion !== null && reseña.calificacion !== undefined &&
+                Math.floor(reseña.calificacion) === calificacionMinima
+            )
+        })).filter(item => item.reseñas.length > 0);
+    }
+    
+    if (reseñasFiltradas.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">No hay reseñas que coincidan con los filtros seleccionados.</div>';
+        return;
+    }
+    
+    // Generar HTML
+    container.innerHTML = reseñasFiltradas.map(voluntariado => {
+        const reseñasHTML = voluntariado.reseñas.map(reseña => {
+            const fechaReseña = reseña.fecha_postulacion 
+                ? new Date(reseña.fecha_postulacion).toLocaleDateString('es-CL', { 
+                    year: 'numeric', 
+                    month: 'long',
+                    day: 'numeric'
+                }) 
+                : 'Fecha no disponible';
+            
+            const estrellasHtml = reseña.calificacion !== null && reseña.calificacion !== undefined 
+                ? generarEstrellasReseñas(reseña.calificacion) 
+                : '';
+            
+            const esPublica = reseña.es_publica !== false && reseña.es_publica !== null && reseña.es_publica !== undefined;
+            return `
+                <div class="reseña-item" style="border-left: 3px solid #3b82f6; padding: 16px; margin-bottom: 16px; background: #f9fafb; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <h4 style="font-weight: 600; color: #1f2937; margin: 0;">${reseña.usuario_nombre}</h4>
+                                <span class="badge-visibilidad" style="font-size: 11px; padding: 2px 8px; border-radius: 12px; ${esPublica ? 'background: #dbeafe; color: #1e40af;' : 'background: #f3f4f6; color: #4b5563;'}">
+                                    ${esPublica ? '🌐 Pública' : '🔒 Privada'}
+                                </span>
+                            </div>
+                            <p style="font-size: 12px; color: #6b7280; margin: 0;">${fechaReseña}</p>
+                        </div>
+                        ${estrellasHtml ? `
+                            <div style="text-align: right; margin-left: 16px;">
+                                <div style="font-size: 18px; line-height: 1;">${estrellasHtml}</div>
+                                <span style="font-size: 14px; color: #6b7280; font-weight: 500;">${reseña.calificacion.toFixed(1)}/5.0</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${reseña.reseña ? `
+                        <p style="color: #374151; line-height: 1.6; font-style: italic; margin-bottom: 12px;">"${reseña.reseña}"</p>
+                    ` : ''}
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button onclick="cambiarVisibilidadResenaOrg(${reseña.postulacion_id}, ${!esPublica})" 
+                                class="btn-toggle-visibilidad" 
+                                style="padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; ${esPublica ? 'background: #fee2e2; color: #991b1b;' : 'background: #dbeafe; color: #1e40af;'}"
+                                title="${esPublica ? 'Hacer privada' : 'Hacer pública'}">
+                            ${esPublica ? '🔒 Hacer Privada' : '🌐 Hacer Pública'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Calcular promedio de calificaciones
+        const calificaciones = voluntariado.reseñas
+            .map(r => r.calificacion)
+            .filter(c => c !== null && c !== undefined);
+        const promedio = calificaciones.length > 0 
+            ? (calificaciones.reduce((a, b) => a + b, 0) / calificaciones.length).toFixed(1)
+            : null;
+        
+        return `
+            <div class="voluntariado-reseñas-card" style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 4px;">${voluntariado.oportunidad_titulo}</h3>
+                        <p style="font-size: 14px; color: #6b7280;">${voluntariado.reseñas.length} ${voluntariado.reseñas.length === 1 ? 'reseña' : 'reseñas'}</p>
+                    </div>
+                    ${promedio ? `
+                        <div style="text-align: center; padding: 12px 20px; background: #eff6ff; border-radius: 8px;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Promedio</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #2563eb;">${promedio}</div>
+                            <div style="font-size: 12px; color: #6b7280;">/ 5.0</div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="reseñas-list">
+                    ${reseñasHTML}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Agregar event listeners a los filtros
+    const selectOportunidad = document.getElementById('filtroOportunidadReseñas');
+    const selectCalificacion = document.getElementById('filtroCalificacionReseñas');
+    
+    if (selectOportunidad) {
+        selectOportunidad.removeEventListener('change', loadReseñas);
+        selectOportunidad.addEventListener('change', loadReseñas);
+    }
+    
+    if (selectCalificacion) {
+        selectCalificacion.removeEventListener('change', () => {
+            mostrarReseñas(window.reseñasDataActual || []);
+        });
+        selectCalificacion.addEventListener('change', () => {
+            mostrarReseñas(window.reseñasDataActual || []);
+        });
+    }
+    
+    // Guardar datos actuales para el filtro
+    window.reseñasDataActual = reseñasPorVoluntariado;
+}
+
+// Función para cambiar la visibilidad de una reseña (pública/privada)
+window.cambiarVisibilidadResenaOrg = async function(postulacionId, nuevaVisibilidad) {
+    if (!organizacionId) {
+        alert('Error: No se pudo identificar la organización');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/postulaciones/${postulacionId}/resena-visibilidad`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                es_publica: nuevaVisibilidad,
+                organizacion_id: organizacionId
+            }),
+            mode: 'cors'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Recargar las reseñas para actualizar la vista
+            await loadReseñas();
+        } else {
+            alert('Error al cambiar la visibilidad: ' + (data.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error cambiando visibilidad de reseña:', error);
+        alert('Error de conexión al cambiar la visibilidad de la reseña');
+    }
+};
 
 // Generar reporte Excel
 document.addEventListener('DOMContentLoaded', function() {
@@ -1243,8 +1543,26 @@ async function abrirModalSeguimiento(postulacionId, usuarioIdParam = null) {
     const modal = document.getElementById('modalSeguimiento');
     const body = document.getElementById('modalSeguimientoBody');
     
-    // Obtener horas actuales del usuario si están disponibles
-    const horasActuales = seguimiento.horas_voluntariado || 0;
+    // Obtener horas de esta postulación específica (no las horas totales del usuario)
+    // Las horas están en seguimiento.horas_voluntariado si ya fueron guardadas
+    let horasPostulacionActuales = seguimiento.horas_voluntariado || 0;
+    const usuarioId = usuarioIdParam || seguimiento.usuario_id;
+    
+    // Si no hay horas en seguimiento, intentar obtenerlas de la API
+    if (horasPostulacionActuales === 0 && postulacionId) {
+        try {
+            // Buscar en postulacionesData o seguimientoData primero
+            const postEnData = postulacionesData.find(p => p.id === postulacionId) || 
+                              seguimientoData.find(s => s.id === postulacionId);
+            if (postEnData && postEnData.horas_voluntariado) {
+                horasPostulacionActuales = postEnData.horas_voluntariado;
+            }
+        } catch (error) {
+            console.error('Error obteniendo horas de la postulación:', error);
+        }
+    }
+    
+    console.log('Horas de esta postulación específica:', horasPostulacionActuales);
     
     body.innerHTML = `
         <div class="seguimiento-form">
@@ -1292,11 +1610,11 @@ async function abrirModalSeguimiento(postulacionId, usuarioIdParam = null) {
                 <h4 style="margin-bottom: 15px; font-size: 16px; font-weight: 600;">Horas de Voluntariado</h4>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                     <label style="flex: 1;">Horas completadas en esta oportunidad:</label>
-                    <input type="number" id="horasVoluntariado" min="0" step="0.5" value="0" style="width: 120px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+                    <input type="number" id="horasVoluntariado" min="0" step="0.5" value="${horasPostulacionActuales}" style="width: 120px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
                     <span style="color: #6b7280; font-size: 14px;">horas</span>
                 </div>
                 <p style="font-size: 12px; color: #6b7280; margin: 0;">
-                    <i class="fas fa-info-circle"></i> Ingresa las horas que el voluntario completó en esta oportunidad. Se sumarán a sus horas totales.
+                    <i class="fas fa-info-circle"></i> Ingresa las horas que el voluntario completó en esta oportunidad específica. Se guardarán en esta postulación y se sumarán automáticamente a sus horas totales.
                 </p>
             </div>
             
@@ -1332,20 +1650,33 @@ async function abrirModalSeguimiento(postulacionId, usuarioIdParam = null) {
                 <h4 style="margin-bottom: 15px; font-size: 16px; font-weight: 600;">Certificado</h4>
                 <div style="margin-bottom: 10px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="tieneCertificado" ${seguimiento.tiene_certificado ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+                        <input type="checkbox" id="tieneCertificado" ${seguimiento.tiene_certificado ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;" onchange="toggleCertificadoUpload()">
                         <span>Emitir certificado de participación</span>
                     </label>
                 </div>
-                ${seguimiento.tiene_certificado && seguimiento.ruta_certificado_pdf ? `
-                    <div style="margin-top: 10px; padding: 10px; background: #dbeafe; border-radius: 6px;">
-                        <p style="margin: 0; font-size: 14px; color: #1e40af;">
-                            <i class="fas fa-check-circle"></i> Certificado emitido
+                
+                <!-- Sección para subir certificado (se muestra cuando el checkbox está marcado) -->
+                <div id="certificadoUploadSection" style="margin-top: 15px; ${seguimiento.tiene_certificado ? '' : 'display: none;'}">
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">Subir certificado (PDF):</label>
+                        <input type="file" id="certificadoFile" accept=".pdf" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        <p style="font-size: 12px; color: #6b7280; margin-top: 5px; margin: 0;">
+                            <i class="fas fa-info-circle"></i> Selecciona un archivo PDF del certificado.
                         </p>
-                        ${seguimiento.ruta_certificado_pdf ? `
-                            <a href="${API_BASE_URL}/postulaciones/${postulacionId}/certificado/descargar" target="_blank" style="display: inline-block; margin-top: 8px; color: #2563eb; text-decoration: underline;">
-                                <i class="fas fa-download"></i> Descargar certificado
-                            </a>
-                        ` : ''}
+                    </div>
+                    <button type="button" onclick="subirCertificado(${postulacionId})" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                        <i class="fas fa-upload"></i> Subir Certificado
+                    </button>
+                </div>
+                
+                ${seguimiento.tiene_certificado && seguimiento.ruta_certificado_pdf ? `
+                    <div style="margin-top: 15px; padding: 10px; background: #dbeafe; border-radius: 6px;">
+                        <p style="margin: 0; font-size: 14px; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-check-circle"></i> Certificado subido exitosamente
+                        </p>
+                        <a href="${API_BASE_URL}/postulaciones/${postulacionId}/certificado/descargar" target="_blank" style="display: inline-block; margin-top: 8px; color: #2563eb; text-decoration: underline; font-size: 14px;">
+                            <i class="fas fa-download"></i> Descargar certificado
+                        </a>
                     </div>
                 ` : ''}
             </div>
@@ -1489,7 +1820,8 @@ async function guardarSeguimiento(postulacionId, usuarioId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 asistencia_capacitacion: asistenciaCapacitacion,
-                asistencia_actividad: asistenciaActividad
+                asistencia_actividad: asistenciaActividad,
+                horas_voluntariado: horasVoluntariado  // Guardar horas en la postulación
             }),
             mode: 'cors'
         });
@@ -1535,42 +1867,9 @@ async function guardarSeguimiento(postulacionId, usuarioId) {
             throw new Error('Error al actualizar certificado');
         }
         
-        // Actualizar horas de voluntariado del usuario (sumar horas de esta oportunidad)
-        if (horasVoluntariado > 0 && usuarioId) {
-            try {
-                // Primero obtener las horas actuales del usuario
-                const usuarioResponse = await fetch(`${API_BASE_URL}/usuario/${usuarioId}`, {
-                    mode: 'cors'
-                });
-                
-                if (usuarioResponse.ok) {
-                    const usuarioData = await usuarioResponse.json();
-                    const horasActuales = usuarioData.usuario?.hora_voluntariado || 0;
-                    
-                    // Sumar las nuevas horas a las actuales
-                    const nuevasHoras = horasActuales + horasVoluntariado;
-                    
-                    // Actualizar horas de voluntariado del usuario
-                    const horasResponse = await fetch(`${API_BASE_URL}/usuarios/${usuarioId}/horas-voluntariado`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            hora_voluntariado: nuevasHoras
-                        }),
-                        mode: 'cors'
-                    });
-                    
-                    if (!horasResponse.ok) {
-                        console.error('Error actualizando horas:', await horasResponse.json());
-                    } else {
-                        console.log(`Horas actualizadas: ${horasActuales} + ${horasVoluntariado} = ${nuevasHoras}`);
-                    }
-                }
-            } catch (error) {
-                console.error('Error actualizando horas de voluntariado del usuario:', error);
-                // No fallar todo si esto falla, solo loguear
-            }
-        }
+        // Las horas ya se guardaron en la postulación mediante el endpoint de asistencia
+        // El backend calculará automáticamente la suma total de todas las postulaciones
+        // y actualizará el total en el usuario
         
         alert('Seguimiento guardado exitosamente');
         cerrarModal('modalSeguimiento');
@@ -1579,6 +1878,102 @@ async function guardarSeguimiento(postulacionId, usuarioId) {
     } catch (error) {
         console.error('Error guardando seguimiento:', error);
         alert('Error al guardar el seguimiento: ' + error.message);
+    }
+}
+
+// Función para mostrar/ocultar el apartado de subida de certificado
+window.toggleCertificadoUpload = function() {
+    const checkbox = document.getElementById('tieneCertificado');
+    const uploadSection = document.getElementById('certificadoUploadSection');
+    
+    if (checkbox && uploadSection) {
+        if (checkbox.checked) {
+            uploadSection.style.display = 'block';
+        } else {
+            uploadSection.style.display = 'none';
+        }
+    }
+}
+
+// Función para subir el certificado
+window.subirCertificado = async function(postulacionId) {
+    const fileInput = document.getElementById('certificadoFile');
+    
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert('Por favor, selecciona un archivo PDF para subir.');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    // Validar que sea PDF
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+        alert('El archivo debe ser un PDF.');
+        return;
+    }
+    
+    // Validar tamaño (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('El archivo es demasiado grande. El tamaño máximo es 10MB.');
+        return;
+    }
+    
+    // Crear FormData para enviar el archivo
+    const formData = new FormData();
+    formData.append('certificado', file);
+    
+    // Obtener el botón de subir
+    const uploadBtn = document.querySelector(`button[onclick*="subirCertificado(${postulacionId})"]`);
+    const originalText = uploadBtn ? uploadBtn.innerHTML : '';
+    
+    try {
+        // Mostrar indicador de carga
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/postulaciones/${postulacionId}/certificado`, {
+            method: 'POST',
+            body: formData,
+            mode: 'cors'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Certificado subido exitosamente');
+            
+            // Marcar el checkbox como seleccionado
+            const checkbox = document.getElementById('tieneCertificado');
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+            
+            // Recargar el modal para mostrar el certificado subido
+            const modal = document.getElementById('modalSeguimiento');
+            const usuarioId = modal ? modal.dataset.usuarioId : null;
+            if (usuarioId) {
+                await abrirModalSeguimiento(postulacionId, usuarioId);
+            }
+            
+            // Recargar datos
+            loadSeguimiento();
+            loadPostulaciones();
+        } else {
+            alert('Error al subir el certificado: ' + (data.error || 'Error desconocido'));
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = originalText;
+            }
+        }
+    } catch (error) {
+        console.error('Error subiendo certificado:', error);
+        alert('Error de conexión al subir el certificado');
+        if (uploadBtn) {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Subir Certificado';
+        }
     }
 }
 
@@ -2022,6 +2417,18 @@ async function verDetallesOportunidad(oportunidadId) {
                                 <div style="width: ${Math.min(porcentajeCupos, 100)}%; height: 100%; background: ${porcentajeCupos >= 100 ? '#ef4444' : porcentajeCupos >= 75 ? '#f59e0b' : '#3b82f6'}; transition: width 0.3s;"></div>
                             </div>
                         ` : ''}
+                    </div>
+                    <div>
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Fechas del Voluntariado</p>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: 600;">
+                            ${(oportunidad.fecha_inicio_voluntariado || 'TBD')} - ${(oportunidad.fecha_fin_voluntariado || 'TBD')}
+                        </p>
+                    </div>
+                    <div>
+                        <p style="margin: 0; font-size: 12px; opacity: 0.9;">Horas del Voluntariado</p>
+                        <p style="margin: 5px 0 0 0; font-size: 16px; font-weight: 700;">
+                            ${(oportunidad.horas_voluntariado !== null && oportunidad.horas_voluntariado !== undefined && oportunidad.horas_voluntariado !== '' ? `${oportunidad.horas_voluntariado} hrs` : 'N/A')}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -2545,4 +2952,496 @@ async function cambiarEstadoPostulacionDesdeOportunidad(postulacionId, oportunid
 function cambiarContrasena() {
     alert('Funcionalidad de cambio de contraseña pendiente de implementar');
 }
+
+// ==========================================================
+// ========== Funcionalidad de Crear Oportunidad ===========
+// ==========================================================
+
+// Helper function para obtener elementos (compatible con app.js)
+function $(selector) {
+    return document.getElementById(selector) || document.querySelector(selector);
+}
+
+// Asegurar que las funciones estén disponibles globalmente desde el inicio
+// Declarar las funciones globales primero
+window.mostrarModalCrearOportunidad = null;
+window.cerrarModalCrearOportunidad = null;
+
+// Objeto de ubicaciones de Chile (igual que app.js)
+const ubicacionesChile = {
+    "Arica y Parinacota": {
+        ciudades: {
+            "Arica": ["Arica", "Camarones"],
+            "Parinacota": ["Putre", "General Lagos"]
+        }
+    },
+    "Tarapacá": {
+        ciudades: {
+            "Iquique": ["Iquique", "Alto Hospicio", "Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"],
+            "Tamarugal": ["Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"]
+        }
+    },
+    "Antofagasta": {
+        ciudades: {
+            "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal"],
+            "El Loa": ["Calama", "Ollagüe", "San Pedro de Atacama"],
+            "Tocopilla": ["Tocopilla", "María Elena"]
+        }
+    },
+    "Atacama": {
+        ciudades: {
+            "Copiapó": ["Copiapó", "Caldera", "Tierra Amarilla"],
+            "Chañaral": ["Chañaral", "Diego de Almagro"],
+            "Huasco": ["Vallenar", "Alto del Carmen", "Freirina", "Huasco"]
+        }
+    },
+    "Coquimbo": {
+        ciudades: {
+            "La Serena": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña"],
+            "Elqui": ["La Serena", "Vicuña", "Paihuano", "La Higuera"],
+            "Limarí": ["Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
+            "Choapa": ["Illapel", "Canela", "Los Vilos", "Salamanca"]
+        }
+    },
+    "Valparaíso": {
+        ciudades: {
+            "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
+            "Isla de Pascua": ["Isla de Pascua"],
+            "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"],
+            "Petorca": ["La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
+            "Quillota": ["Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales"],
+            "San Antonio": ["San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo"],
+            "San Felipe": ["San Felipe", "Catemu", "Llay Llay", "Panquehue", "Putaendo", "Santa María"],
+            "Marga Marga": ["Quilpué", "Limache", "Olmué", "Villa Alemana"]
+        }
+    },
+    "Región Metropolitana de Santiago": {
+        ciudades: {
+            "Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura"],
+            "Cordillera": ["Puente Alto", "Pirque", "San José de Maipo"],
+            "Chacabuco": ["Colina", "Lampa", "Tiltil"],
+            "Maipo": ["San Bernardo", "Buin", "Calera de Tango", "Paine"],
+            "Melipilla": ["Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro"],
+            "Talagante": ["Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"]
+        }
+    },
+    "O'Higgins": {
+        ciudades: {
+            "Rancagua": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente"],
+            "Cachapoal": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente"],
+            "Colchagua": ["San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
+            "Cardenal Caro": ["Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones"]
+        }
+    },
+    "Maule": {
+        ciudades: {
+            "Talca": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael"],
+            "Cauquenes": ["Cauquenes", "Chanco", "Pelluhue"],
+            "Curicó": ["Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén"],
+            "Linares": ["Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"]
+        }
+    },
+    "Ñuble": {
+        ciudades: {
+            "Chillán": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"],
+            "Diguillín": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"],
+            "Itata": ["Cobquecura", "Coelemu", "Ninhue", "Portezuelo", "Quirihue", "Ránquil", "Treguaco"],
+            "Punilla": ["Coihueco", "Ñiquén", "San Carlos", "San Fabián", "San Nicolás"]
+        }
+    },
+    "Bío Bío": {
+        ciudades: {
+            "Concepción": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé"],
+            "Arauco": ["Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa"],
+            "Bío Bío": ["Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel"],
+            "Ñuble": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"]
+        }
+    },
+    "Araucanía": {
+        ciudades: {
+            "Temuco": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre Las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol"],
+            "Cautín": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre Las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol"],
+            "Malleco": ["Angol", "Collipulli", "Curacautín", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"]
+        }
+    },
+    "Los Ríos": {
+        ciudades: {
+            "Valdivia": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli"],
+            "Ranco": ["La Unión", "Futrono", "Lago Ranco", "Río Bueno"]
+        }
+    },
+    "Los Lagos": {
+        ciudades: {
+            "Puerto Montt": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas"],
+            "Osorno": ["Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo"],
+            "Llanquihue": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas"],
+            "Chiloé": ["Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao"],
+            "Palena": ["Chaitén", "Futaleufú", "Hualaihué", "Palena"]
+        }
+    },
+    "Aysén": {
+        ciudades: {
+            "Coyhaique": ["Coyhaique", "Lago Verde"],
+            "Aysén": ["Aysén", "Cisnes", "Guaitecas"],
+            "Capitán Prat": ["Cochrane", "O'Higgins", "Tortel"],
+            "General Carrera": ["Chile Chico", "Río Ibáñez"]
+        }
+    },
+    "Magallanes y de la Antártica Chilena": {
+        ciudades: {
+            "Punta Arenas": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio"],
+            "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio"],
+            "Tierra del Fuego": ["Porvenir", "Primavera", "Timaukel"],
+            "Antártica": ["Antártica", "Cabo de Hornos"],
+            "Última Esperanza": ["Natales", "Torres del Paine"]
+        }
+    }
+};
+
+// Función para mostrar modal de crear oportunidad (igual que app.js)
+window.mostrarModalCrearOportunidad = function() {
+    // Verificar que hay organizacionId
+    if (!organizacionId) {
+        alert('Error: No se encontró la organización. Por favor, recarga la página.');
+        return;
+    }
+
+    // Crear modal dinámicamente
+    const modal = document.createElement('div');
+    modal.id = 'modalCrearOportunidad';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4';
+    modal.style.paddingTop = '80px'; // Agregar padding superior para evitar que se corte con el header
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold">Crear Nueva Oportunidad</h3>
+                    <button onclick="cerrarModalCrearOportunidad()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                <form id="formCrearOportunidad" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Título *</label>
+                        <input type="text" id="tituloOportunidad" required autocomplete="off" class="w-full border rounded-lg p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Descripción *</label>
+                        <textarea id="descripcionOportunidad" required rows="4" class="w-full border rounded-lg p-2"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Meta de postulantes</label>
+                            <input type="number" id="metaPostulantes" min="1" autocomplete="off" class="w-full border rounded-lg p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Cupo máximo</label>
+                            <input type="number" id="cupoMaximo" min="1" autocomplete="off" class="w-full border rounded-lg p-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Fecha límite de postulación</label>
+                        <input type="date" id="fechaLimite" class="w-full border rounded-lg p-2">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Fecha de inicio del voluntariado</label>
+                            <input type="date" id="fechaInicioVol" class="w-full border rounded-lg p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Fecha de fin del voluntariado</label>
+                            <input type="date" id="fechaFinVol" class="w-full border rounded-lg p-2">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Horas del voluntariado (estimadas)</label>
+                        <input type="number" id="horasVoluntariado" min="0" step="1" autocomplete="off" class="w-full border rounded-lg p-2" placeholder="Ej: 20">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Área de Voluntariado</label>
+                        <select id="areaVoluntariado" class="w-full border rounded-lg p-2" autocomplete="off">
+                            <option value="">Seleccione un área</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Medio Ambiente">Medio Ambiente</option>
+                            <option value="Salud">Salud</option>
+                            <option value="Comunidad">Comunidad</option>
+                            <option value="Deporte">Deporte</option>
+                            <option value="Cultura">Cultura</option>
+                            <option value="Emergencia">Emergencia</option>
+                            <option value="Desarrollo Social">Desarrollo Social</option>
+                            <option value="Tecnología">Tecnología</option>
+                            <option value="Arte">Arte</option>
+                            <option value="Animales">Animales</option>
+                            <option value="Adultos Mayores">Adultos Mayores</option>
+                            <option value="Niños y Jóvenes">Niños y Jóvenes</option>
+                            <option value="Discapacidad">Discapacidad</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div id="areaOtroContainer" class="hidden">
+                        <label class="block text-sm font-medium mb-1">Especificar área</label>
+                        <input type="text" id="areaOtro" autocomplete="off" placeholder="Escriba el área de voluntariado" class="w-full border rounded-lg p-2">
+                    </div>
+                    
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="text-lg font-semibold mb-3">Información del Responsable</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Nombre del responsable</label>
+                                <input type="text" id="responsableNombre" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Apellido del responsable</label>
+                                <input type="text" id="responsableApellido" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Email del responsable</label>
+                                <input type="email" id="responsableEmail" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Email institucional</label>
+                                <input type="email" id="responsableEmailInstitucional" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium mb-1">Teléfono del responsable</label>
+                            <input type="tel" id="responsableTelefono" autocomplete="off" class="w-full border rounded-lg p-2">
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="text-lg font-semibold mb-3">Ubicación de la Oportunidad</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Región</label>
+                                <select id="regionOportunidad" class="w-full border rounded-lg p-2">
+                                    <option value="">Seleccione una región</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Ciudad</label>
+                                <select id="ciudadOportunidad" disabled class="w-full border rounded-lg p-2">
+                                    <option value="">Primero seleccione una región</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Comuna</label>
+                                <select id="comunaOportunidad" disabled class="w-full border rounded-lg p-2">
+                                    <option value="">Primero seleccione una ciudad</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="cerrarModalCrearOportunidad()" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Crear Oportunidad
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Inicializar selectores de ubicación
+    inicializarSelectoresUbicacionOportunidad();
+    
+    // Manejar cambio en área de voluntariado
+    setTimeout(() => {
+        const areaSelect = $('#areaVoluntariado');
+        const areaOtroContainer = $('#areaOtroContainer');
+        const areaOtroInput = $('#areaOtro');
+        
+        if (areaSelect) {
+            areaSelect.addEventListener('change', function() {
+                if (this.value === 'Otro') {
+                    if (areaOtroContainer) areaOtroContainer.classList.remove('hidden');
+                    if (areaOtroInput) areaOtroInput.required = true;
+                } else {
+                    if (areaOtroContainer) areaOtroContainer.classList.add('hidden');
+                    if (areaOtroInput) {
+                        areaOtroInput.required = false;
+                        areaOtroInput.value = '';
+                    }
+                }
+            });
+        }
+    }, 100);
+
+    $('#formCrearOportunidad')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await crearOportunidad();
+    });
+};
+
+// Función para inicializar los selectores de ubicación
+function inicializarSelectoresUbicacionOportunidad() {
+    const regionSelect = $('#regionOportunidad');
+    const ciudadSelect = $('#ciudadOportunidad');
+    const comunaSelect = $('#comunaOportunidad');
+
+    if (!regionSelect || !ciudadSelect || !comunaSelect) return;
+
+    // Llenar el selector de regiones
+    Object.keys(ubicacionesChile).forEach(region => {
+        const option = document.createElement('option');
+        option.value = region;
+        option.textContent = region;
+        regionSelect.appendChild(option);
+    });
+
+    // Cuando se selecciona una región, actualizar ciudades
+    regionSelect.addEventListener('change', function() {
+        const regionSeleccionada = this.value;
+        
+        ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+        comunaSelect.innerHTML = '<option value="">Primero seleccione una ciudad</option>';
+        
+        if (regionSeleccionada && ubicacionesChile[regionSeleccionada]) {
+            ciudadSelect.disabled = false;
+            const ciudades = Object.keys(ubicacionesChile[regionSeleccionada].ciudades);
+            
+            ciudades.forEach(ciudad => {
+                const option = document.createElement('option');
+                option.value = ciudad;
+                option.textContent = ciudad;
+                ciudadSelect.appendChild(option);
+            });
+        } else {
+            ciudadSelect.disabled = true;
+            comunaSelect.disabled = true;
+        }
+    });
+
+    // Cuando se selecciona una ciudad, actualizar comunas
+    ciudadSelect.addEventListener('change', function() {
+        const regionSeleccionada = regionSelect.value;
+        const ciudadSeleccionada = this.value;
+        
+        comunaSelect.innerHTML = '<option value="">Seleccione una comuna</option>';
+        
+        if (regionSeleccionada && ciudadSeleccionada && 
+            ubicacionesChile[regionSeleccionada] && 
+            ubicacionesChile[regionSeleccionada].ciudades[ciudadSeleccionada]) {
+            comunaSelect.disabled = false;
+            const comunas = ubicacionesChile[regionSeleccionada].ciudades[ciudadSeleccionada];
+            
+            comunas.forEach(comuna => {
+                const option = document.createElement('option');
+                option.value = comuna;
+                option.textContent = comuna;
+                comunaSelect.appendChild(option);
+            });
+        } else {
+            comunaSelect.disabled = true;
+        }
+    });
+}
+
+// Función para crear oportunidad (igual que app.js)
+async function crearOportunidad() {
+    if (!organizacionId) {
+        alert('Error: No se encontró la organización');
+        return;
+    }
+
+    const titulo = $('#tituloOportunidad')?.value;
+    const descripcion = $('#descripcionOportunidad')?.value;
+    const metaPostulantes = $('#metaPostulantes')?.value;
+    const cupoMaximo = $('#cupoMaximo')?.value;
+    const fechaLimite = $('#fechaLimite')?.value;
+    const fechaInicioVol = $('#fechaInicioVol')?.value;
+    const fechaFinVol = $('#fechaFinVol')?.value;
+    const horasVoluntariado = $('#horasVoluntariado')?.value;
+    
+    // Campos del responsable
+    const responsableNombre = $('#responsableNombre')?.value;
+    const responsableApellido = $('#responsableApellido')?.value;
+    const responsableEmail = $('#responsableEmail')?.value;
+    const responsableEmailInstitucional = $('#responsableEmailInstitucional')?.value;
+    const responsableTelefono = $('#responsableTelefono')?.value;
+    
+    // Campos de ubicación
+    const regionOpor = $('#regionOportunidad')?.value;
+    const ciudadOpor = $('#ciudadOportunidad')?.value;
+    const comunaOpor = $('#comunaOportunidad')?.value;
+    
+    // Campo de área de voluntariado
+    const areaVoluntariado = $('#areaVoluntariado')?.value;
+    const areaOtro = $('#areaOtro')?.value;
+    const areaFinal = areaVoluntariado === 'Otro' ? (areaOtro?.trim() || null) : (areaVoluntariado || null);
+
+    if (!titulo || !descripcion) {
+        alert('Título y descripción son requeridos');
+        return;
+    }
+    
+    if (areaVoluntariado === 'Otro' && !areaOtro?.trim()) {
+        alert('Por favor, especifique el área de voluntariado');
+        return;
+    }
+
+    if (horasVoluntariado !== undefined && horasVoluntariado !== null && horasVoluntariado !== '') {
+        const horasInt = parseInt(horasVoluntariado);
+        if (isNaN(horasInt) || horasInt < 0) {
+            alert('Horas del voluntariado inválidas (debe ser un número mayor o igual a 0)');
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/oportunidades`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                organizacion_id: organizacionId,
+                titulo: titulo.trim(),
+                descripcion: descripcion.trim(),
+                meta_postulantes: metaPostulantes ? parseInt(metaPostulantes) : null,
+                cupo_maximo: cupoMaximo ? parseInt(cupoMaximo) : null,
+                fecha_limite_postulacion: fechaLimite || null,
+                fecha_inicio_voluntariado: fechaInicioVol || null,
+                fecha_fin_voluntariado: fechaFinVol || null,
+                horas_voluntariado: horasVoluntariado !== undefined && horasVoluntariado !== null && horasVoluntariado !== '' ? parseInt(horasVoluntariado) : null,
+                responsable_nombre: responsableNombre?.trim() || null,
+                responsable_apellido: responsableApellido?.trim() || null,
+                responsable_email: responsableEmail?.trim() || null,
+                responsable_email_institucional: responsableEmailInstitucional?.trim() || null,
+                responsable_telefono: responsableTelefono?.trim() || null,
+                region_opor: regionOpor || null,
+                ciudad_opor: ciudadOpor || null,
+                comuna_opor: comunaOpor || null,
+                area_voluntariado: areaFinal,
+                tipo_de_voluntariado: areaFinal
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Oportunidad creada exitosamente');
+            cerrarModalCrearOportunidad();
+            loadHistorialOportunidades(); // Recargar el historial de oportunidades
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo crear la oportunidad'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+}
+
+// Función para cerrar el modal
+window.cerrarModalCrearOportunidad = function() {
+    const modal = $('#modalCrearOportunidad');
+    if (modal) modal.remove();
+};
+
 

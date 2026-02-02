@@ -181,6 +181,12 @@
           <li class="nav-item">
             <a href="#" id="news-link" class="nav-link" onclick="goToNoticias(event); return false;">Noticias</a>
           </li>
+          <li class="nav-item">
+            <a href="#" id="academia-link" class="nav-link" onclick="goToAcademia(event); return false;">Academia</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" id="biblioteca-link" class="nav-link" onclick="goToBiblioteca(event); return false;">Biblioteca</a>
+          </li>
 
           <li class="nav-item dropdown">
             <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
@@ -238,12 +244,59 @@
         return '../';
       } else if (currentPath.includes('visualizacion-vd') || 
                  currentPath.includes('noticias') ||
+                 currentPath.includes('organizaciones') ||
+                 currentPath.includes('academia') ||
+                 currentPath.includes('biblioteca') ||
                  currentPath.includes('inicio de sesion')) {
         return '../';
       } else if (currentPath.includes('/template/')) {
         return '';
       } else {
         return 'template/';
+      }
+    }
+    
+    // Función helper para construir rutas de manera consistente
+    window.buildPath = function(relativePath) {
+      // Si la ruta ya es absoluta, retornarla
+      if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+        return relativePath;
+      }
+      
+      // Si la ruta comienza con ../, construir la ruta relativa correctamente
+      if (relativePath.startsWith('../')) {
+        const currentPath = window.location.pathname;
+        
+        // Obtener el directorio actual (sin el archivo HTML)
+        const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        
+        // Contar cuántos niveles subir
+        const upLevels = (relativePath.match(/\.\.\//g) || []).length;
+        const pathWithoutUp = relativePath.replace(/^(\.\.\/)+/, '');
+        
+        // Construir la ruta subiendo los niveles necesarios
+        const dirParts = currentDir.split('/').filter(p => p);
+        const newDirParts = dirParts.slice(0, dirParts.length - upLevels);
+        const finalPath = '/' + newDirParts.join('/') + '/' + pathWithoutUp;
+        
+        return window.location.origin + finalPath;
+      }
+      
+      // Si la ruta no tiene ../, usar getBasePath
+      const basePath = getBasePath();
+      const normalizedPath = relativePath.replace(/^\.\//, '');
+      const separator = basePath.endsWith('/') ? '' : '/';
+      return basePath + separator + normalizedPath;
+    }
+    
+    // Función helper para redirecciones consistentes
+    window.redirectTo = function(path, useReplace = false) {
+      const finalPath = window.buildPath(path);
+      console.log('Redirigiendo a:', finalPath);
+      if (useReplace) {
+        window.location.replace(finalPath);
+      } else {
+        window.location.href = finalPath;
       }
     }
     
@@ -321,14 +374,68 @@
       const basePath = getBasePath();
       const currentPath = window.location.pathname;
       
-      // Si ya estamos en noticias, no hacer nada
-      if (currentPath.includes('noticias')) {
-        return;
+      // Si estamos en index.html, hacer scroll a la sección de noticias
+      if (currentPath.includes('index.html') || currentPath.endsWith('/template/') || currentPath.endsWith('/template')) {
+        const section = document.getElementById('news');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
       }
       
-      // Ir a noticias/index.html
-      const url = basePath + 'noticias/index.html';
+      // Si estamos en otra página, redirigir a index.html#news
+      const url = basePath + 'index.html#news';
       console.log('Redirigiendo a Noticias:', url);
+      window.location.href = url;
+    };
+
+    // Función para ir a "Academia de voluntariado"
+    window.goToAcademia = function(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      const basePath = getBasePath();
+      const currentPath = window.location.pathname;
+      
+      // Si estamos en index.html, hacer scroll a la sección
+      if (currentPath.includes('index.html') || currentPath.endsWith('/template/') || currentPath.endsWith('/template')) {
+        const section = document.getElementById('academia-voluntariado');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+      }
+      
+      // Si estamos en otra página, redirigir a index.html#academia-voluntariado
+      const url = basePath + 'index.html#academia-voluntariado';
+      console.log('Redirigiendo a Academia:', url);
+      window.location.href = url;
+    };
+
+    // Función para ir a "Biblioteca/estudios"
+    window.goToBiblioteca = function(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      
+      const basePath = getBasePath();
+      const currentPath = window.location.pathname;
+      
+      // Si estamos en index.html, hacer scroll a la sección
+      if (currentPath.includes('index.html') || currentPath.endsWith('/template/') || currentPath.endsWith('/template')) {
+        const section = document.getElementById('biblioteca-estudios');
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+      }
+      
+      // Si estamos en otra página, redirigir a index.html#biblioteca-estudios
+      const url = basePath + 'index.html#biblioteca-estudios';
+      console.log('Redirigiendo a Biblioteca:', url);
       window.location.href = url;
     };
     
@@ -387,33 +494,25 @@
         profileDropdown.classList.remove('active');
       }
       
-      // Determinar la ruta según la ubicación actual
+      // Construir ruta absoluta siempre desde la raíz
+      const baseUrl = window.location.origin;
       const currentPath = window.location.pathname;
-      let profileUrl = '';
       
-      if (currentPath.includes('Perfil_usuario')) {
-        // Ya estamos en el perfil de usuario
-        profileUrl = 'index.html';
-      } else if (currentPath.includes('visualizacion-vd')) {
-        profileUrl = '../Roles/Perfil_usuario/index.html';
-      } else if (currentPath.includes('Perfil_organizacion') || 
-                 currentPath.includes('Formulario') || 
-                 currentPath.includes('Admin')) {
-        profileUrl = '../Perfil_usuario/index.html';
-      } else if (currentPath.includes('template/index.html') || 
-                 currentPath.endsWith('template/') || 
-                 currentPath.endsWith('template')) {
-        // Estamos en template/index.html
-        profileUrl = 'Roles/Perfil_usuario/index.html';
-      } else if (currentPath.includes('/template/')) {
-        // Estamos en alguna página dentro de template
-        profileUrl = 'Roles/Perfil_usuario/index.html';
-      } else {
-        // Estamos en la raíz
-        profileUrl = 'template/Roles/Perfil_usuario/index.html';
+      // Si ya estamos en el perfil de usuario, solo recargar
+      if (currentPath.includes('Perfil_usuario') && currentPath.endsWith('index.html')) {
+        window.location.reload();
+        return;
       }
       
-      console.log('Redirigiendo a perfil:', profileUrl);
+      // Construir ruta absoluta al perfil de usuario
+      const profileUrl = baseUrl + '/template/Roles/Perfil_usuario/index.html';
+      
+      console.log('=== Redirección a Mi Perfil ===');
+      console.log('Ruta actual:', currentPath);
+      console.log('Base URL:', baseUrl);
+      console.log('URL final:', profileUrl);
+      console.log('================================');
+      
       window.location.href = profileUrl;
     };
     
@@ -429,21 +528,25 @@
         profileDropdown.classList.remove('active');
       }
       
-      // Determinar la ruta según la ubicación actual
+      // Construir ruta absoluta siempre desde la raíz
+      const baseUrl = window.location.origin;
       const currentPath = window.location.pathname;
-      let organizacionUrl = '';
       
-      if (currentPath.includes('Perfil_organizacion')) {
-        organizacionUrl = 'index.html';
-      } else if (currentPath.includes('Roles')) {
-        organizacionUrl = 'Perfil_organizacion/index.html';
-      } else if (currentPath.includes('template')) {
-        organizacionUrl = 'Roles/Perfil_organizacion/index.html';
-      } else {
-        organizacionUrl = 'template/Roles/Perfil_organizacion/index.html';
+      // Si ya estamos en el perfil de organización, solo recargar
+      if (currentPath.includes('Perfil_organizacion') && currentPath.endsWith('index.html')) {
+        window.location.reload();
+        return;
       }
       
-      console.log('Redirigiendo a organización:', organizacionUrl);
+      // Construir ruta absoluta al perfil de organización
+      const organizacionUrl = baseUrl + '/template/Roles/Perfil_organizacion/index.html';
+      
+      console.log('=== Redirección a Mi Organización ===');
+      console.log('Ruta actual:', currentPath);
+      console.log('Base URL:', baseUrl);
+      console.log('URL final:', organizacionUrl);
+      console.log('=====================================');
+      
       window.location.href = organizacionUrl;
     };
     
@@ -483,35 +586,28 @@
       const currentPath = window.location.pathname;
       let panelUrl = '';
       
+      // Construir ruta absoluta siempre desde la raíz
+      const baseUrl = window.location.origin;
+      
       if (userRol === 'admin') {
-        // Panel de administración
-        if (currentPath.includes('Admin')) {
-          panelUrl = 'admin-modern.html';
-        } else if (currentPath.includes('Roles')) {
-          panelUrl = 'Admin/admin-modern.html';
-        } else if (currentPath.includes('template')) {
-          panelUrl = 'Roles/Admin/admin-modern.html';
-        } else {
-          panelUrl = 'template/Roles/Admin/admin-modern.html';
-        }
+        // Panel de administración - siempre usar ruta absoluta
+        panelUrl = baseUrl + '/template/Roles/Admin/admin-modern.html';
       } else if (userRol === 'organizacion') {
-        // Dashboard de organización
-        if (currentPath.includes('Perfil_organizacion')) {
-          panelUrl = 'dashboard.html';
-        } else if (currentPath.includes('Roles')) {
-          panelUrl = 'Perfil_organizacion/dashboard.html';
-        } else if (currentPath.includes('template')) {
-          panelUrl = 'Roles/Perfil_organizacion/dashboard.html';
-        } else {
-          panelUrl = 'template/Roles/Perfil_organizacion/dashboard.html';
-        }
+        // Dashboard de organización - siempre usar ruta absoluta
+        panelUrl = baseUrl + '/template/Roles/Perfil_organizacion/dashboard.html';
       } else {
         // Usuario normal - no tiene panel, redirigir al perfil
         window.goToProfile(event);
         return;
       }
       
-      console.log('Redirigiendo a panel:', panelUrl);
+      console.log('=== Redirección a Mi Panel ===');
+      console.log('Ruta actual:', currentPath);
+      console.log('Base URL:', baseUrl);
+      console.log('Rol:', userRol);
+      console.log('URL final:', panelUrl);
+      console.log('================================');
+      
       window.location.href = panelUrl;
     };
     

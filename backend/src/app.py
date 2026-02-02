@@ -111,7 +111,7 @@ class Organizacion(db.Model):
     experiencia_anios = db.Column(db.Integer, nullable=True)
     voluntarios_anuales = db.Column(db.String(100), nullable=True)
     certificacion = db.Column(db.JSON, default=list, nullable=True)
-    reseña_organizacion = db.Column(db.String(500), nullable=True)
+    # reseña_organizacion = db.Column(db.String(500), nullable=True)  # Comentado: columna no existe en BD
     created_at = db.Column(db.DateTime, nullable=True)
 
 class Postulacion(db.Model):
@@ -130,6 +130,9 @@ class Postulacion(db.Model):
     resena_org_sobre_voluntario = db.Column(db.Text)
     resena_org_publica = db.Column(db.Boolean)
     calificacion_org = db.Column(db.Numeric(3, 1))  # Permite valores de 0.0 a 5.0 con un decimal
+    reseña_org = db.Column(db.Text)  # Reseña del usuario sobre la organización
+    horas_voluntariado = db.Column(db.Integer, nullable=True)  # Horas de voluntariado específicas de esta postulación
+    # calificacion_usuario_org se define condicionalmente o se maneja con getattr
     created_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime)
 
@@ -143,6 +146,9 @@ class Oportunidad(db.Model):
     meta_postulantes = db.Column(db.Integer)
     cupo_maximo = db.Column(db.Integer)
     fecha_limite_postulacion = db.Column(db.Date)
+    fecha_inicio_voluntariado = db.Column(db.Date, nullable=True)
+    fecha_fin_voluntariado = db.Column(db.Date, nullable=True)
+    horas_voluntariado = db.Column(db.Integer, nullable=True)  # Horas estimadas del voluntariado (definidas por organización)
     estado = db.Column(db.String(20))
     responsable_nombre = db.Column(db.String(50))
     responsable_apellido = db.Column(db.String(50))
@@ -988,15 +994,19 @@ def listar_oportunidades():
                         oportunidades = oportunidades_str
             
             # Si se especifica estado y NO es 'todas', filtrar después en Python
-            # IMPORTANTE: Si NO se especifica estado, devolver TODAS las oportunidades de la organización
+            # IMPORTANTE: Si NO se especifica estado, devolver TODAS las oportunidades de la organización (activas, abiertas, etc.)
             if estado and estado != 'todas' and estado != 'all':
                 print(f"🔍 Aplicando filtro de estado: {estado}")
                 oportunidades_antes = len(oportunidades)
-                oportunidades = [op for op in oportunidades if op.estado == estado]
-                print(f"✅ Oportunidades después del filtro de estado: {len(oportunidades)} (de {oportunidades_antes})")
+                # Normalizar estado: 'abierto' -> 'abierta' para consistencia
+                estado_normalizado = estado.lower()
+                if estado_normalizado == 'abierto':
+                    estado_normalizado = 'abierta'
+                oportunidades = [op for op in oportunidades if op.estado and op.estado.lower() == estado_normalizado]
+                print(f"✅ Oportunidades después del filtro de estado '{estado_normalizado}': {len(oportunidades)} (de {oportunidades_antes})")
             else:
                 # Si no se especifica estado o es 'todas', devolver TODAS las oportunidades de la organización
-                print(f"🔍 No se aplicará filtro de estado, devolviendo TODAS las oportunidades de la organización")
+                print(f"🔍 No se aplicará filtro de estado, devolviendo TODAS las oportunidades de la organización (activas, abiertas, cerradas, etc.)")
             
             # Mostrar detalles de las oportunidades encontradas
             if oportunidades:
@@ -1022,16 +1032,20 @@ def listar_oportunidades():
             query = Oportunidad.query
             
             # Aplicar filtro de estado
-            # Por defecto, SIEMPRE mostrar solo activas a menos que se especifique 'todas' o 'all'
+            # Por defecto, mostrar activas Y abiertas a menos que se especifique 'todas' o 'all'
             if estado and estado not in ['todas', 'all']:
                 print(f"🔍 Aplicando filtro de estado: '{estado}'")
-                query = query.filter_by(estado=estado)
+                # Normalizar estado: 'abierto' -> 'abierta'
+                estado_normalizado = estado.lower()
+                if estado_normalizado == 'abierto':
+                    estado_normalizado = 'abierta'
+                query = query.filter_by(estado=estado_normalizado)
             elif estado in ['todas', 'all']:
                 print(f"🔍 Estado es 'todas' o 'all', no aplicando filtro de estado")
             else:
-                # Por defecto, mostrar solo activas si no se especifica estado
-                print(f"🔍 No se especificó estado, usando filtro por defecto: 'activa'")
-                query = query.filter_by(estado='activa')
+                # Por defecto, mostrar activas Y abiertas si no se especifica estado
+                print(f"🔍 No se especificó estado, usando filtro por defecto: 'activa' o 'abierta'")
+                query = query.filter(Oportunidad.estado.in_(['activa', 'abierta']))
             
             # Si se especifica region, usar region_opor de la tabla oportunidades
             if region and region.strip():
@@ -1088,9 +1102,9 @@ def listar_oportunidades():
                         # Si se especifica 'todas' o 'all', mostrar todas sin filtrar por estado
                         pass
                     else:
-                        # Por defecto, solo mostrar activas
-                        if op_estado.lower() != 'activa':
-                            print(f"  ❌ Oportunidad {op.id} descartada: estado '{op_estado}' != 'activa' (por defecto)")
+                        # Por defecto, mostrar activas Y abiertas
+                        if op_estado.lower() not in ['activa', 'abierta']:
+                            print(f"  ❌ Oportunidad {op.id} descartada: estado '{op_estado}' no es 'activa' ni 'abierta' (por defecto)")
                             continue
                     
                     # Verificar región si se especificó (OBLIGATORIO si se especifica)
@@ -1198,6 +1212,22 @@ def listar_oportunidades():
                         print(f"Error al formatear fecha_limite_postulacion: {date_error}")
                         fecha_limite_str = None
                 
+                # Formatear fechas del voluntariado de forma segura
+                fecha_inicio_vol_str = None
+                fecha_fin_vol_str = None
+                if op.fecha_inicio_voluntariado:
+                    try:
+                        fecha_inicio_vol_str = op.fecha_inicio_voluntariado.strftime('%Y-%m-%d')
+                    except Exception as date_error:
+                        print(f"Error al formatear fecha_inicio_voluntariado: {date_error}")
+                        fecha_inicio_vol_str = None
+                if op.fecha_fin_voluntariado:
+                    try:
+                        fecha_fin_vol_str = op.fecha_fin_voluntariado.strftime('%Y-%m-%d')
+                    except Exception as date_error:
+                        print(f"Error al formatear fecha_fin_voluntariado: {date_error}")
+                        fecha_fin_vol_str = None
+                
                 # Formatear created_at de forma segura
                 created_at_str = None
                 if op.created_at:
@@ -1229,6 +1259,9 @@ def listar_oportunidades():
                     'meta_postulantes': op.meta_postulantes,
                     'cupo_maximo': op.cupo_maximo,
                     'fecha_limite_postulacion': fecha_limite_str,
+                    'fecha_inicio_voluntariado': fecha_inicio_vol_str,
+                    'fecha_fin_voluntariado': fecha_fin_vol_str,
+                    'horas_voluntariado': int(op.horas_voluntariado) if op.horas_voluntariado is not None else None,
                     'estado': op.estado if op.estado is not None else 'activa',
                     'num_postulaciones': num_postulaciones,
                     'created_at': created_at_str,
@@ -1292,6 +1325,9 @@ def obtener_oportunidad(oportunidad_id):
                 'meta_postulantes': oportunidad.meta_postulantes,
                 'cupo_maximo': oportunidad.cupo_maximo,
                 'fecha_limite_postulacion': oportunidad.fecha_limite_postulacion.strftime('%Y-%m-%d') if oportunidad.fecha_limite_postulacion else None,
+                'fecha_inicio_voluntariado': oportunidad.fecha_inicio_voluntariado.strftime('%Y-%m-%d') if oportunidad.fecha_inicio_voluntariado else None,
+                'fecha_fin_voluntariado': oportunidad.fecha_fin_voluntariado.strftime('%Y-%m-%d') if oportunidad.fecha_fin_voluntariado else None,
+                'horas_voluntariado': int(oportunidad.horas_voluntariado) if oportunidad.horas_voluntariado is not None else None,
                 'estado': oportunidad.estado,
                 'num_postulaciones': num_postulaciones,
                 'created_at': oportunidad.created_at.strftime('%Y-%m-%d %H:%M:%S') if oportunidad.created_at else None,
@@ -1321,6 +1357,9 @@ def crear_oportunidad():
         meta_postulantes = data.get('meta_postulantes')
         cupo_maximo = data.get('cupo_maximo')
         fecha_limite_str = data.get('fecha_limite_postulacion')
+        fecha_inicio_vol_str = data.get('fecha_inicio_voluntariado')
+        fecha_fin_vol_str = data.get('fecha_fin_voluntariado')
+        horas_voluntariado_raw = data.get('horas_voluntariado')
         
         # Campos del responsable
         responsable_nombre = data.get('responsable_nombre')
@@ -1343,6 +1382,13 @@ def crear_oportunidad():
                 'error': 'Organización, título y descripción son requeridos'
             }), 400
         
+        # Validar longitud de descripción (máximo 500 caracteres)
+        if len(descripcion) > 500:
+            return jsonify({
+                'success': False,
+                'error': 'La descripción no puede exceder 500 caracteres'
+            }), 400
+        
         # Verificar que la organización existe
         organizacion = Organizacion.query.get(organizacion_id)
         if not organizacion:
@@ -1351,7 +1397,7 @@ def crear_oportunidad():
                 'error': 'Organización no encontrada'
             }), 404
         
-        # Convertir fecha
+        # Convertir fechas
         fecha_limite = None
         if fecha_limite_str:
             try:
@@ -1359,8 +1405,45 @@ def crear_oportunidad():
             except ValueError:
                 return jsonify({
                     'success': False,
-                    'error': 'Formato de fecha inválido (debe ser YYYY-MM-DD)'
+                    'error': 'Formato de fecha límite inválido (debe ser YYYY-MM-DD)'
                 }), 400
+        
+        fecha_inicio_vol = None
+        if fecha_inicio_vol_str:
+            try:
+                fecha_inicio_vol = datetime.strptime(fecha_inicio_vol_str, '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({
+                    'success': False,
+                    'error': 'Formato de fecha de inicio inválido (debe ser YYYY-MM-DD)'
+                }), 400
+        
+        fecha_fin_vol = None
+        if fecha_fin_vol_str:
+            try:
+                fecha_fin_vol = datetime.strptime(fecha_fin_vol_str, '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({
+                    'success': False,
+                    'error': 'Formato de fecha de fin inválido (debe ser YYYY-MM-DD)'
+                }), 400
+        
+        # Validar que fecha de inicio sea anterior a fecha de fin
+        if fecha_inicio_vol and fecha_fin_vol and fecha_inicio_vol > fecha_fin_vol:
+            return jsonify({
+                'success': False,
+                'error': 'La fecha de inicio debe ser anterior a la fecha de fin'
+            }), 400
+
+        # Validar horas del voluntariado (si viene)
+        horas_voluntariado = None
+        if horas_voluntariado_raw is not None and horas_voluntariado_raw != '':
+            try:
+                horas_voluntariado = int(horas_voluntariado_raw)
+                if horas_voluntariado < 0:
+                    return jsonify({'success': False, 'error': 'Las horas de voluntariado no pueden ser negativas'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'error': 'Horas de voluntariado inválidas'}), 400
         
         # Validar tipos de datos
         try:
@@ -1379,6 +1462,9 @@ def crear_oportunidad():
             meta_postulantes=int(meta_postulantes) if meta_postulantes else None,
             cupo_maximo=int(cupo_maximo) if cupo_maximo else None,
             fecha_limite_postulacion=fecha_limite,
+            fecha_inicio_voluntariado=fecha_inicio_vol,
+            fecha_fin_voluntariado=fecha_fin_vol,
+            horas_voluntariado=horas_voluntariado,
             estado='activa',
             responsable_nombre=responsable_nombre.strip() if responsable_nombre else None,
             responsable_apellido=responsable_apellido.strip() if responsable_apellido else None,
@@ -1471,8 +1557,29 @@ def actualizar_estado_oportunidad(oportunidad_id):
                 'error': 'Oportunidad no encontrada'
             }), 404
         
+        estado_anterior = oportunidad.estado
         oportunidad.estado = nuevo_estado
         db.session.commit()
+        
+        # Si se cerró la oportunidad, notificar a todos los postulantes
+        if nuevo_estado == 'cerrada' and estado_anterior != 'cerrada':
+            try:
+                # Obtener todas las postulaciones de esta oportunidad
+                postulaciones = Postulacion.query.filter_by(oportunidad_id=oportunidad_id).all()
+                
+                for postulacion in postulaciones:
+                    # Solo notificar a postulantes que no hayan sido rechazados
+                    if postulacion.estado not in ['No seleccionado']:
+                        try:
+                            usuario = Usuario.query.get(postulacion.usuario_id)
+                            if usuario and usuario.email:
+                                # Enviar email de notificación de cierre
+                                enviar_email_cierre_oportunidad(usuario, oportunidad, postulacion)
+                        except Exception as email_error:
+                            print(f"Error enviando email de cierre a usuario {postulacion.usuario_id}: {str(email_error)}")
+            except Exception as e:
+                print(f"Error notificando cierre de oportunidad: {str(e)}")
+                # No fallar la actualización si el envío de emails falla
         
         return jsonify({
             'success': True,
@@ -1521,6 +1628,35 @@ def actualizar_oportunidad(oportunidad_id):
                     pass
             else:
                 oportunidad.fecha_limite_postulacion = None
+        if 'fecha_inicio_voluntariado' in data:
+            if data['fecha_inicio_voluntariado']:
+                try:
+                    oportunidad.fecha_inicio_voluntariado = datetime.strptime(data['fecha_inicio_voluntariado'], '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            else:
+                oportunidad.fecha_inicio_voluntariado = None
+        if 'fecha_fin_voluntariado' in data:
+            if data['fecha_fin_voluntariado']:
+                try:
+                    oportunidad.fecha_fin_voluntariado = datetime.strptime(data['fecha_fin_voluntariado'], '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            else:
+                oportunidad.fecha_fin_voluntariado = None
+        if oportunidad.fecha_inicio_voluntariado and oportunidad.fecha_fin_voluntariado and oportunidad.fecha_inicio_voluntariado > oportunidad.fecha_fin_voluntariado:
+            return jsonify({'success': False, 'error': 'La fecha de inicio debe ser anterior a la fecha de fin'}), 400
+        if 'horas_voluntariado' in data:
+            if data['horas_voluntariado'] is None or data['horas_voluntariado'] == '':
+                oportunidad.horas_voluntariado = None
+            else:
+                try:
+                    horas_int = int(data['horas_voluntariado'])
+                    if horas_int < 0:
+                        return jsonify({'success': False, 'error': 'Las horas de voluntariado no pueden ser negativas'}), 400
+                    oportunidad.horas_voluntariado = horas_int
+                except (ValueError, TypeError):
+                    return jsonify({'success': False, 'error': 'Horas de voluntariado inválidas'}), 400
         if 'region_opor' in data:
             oportunidad.region_opor = data['region_opor'].strip() if data['region_opor'] else None
         if 'ciudad_opor' in data:
@@ -1565,6 +1701,9 @@ def actualizar_oportunidad(oportunidad_id):
                 'meta_postulantes': oportunidad.meta_postulantes,
                 'cupo_maximo': oportunidad.cupo_maximo,
                 'fecha_limite_postulacion': oportunidad.fecha_limite_postulacion.strftime('%Y-%m-%d') if oportunidad.fecha_limite_postulacion else None,
+                'fecha_inicio_voluntariado': oportunidad.fecha_inicio_voluntariado.strftime('%Y-%m-%d') if oportunidad.fecha_inicio_voluntariado else None,
+                'fecha_fin_voluntariado': oportunidad.fecha_fin_voluntariado.strftime('%Y-%m-%d') if oportunidad.fecha_fin_voluntariado else None,
+                'horas_voluntariado': int(oportunidad.horas_voluntariado) if oportunidad.horas_voluntariado is not None else None,
                 'estado': oportunidad.estado,
                 'num_postulaciones': num_postulaciones,
                 'region_opor': oportunidad.region_opor if oportunidad.region_opor else '',
@@ -2293,6 +2432,114 @@ def enviar_email_cambio_estado(postulacion, nuevo_estado, motivo_no_seleccion=No
         print(f"Error al enviar email de cambio de estado: {str(e)}")
         raise
 
+def enviar_email_cierre_oportunidad(usuario, oportunidad, postulacion):
+    """
+    Envía un email al usuario cuando se cierra la oportunidad a la que está postulado.
+    """
+    try:
+        # Obtener información de la organización
+        organizacion = Organizacion.query.get(oportunidad.organizacion_id)
+        organizacion_nombre = organizacion.nombre if organizacion else 'la organización'
+        
+        # Verificar que el usuario tenga email
+        if not usuario.email:
+            print(f"Usuario {usuario.id} no tiene email configurado")
+            return
+        
+        # Determinar mensaje según el estado de la postulación
+        if postulacion.estado == 'Seleccionado':
+            mensaje_estado = "Como seleccionado en esta oportunidad, te informamos que la oportunidad ha sido cerrada."
+            mensaje_adicional = "<p>Si tienes alguna pregunta sobre tu participación o certificados, por favor contacta a la organización.</p>"
+        elif postulacion.estado in ['Pre-seleccionado', 'Etapa de entrevista', 'En lista de espera']:
+            mensaje_estado = f"Tu postulación está en estado: <strong>{postulacion.estado}</strong>. Te informamos que la oportunidad ha sido cerrada."
+            mensaje_adicional = "<p>La organización puede contactarte si hay nuevas oportunidades similares en el futuro.</p>"
+        else:
+            mensaje_estado = "Te informamos que la oportunidad a la que te postulaste ha sido cerrada."
+            mensaje_adicional = ""
+        
+        # Crear el mensaje
+        msg = Message(
+            subject='Actualización: Oportunidad de voluntariado cerrada',
+            recipients=[usuario.email],
+            html=f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                    }}
+                    .container {{
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f9f9f9;
+                    }}
+                    .header {{
+                        background-color: #6b7280;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                        border-radius: 5px 5px 0 0;
+                    }}
+                    .content {{
+                        background-color: white;
+                        padding: 30px;
+                        border-radius: 0 0 5px 5px;
+                    }}
+                    .footer {{
+                        text-align: center;
+                        margin-top: 20px;
+                        color: #666;
+                        font-size: 12px;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>📢 Actualización de Oportunidad</h1>
+                    </div>
+                    <div class="content">
+                        <p>Hola <strong>{usuario.nombre or 'Usuario'}</strong>,</p>
+                        
+                        <p>{mensaje_estado}</p>
+                        
+                        <h3>Detalles de la oportunidad:</h3>
+                        <ul>
+                            <li><strong>Oportunidad:</strong> {oportunidad.titulo}</li>
+                            <li><strong>Organización:</strong> {organizacion_nombre}</li>
+                            <li><strong>Estado de tu postulación:</strong> {postulacion.estado}</li>
+                            <li><strong>Estado de la oportunidad:</strong> Cerrada</li>
+                        </ul>
+                        
+                        {mensaje_adicional}
+                        
+                        <p>Puedes revisar el estado de todas tus postulaciones en tu perfil de usuario.</p>
+                        
+                        <p>Saludos cordiales,<br>
+                        <strong>Equipo INJUV</strong></p>
+                    </div>
+                    <div class="footer">
+                        <p>Este es un email automático, por favor no respondas a este mensaje.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+        )
+        
+        # Enviar el email
+        mail.send(msg)
+        print(f"Email de cierre de oportunidad enviado a {usuario.email} (Oportunidad: {oportunidad.titulo})")
+        
+    except Exception as e:
+        print(f"Error al enviar email de cierre de oportunidad: {str(e)}")
+        # No lanzar error para no interrumpir el flujo
+
 def enviar_email_confirmacion_postulacion(usuario, oportunidad):
     """
     Envía un email de confirmación al usuario cuando realiza una postulación exitosa.
@@ -2545,41 +2792,214 @@ def crear_postulacion():
 @app.route("/api/usuarios/<int:usuario_id>/postulaciones", methods=["GET"])
 def listar_postulaciones_usuario(usuario_id):
     try:
-        postulaciones = Postulacion.query.filter_by(usuario_id=usuario_id).all()
+        print(f"🔍 listar_postulaciones_usuario llamado para usuario_id: {usuario_id}")
+        # Usar SQL directo para evitar problemas con columnas que aún no existen
+        from sqlalchemy import text
+        
+        # Asegurar que la sesión esté en un estado limpio (hacer rollback primero)
+        try:
+            db.session.rollback()
+        except:
+            pass
+        
+        # Usar SQL directo directamente para evitar problemas con columnas faltantes
+        # (SQLAlchemy ORM intentará cargar todas las columnas del modelo, incluso si no existen)
+        
+        # Primero verificar si las columnas nuevas existen
+        # Verificar con diferentes variaciones del nombre (con/sin tilde, con/sin mayúsculas)
+        try:
+            check_columns_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND (column_name = 'reseña_org' 
+                     OR column_name = 'resena_org'
+                     OR column_name = 'reseña_organizacion'
+                     OR column_name = 'resena_organizacion'
+                     OR column_name = 'resena_usuario_sobre_org'
+                     OR column_name = 'calificacion_usuario_org')
+            """)
+            existing_columns = db.session.execute(check_columns_query).fetchall()
+            existing_column_names = [row[0] for row in existing_columns]
+        except Exception as check_error:
+            # Si hay error (por ejemplo, transacción abortada), hacer rollback y reintentar
+            db.session.rollback()
+            try:
+                existing_columns = db.session.execute(check_columns_query).fetchall()
+                existing_column_names = [row[0] for row in existing_columns]
+            except:
+                # Si aún falla, continuar sin las columnas nuevas
+                existing_column_names = []
+        
+        # Verificar variaciones del nombre de la columna de reseña
+        has_resena_col = any(name in existing_column_names for name in [
+            'reseña_org',
+            'resena_org',
+            'reseña_organizacion', 
+            'resena_organizacion',
+            'resena_usuario_sobre_org'
+        ])
+        # Obtener el nombre real de la columna si existe (priorizar reseña_org)
+        resena_col_name = None
+        for name in ['reseña_org', 'resena_org', 'reseña_organizacion', 'resena_organizacion', 'resena_usuario_sobre_org']:
+            if name in existing_column_names:
+                resena_col_name = name
+                break
+        
+        has_calif_col = 'calificacion_usuario_org' in existing_column_names
+        
+        # Verificar si existe la columna resena_usuario_publica
+        check_publica_query = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'postulaciones' 
+            AND column_name = 'resena_usuario_publica'
+        """)
+        try:
+            publica_col_exists = db.session.execute(check_publica_query).fetchone()
+        except:
+            publica_col_exists = None
+        
+        # Construir la consulta SQL base (incluir horas_voluntariado)
+        base_query = """
+            SELECT 
+                p.id, p.oportunidad_id, p.estado, p.estado_confirmacion, 
+                p.motivo_no_seleccion, p.tiene_certificado, p.ruta_certificado_pdf,
+                p.resena_org_sobre_voluntario, p.resena_org_publica, p.calificacion_org,
+                p.created_at, COALESCE(p.horas_voluntariado, 0) as horas_voluntariado
+"""
+        
+        # Agregar columnas nuevas solo si existen, usando el nombre real
+        if has_resena_col and resena_col_name:
+            # Usar comillas dobles si el nombre tiene caracteres especiales
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f', p."{resena_col_name}"'
+            else:
+                base_query += f', p.{resena_col_name}'
+        if has_calif_col:
+            base_query += ", p.calificacion_usuario_org"
+        
+        if publica_col_exists:
+            base_query += ", p.resena_usuario_publica"
+        
+        base_query += """
+            FROM postulaciones p
+            WHERE p.usuario_id = :usuario_id
+        """
+        
+        # Ejecutar la consulta SQL
+        try:
+            print(f"📝 Ejecutando query SQL para usuario_id: {usuario_id}")
+            print(f"📋 Query SQL completo:\n{base_query}")
+            sql_query = text(base_query)
+            results = db.session.execute(sql_query, {'usuario_id': usuario_id}).fetchall()
+            print(f"✅ Query ejecutado. Filas encontradas: {len(results)}")
+            if len(results) > 0:
+                print(f"📊 Primera fila de resultados: {results[0]}")
+        except Exception as sql_error:
+            # Si hay error en la consulta SQL (por ejemplo, transacción abortada), hacer rollback y reintentar
+            print(f"⚠️ Error en query SQL, reintentando: {sql_error}")
+            error_str = str(sql_error).lower()
+            db.session.rollback()
+            # Reintentar después del rollback
+            sql_query = text(base_query)
+            results = db.session.execute(sql_query, {'usuario_id': usuario_id}).fetchall()
+            print(f"✅ Reintento exitoso. Filas encontradas: {len(results)}")
         
         resultado = []
-        for post in postulaciones:
-            oportunidad = Oportunidad.query.get(post.oportunidad_id)
+        print(f"🔄 Procesando {len(results)} filas de postulaciones")
+        for row in results:
+            post_id = row[0]
+            oportunidad_id = row[1]
             
-            # Solo incluir postulaciones cuya oportunidad aún existe
-            # Si la oportunidad fue eliminada, no se muestra en el perfil del usuario
-            if not oportunidad:
+            # Usar SQL directo para obtener información de la oportunidad y organización
+            # para evitar problemas con columnas faltantes en los modelos ORM
+            try:
+                oportunidad_query = text("""
+                    SELECT id, titulo, estado, organizacion_id
+                    FROM oportunidades
+                    WHERE id = :oportunidad_id
+                """)
+                oportunidad_row = db.session.execute(oportunidad_query, {'oportunidad_id': oportunidad_id}).fetchone()
+                
+                if not oportunidad_row:
+                    print(f"⚠️ Oportunidad {oportunidad_id} no encontrada, saltando postulación {post_id}")
+                    continue
+                
+                oportunidad_titulo = oportunidad_row[1]
+                oportunidad_estado = oportunidad_row[2]
+                organizacion_id = oportunidad_row[3]
+                oportunidad_cerrada = oportunidad_estado == 'cerrada'
+                
+                # Obtener información de la organización usando SQL directo
+                organizacion_nombre = ''
+                if organizacion_id:
+                    try:
+                        org_query = text("""
+                            SELECT nombre
+                            FROM organizaciones
+                            WHERE id = :org_id
+                        """)
+                        org_row = db.session.execute(org_query, {'org_id': organizacion_id}).fetchone()
+                        if org_row:
+                            organizacion_nombre = org_row[0]
+                    except:
+                        pass
+                
+            except Exception as op_error:
+                # Si hay error obteniendo la oportunidad, continuar con la siguiente postulación
+                print(f"❌ Error obteniendo oportunidad {oportunidad_id} para postulación {post_id}: {op_error}")
                 continue
             
-            organizacion = Organizacion.query.get(oportunidad.organizacion_id) if oportunidad else None
-            
-            # Verificar si la oportunidad está cerrada
-            oportunidad_cerrada = oportunidad and oportunidad.estado == 'cerrada'
-            
-            resultado.append({
-                'id': post.id,
-                'oportunidad_id': post.oportunidad_id,
-                'oportunidad_titulo': oportunidad.titulo if oportunidad else '',
-                'oportunidad_estado': oportunidad.estado if oportunidad else None,
+            # Construir el diccionario de resultado
+            post_data = {
+                'id': post_id,
+                'oportunidad_id': oportunidad_id,
+                'oportunidad_titulo': oportunidad_titulo,
+                'oportunidad_estado': oportunidad_estado,
                 'oportunidad_cerrada': oportunidad_cerrada,
-                'organizacion_id': oportunidad.organizacion_id if oportunidad else None,
-                'organizacion_nombre': organizacion.nombre if organizacion else '',
-                'estado': post.estado,
-                'estado_confirmacion': post.estado_confirmacion,
-                'motivo_no_seleccion': post.motivo_no_seleccion,
-                'tiene_certificado': post.tiene_certificado,
-                'ruta_certificado_pdf': post.ruta_certificado_pdf,
-                'resena_org_sobre_voluntario': post.resena_org_sobre_voluntario,
-                'resena_org_publica': post.resena_org_publica,
-                'calificacion_org': float(getattr(post, 'calificacion_org', None)) if getattr(post, 'calificacion_org', None) is not None else None,
-                'created_at': post.created_at.strftime('%Y-%m-%d %H:%M:%S') if post.created_at else None
-            })
+                'organizacion_id': organizacion_id,
+                'organizacion_nombre': organizacion_nombre,
+                'estado': row[2],
+                'estado_confirmacion': row[3],
+                'motivo_no_seleccion': row[4],
+                'tiene_certificado': row[5],
+                'ruta_certificado_pdf': row[6],
+                'resena_org_sobre_voluntario': row[7],
+                'resena_org_publica': row[8],
+                'calificacion_org': float(row[9]) if row[9] is not None else None,
+                'created_at': row[10].strftime('%Y-%m-%d %H:%M:%S') if row[10] else None,
+                'horas_voluntariado': int(row[11]) if row[11] is not None else 0  # Horas de esta postulación específica
+            }
+            
+            # Agregar campos nuevos solo si existen
+            col_idx = 12
+            if has_resena_col and resena_col_name:
+                resena_valor = row[col_idx]
+                post_data['reseña_org'] = resena_valor  # Nombre correcto de la columna
+                post_data['resena_usuario_sobre_org'] = resena_valor  # Retrocompatibilidad
+                post_data['reseña_organizacion'] = resena_valor  # Retrocompatibilidad
+                col_idx += 1
+            else:
+                post_data['reseña_org'] = None
+                post_data['resena_usuario_sobre_org'] = None
+                post_data['reseña_organizacion'] = None
+            
+            if has_calif_col:
+                post_data['calificacion_usuario_org'] = float(row[col_idx]) if row[col_idx] is not None else None
+                col_idx += 1
+            else:
+                post_data['calificacion_usuario_org'] = None
+            
+            # Agregar campo resena_usuario_publica si existe
+            if publica_col_exists and col_idx < len(row):
+                post_data['resena_usuario_publica'] = bool(row[col_idx]) if row[col_idx] is not None else True
+            else:
+                post_data['resena_usuario_publica'] = True  # Por defecto es pública
+            
+            resultado.append(post_data)
         
+        print(f"✅ Retornando {len(resultado)} postulaciones procesadas para usuario {usuario_id}")
         return jsonify({
             'success': True,
             'postulaciones': resultado
@@ -2587,11 +3007,21 @@ def listar_postulaciones_usuario(usuario_id):
         
     except Exception as e:
         import traceback
+        error_trace = traceback.format_exc()
         print(f"Error en listar_postulaciones_usuario: {str(e)}")
-        print(traceback.format_exc())
+        print(error_trace)
+        
+        # Si el error es sobre columnas que no existen, dar un mensaje más claro
+        error_str = str(e).lower()
+        if 'no existe la columna' in error_str or ('column' in error_str and 'does not exist' in error_str):
+            return jsonify({
+                'success': False,
+                'error': f'Error de base de datos: {str(e)}. Por favor verifica que la columna reseña_org existe en la tabla postulaciones.'
+            }), 500
+        
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': f'Error al listar postulaciones: {str(e)}'
         }), 500
 
 # Listar postulaciones de una oportunidad (para la organización)
@@ -2623,8 +3053,8 @@ def listar_postulaciones_oportunidad(oportunidad_id):
                 if (hoy.month, hoy.day) < (usuario.fecha_nacimiento.month, usuario.fecha_nacimiento.day):
                     edad -= 1
             
-            # Obtener horas de voluntariado del usuario
-            horas_voluntariado_usuario = usuario.hora_voluntariado if usuario and usuario.hora_voluntariado else 0
+            # Obtener horas de voluntariado de esta postulación específica (no las horas totales del usuario)
+            horas_voluntariado_postulacion = getattr(post, 'horas_voluntariado', None) or 0
             
             resultado.append({
                 'id': post.id,
@@ -2645,7 +3075,7 @@ def listar_postulaciones_oportunidad(oportunidad_id):
                 'asistencia_actividad': post.asistencia_actividad,
                 'tiene_certificado': post.tiene_certificado,
                 'ruta_certificado_pdf': post.ruta_certificado_pdf if hasattr(post, 'ruta_certificado_pdf') else None,
-                'horas_voluntariado': horas_voluntariado_usuario,  # Horas totales del usuario (se puede mejorar para horas por postulación)
+                'horas_voluntariado': int(horas_voluntariado_postulacion) if horas_voluntariado_postulacion is not None else 0,  # Horas específicas de esta postulación
                 'motivo_no_seleccion': post.motivo_no_seleccion,
                 'motivo_no_seleccion_otro': post.motivo_no_seleccion_otro,
                 'resena_org_sobre_voluntario': post.resena_org_sobre_voluntario,
@@ -2930,6 +3360,7 @@ def actualizar_asistencia(postulacion_id):
         # Formato antiguo: tipo y asistencia
         asistencia_capacitacion = data.get('asistencia_capacitacion')
         asistencia_actividad = data.get('asistencia_actividad')
+        horas_voluntariado = data.get('horas_voluntariado')  # Horas específicas de esta postulación
         tipo = data.get('tipo')  # 'capacitacion' o 'actividad' (formato antiguo)
         asistencia = data.get('asistencia')  # 'SI', 'No', 'No aplica' (formato antiguo)
         
@@ -3014,6 +3445,34 @@ def actualizar_asistencia(postulacion_id):
                 'error': 'Se requiere enviar asistencia_capacitacion y/o asistencia_actividad, o tipo y asistencia'
             }), 400
         
+        # Actualizar horas de voluntariado de la postulación si se proporciona
+        if horas_voluntariado is not None:
+            try:
+                horas_int = int(horas_voluntariado)
+                if horas_int < 0:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Las horas no pueden ser negativas'
+                    }), 400
+                postulacion.horas_voluntariado = horas_int
+                
+                # Calcular y actualizar el total de horas del usuario (suma de todas sus postulaciones)
+                from sqlalchemy import func
+                total_horas = db.session.query(func.coalesce(func.sum(Postulacion.horas_voluntariado), 0)).filter(
+                    Postulacion.usuario_id == postulacion.usuario_id
+                ).scalar() or 0
+                
+                # Actualizar el total en el usuario
+                usuario = Usuario.query.get(postulacion.usuario_id)
+                if usuario:
+                    usuario.hora_voluntariado = int(total_horas)
+                    print(f"✅ Horas totales del usuario {postulacion.usuario_id} actualizadas a: {total_horas} (suma de todas sus postulaciones)")
+            except (ValueError, TypeError):
+                return jsonify({
+                    'success': False,
+                    'error': 'Las horas deben ser un número entero válido'
+                }), 400
+        
         postulacion.updated_at = datetime.now()
         db.session.commit()
         
@@ -3021,7 +3480,8 @@ def actualizar_asistencia(postulacion_id):
             'success': True,
             'message': 'Asistencia actualizada exitosamente',
             'asistencia_capacitacion': postulacion.asistencia_capacitacion,
-            'asistencia_actividad': postulacion.asistencia_actividad
+            'asistencia_actividad': postulacion.asistencia_actividad,
+            'horas_voluntariado': postulacion.horas_voluntariado
         }), 200
         
     except Exception as e:
@@ -3129,6 +3589,834 @@ def agregar_resena(postulacion_id):
         return jsonify({
             'success': False,
             'error': str(e)
+        }), 500
+
+# Endpoint para que el usuario deje una reseña sobre la organización
+@app.route("/api/postulaciones/<int:postulacion_id>/resena-usuario", methods=["PUT"])
+def agregar_resena_usuario(postulacion_id):
+    try:
+        # Importar text al inicio para que esté disponible en toda la función
+        from sqlalchemy import text
+        
+        data = request.json
+        resena = data.get('resena') or data.get('resena_usuario_sobre_org') or data.get('reseña_org') or data.get('reseña_organizacion')
+        calificacion = data.get('calificacion') or data.get('calificacion_usuario_org')
+        es_publica = data.get('es_publica', True)  # Por defecto es pública
+        
+        if not resena or not resena.strip():
+            return jsonify({
+                'success': False,
+                'error': 'La reseña es requerida'
+            }), 400
+        
+        # Validar calificación
+        if calificacion is None:
+            return jsonify({
+                'success': False,
+                'error': 'La calificación es requerida'
+            }), 400
+        
+        try:
+            calificacion_float = float(calificacion)
+            if calificacion_float < 0 or calificacion_float > 5:
+                return jsonify({
+                    'success': False,
+                    'error': 'La calificación debe estar entre 0 y 5'
+                }), 400
+        except (ValueError, TypeError):
+            return jsonify({
+                'success': False,
+                'error': 'La calificación debe ser un número válido'
+            }), 400
+        
+        # Verificar que la postulación existe usando SQL directo para evitar problemas con columnas faltantes
+        db.session.rollback()  # Limpiar sesión primero
+        check_post_query = text("""
+            SELECT id FROM postulaciones WHERE id = :postulacion_id
+        """)
+        post_exists = db.session.execute(check_post_query, {'postulacion_id': postulacion_id}).fetchone()
+        if not post_exists:
+            return jsonify({
+                'success': False,
+                'error': 'Postulación no encontrada'
+            }), 404
+        
+        # Verificar que el usuario está autenticado (opcional, depende de tu sistema de autenticación)
+        # Aquí puedes agregar validación adicional si es necesario
+        
+        # Actualizar los campos usando la columna reseña_org (nombre correcto)
+        try:
+            # Verificar qué columnas existen realmente (priorizar reseña_org)
+            db.session.rollback()  # Limpiar sesión antes de verificar
+            check_col_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND (column_name = 'reseña_org' 
+                     OR column_name = 'resena_org'
+                     OR column_name = 'reseña_organizacion' 
+                     OR column_name = 'resena_organizacion'
+                     OR column_name = 'resena_usuario_sobre_org')
+            """)
+            existing_cols = db.session.execute(check_col_query).fetchall()
+            existing_col_names = [row[0] for row in existing_cols]
+            
+            # Obtener el nombre real de la columna (priorizar reseña_org)
+            resena_col_name = None
+            for name in ['reseña_org', 'resena_org', 'reseña_organizacion', 'resena_organizacion', 'resena_usuario_sobre_org']:
+                if name in existing_col_names:
+                    resena_col_name = name
+                    break
+            
+            # Si tenemos el nombre de la columna, usar SQL directo (más seguro que ORM)
+            if resena_col_name:
+                # Usar SQL directo con el nombre real de la columna
+                if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                    db.session.execute(
+                        text(f'UPDATE postulaciones SET "{resena_col_name}" = :resena WHERE id = :id'),
+                        {'resena': resena.strip(), 'id': postulacion_id}
+                    )
+                else:
+                    db.session.execute(
+                        text(f'UPDATE postulaciones SET {resena_col_name} = :resena WHERE id = :id'),
+                        {'resena': resena.strip(), 'id': postulacion_id}
+                    )
+            else:
+                # Si no existe ninguna columna, retornar error informativo
+                return jsonify({
+                    'success': False,
+                    'error': 'La columna de reseña no existe en la base de datos. Por favor crea la columna reseña_org en la tabla postulaciones usando: ALTER TABLE postulaciones ADD COLUMN "reseña_org" TEXT;'
+                }), 500
+            
+            # Verificar si existe la columna de calificación
+            check_calif_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND column_name = 'calificacion_usuario_org'
+            """)
+            calif_col_exists = db.session.execute(check_calif_query).fetchone()
+            
+            if calif_col_exists:
+                # Usar SQL directo para actualizar la calificación
+                db.session.execute(
+                    text("UPDATE postulaciones SET calificacion_usuario_org = :calificacion WHERE id = :id"),
+                    {'calificacion': calificacion_float, 'id': postulacion_id}
+                )
+            # Si no existe la columna, simplemente no la actualizamos (no es crítico)
+            
+            # Verificar si existe la columna de resena_usuario_publica
+            check_publica_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND column_name = 'resena_usuario_publica'
+            """)
+            publica_col_exists = db.session.execute(check_publica_query).fetchone()
+            
+            if publica_col_exists:
+                # Actualizar el campo es_publica
+                db.session.execute(
+                    text("UPDATE postulaciones SET resena_usuario_publica = :es_publica WHERE id = :id"),
+                    {'es_publica': bool(es_publica), 'id': postulacion_id}
+                )
+            
+            # Actualizar updated_at usando SQL directo
+            db.session.execute(
+                text("UPDATE postulaciones SET updated_at = :updated_at WHERE id = :id"),
+                {'updated_at': datetime.now(), 'id': postulacion_id}
+            )
+            db.session.commit()
+        except Exception as db_error:
+            # Si hay un error porque las columnas no existen, informar al usuario
+            error_str = str(db_error).lower()
+            if 'no existe la columna' in error_str or ('column' in error_str and 'does not exist' in error_str):
+                db.session.rollback()
+                return jsonify({
+                    'success': False,
+                    'error': f'Error al guardar: {str(db_error)}'
+                }), 500
+            raise
+        
+        return jsonify({
+            'success': True,
+            'message': 'Reseña agregada exitosamente'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(f"Error al agregar reseña de usuario: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# Endpoint para cambiar la visibilidad de una reseña de usuario (pública/privada)
+# Solo la organización puede cambiar esto
+@app.route("/api/postulaciones/<int:postulacion_id>/resena-visibilidad", methods=["PUT"])
+def cambiar_visibilidad_resena(postulacion_id):
+    try:
+        from sqlalchemy import text
+        
+        data = request.json
+        es_publica = data.get('es_publica', True)
+        organizacion_id = data.get('organizacion_id')
+        
+        # Verificar que la postulación existe
+        db.session.rollback()
+        check_post_query = text("""
+            SELECT p.id, p.oportunidad_id, o.organizacion_id
+            FROM postulaciones p
+            INNER JOIN oportunidades o ON p.oportunidad_id = o.id
+            WHERE p.id = :postulacion_id
+        """)
+        post_info = db.session.execute(check_post_query, {'postulacion_id': postulacion_id}).fetchone()
+        
+        if not post_info:
+            return jsonify({
+                'success': False,
+                'error': 'Postulación no encontrada'
+            }), 404
+        
+        # Verificar que la organización que solicita el cambio es la dueña de la oportunidad
+        if organizacion_id and post_info[2] != organizacion_id:
+            return jsonify({
+                'success': False,
+                'error': 'No tienes permisos para cambiar la visibilidad de esta reseña'
+            }), 403
+        
+        # Verificar si existe la columna resena_usuario_publica
+        check_publica_query = text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'postulaciones' 
+            AND column_name = 'resena_usuario_publica'
+        """)
+        publica_col_exists = db.session.execute(check_publica_query).fetchone()
+        
+        if not publica_col_exists:
+            return jsonify({
+                'success': False,
+                'error': 'La columna resena_usuario_publica no existe en la base de datos. Por favor ejecuta la migración correspondiente.'
+            }), 500
+        
+        # Actualizar solo el campo de visibilidad
+        db.session.execute(
+            text("UPDATE postulaciones SET resena_usuario_publica = :es_publica, updated_at = :updated_at WHERE id = :id"),
+            {'es_publica': bool(es_publica), 'updated_at': datetime.now(), 'id': postulacion_id}
+        )
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Visibilidad de la reseña actualizada exitosamente',
+            'es_publica': bool(es_publica)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(f"Error al cambiar visibilidad de reseña: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# Obtener todas las reseñas de usuarios sobre la organización
+@app.route("/api/organizaciones/<int:organizacion_id>/reseñas", methods=["GET"])
+def obtener_reseñas_organizacion(organizacion_id):
+    try:
+        from sqlalchemy import text
+        
+        # Verificar si se solicitan solo reseñas públicas (desde el perfil público)
+        solo_publicas = request.args.get('solo_publicas', 'false').lower() == 'true'
+        
+        # Verificar que la organización existe
+        organizacion = Organizacion.query.get(organizacion_id)
+        if not organizacion:
+            return jsonify({
+                'success': False,
+                'error': 'Organización no encontrada'
+            }), 404
+        
+        # Limpiar sesión
+        db.session.rollback()
+        
+        # Verificar si existen las columnas de reseña
+        try:
+            check_col_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND (column_name = 'reseña_org' 
+                     OR column_name = 'resena_org'
+                     OR column_name = 'calificacion_usuario_org'
+                     OR column_name = 'resena_usuario_publica')
+            """)
+            existing_cols = db.session.execute(check_col_query).fetchall()
+            existing_col_names = [row[0] for row in existing_cols]
+            
+            has_resena_col = any(name in existing_col_names for name in [
+                'reseña_org', 'resena_org'
+            ])
+            resena_col_name = None
+            for name in ['reseña_org', 'resena_org']:
+                if name in existing_col_names:
+                    resena_col_name = name
+                    break
+            
+            has_calif_col = 'calificacion_usuario_org' in existing_col_names
+            has_publica_col = 'resena_usuario_publica' in existing_col_names
+        except:
+            has_resena_col = False
+            has_calif_col = False
+            has_publica_col = False
+            resena_col_name = None
+        
+        # Construir consulta SQL para obtener postulaciones con reseñas
+        # Primero obtener todas las oportunidades de la organización
+        oportunidades_query = text("""
+            SELECT id, titulo FROM oportunidades 
+            WHERE organizacion_id = :organizacion_id
+        """)
+        oportunidades = db.session.execute(oportunidades_query, {'organizacion_id': organizacion_id}).fetchall()
+        
+        if not oportunidades:
+            return jsonify({
+                'success': True,
+                'reseñas_por_voluntariado': []
+            }), 200
+        
+        oportunidad_ids = [op[0] for op in oportunidades]
+        
+        if not oportunidad_ids:
+            return jsonify({
+                'success': True,
+                'reseñas_por_voluntariado': []
+            }), 200
+        
+        # Construir consulta para obtener postulaciones con reseñas
+        # Usar IN en lugar de ANY para mejor compatibilidad
+        base_query = f"""
+            SELECT 
+                p.id, p.oportunidad_id, p.usuario_id,
+                p.created_at
+        """
+        
+        if has_resena_col and resena_col_name:
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f', p."{resena_col_name}"'
+            else:
+                base_query += f', p.{resena_col_name}'
+        else:
+            base_query += ', NULL'
+        
+        if has_calif_col:
+            base_query += ', p.calificacion_usuario_org'
+        else:
+            base_query += ', NULL'
+        
+        if has_publica_col:
+            base_query += ', p.resena_usuario_publica'
+        else:
+            base_query += ', NULL'
+        
+        base_query += f"""
+            FROM postulaciones p
+            WHERE p.oportunidad_id IN ({','.join(map(str, oportunidad_ids))})
+            AND (
+        """
+        
+        if has_resena_col and resena_col_name:
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f'p."{resena_col_name}" IS NOT NULL AND p."{resena_col_name}" != \'\''
+            else:
+                base_query += f'p.{resena_col_name} IS NOT NULL AND p.{resena_col_name} != \'\''
+        
+        if has_calif_col:
+            if has_resena_col:
+                base_query += ' OR '
+            base_query += 'p.calificacion_usuario_org IS NOT NULL'
+        
+        if not has_resena_col and not has_calif_col:
+            # Si no existen las columnas, retornar vacío
+            return jsonify({
+                'success': True,
+                'reseñas_por_voluntariado': []
+            }), 200
+        
+        base_query += """
+            )
+            ORDER BY p.created_at DESC
+        """
+        
+        # Ejecutar consulta
+        sql_query = text(base_query)
+        results = db.session.execute(sql_query).fetchall()
+        
+        # Organizar por oportunidad
+        reseñas_por_voluntariado = {}
+        
+        for row in results:
+            post_id = row[0]
+            oportunidad_id = row[1]
+            usuario_id = row[2]
+            fecha_postulacion = row[3]
+            resena_text = row[4] if len(row) > 4 else None
+            calificacion = float(row[5]) if len(row) > 5 and row[5] is not None else None
+            # Por defecto es pública si el campo es None/null (comportamiento por defecto)
+            es_publica_val = row[6] if len(row) > 6 else None
+            es_publica = es_publica_val if es_publica_val is not None else True  # Por defecto es pública
+            
+            # Si se solicitan solo públicas y esta no lo es, saltarla
+            if solo_publicas and not es_publica:
+                continue
+            
+            # Obtener información de la oportunidad
+            oportunidad_info = next((op for op in oportunidades if op[0] == oportunidad_id), None)
+            if not oportunidad_info:
+                continue
+            
+            oportunidad_titulo = oportunidad_info[1]
+            
+            # Obtener información del usuario
+            usuario_query = text("""
+                SELECT id, nombre, apellido 
+                FROM usuarios 
+                WHERE id = :usuario_id
+            """)
+            usuario_row = db.session.execute(usuario_query, {'usuario_id': usuario_id}).fetchone()
+            
+            usuario_nombre = 'Usuario'
+            if usuario_row:
+                nombre_parts = [usuario_row[1], usuario_row[2]] if usuario_row[1] and usuario_row[2] else []
+                usuario_nombre = ' '.join(nombre_parts) if nombre_parts else 'Usuario'
+            
+            # Agregar a la estructura organizada
+            if oportunidad_id not in reseñas_por_voluntariado:
+                reseñas_por_voluntariado[oportunidad_id] = {
+                    'oportunidad_id': oportunidad_id,
+                    'oportunidad_titulo': oportunidad_titulo,
+                    'reseñas': []
+                }
+            
+            reseña_data = {
+                'postulacion_id': post_id,
+                'usuario_id': usuario_id,
+                'usuario_nombre': usuario_nombre,
+                'fecha_postulacion': fecha_postulacion.strftime('%Y-%m-%d %H:%M:%S') if fecha_postulacion else None,
+                'reseña': resena_text,
+                'calificacion': calificacion,
+                'es_publica': es_publica
+            }
+            
+            reseñas_por_voluntariado[oportunidad_id]['reseñas'].append(reseña_data)
+        
+        # Convertir a lista
+        resultado = list(reseñas_por_voluntariado.values())
+        
+        # Ordenar por número de reseñas (descendente)
+        resultado.sort(key=lambda x: len(x['reseñas']), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'reseñas_por_voluntariado': resultado
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error en obtener_reseñas_organizacion: {str(e)}")
+        print(error_trace)
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'Error al obtener reseñas: {str(e)}'
+        }), 500
+
+# Obtener reseñas públicas recientes para la página principal
+@app.route("/api/reseñas/publicas", methods=["GET"])
+def obtener_reseñas_publicas():
+    try:
+        from sqlalchemy import text
+        
+        # Parámetros opcionales
+        limite = request.args.get('limite', default=3, type=int)
+        
+        # Limpiar sesión
+        db.session.rollback()
+        
+        # Verificar si existen las columnas de reseña
+        try:
+            check_col_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND (column_name = 'reseña_org' 
+                     OR column_name = 'resena_org'
+                     OR column_name = 'calificacion_usuario_org'
+                     OR column_name = 'calificacion_org'
+                     OR column_name = 'resena_usuario_publica')
+            """)
+            existing_cols = db.session.execute(check_col_query).fetchall()
+            existing_col_names = [row[0] for row in existing_cols]
+            
+            has_resena_col = any(name in existing_col_names for name in [
+                'reseña_org', 'resena_org'
+            ])
+            resena_col_name = None
+            for name in ['reseña_org', 'resena_org']:
+                if name in existing_col_names:
+                    resena_col_name = name
+                    break
+            
+            has_calif_col = 'calificacion_usuario_org' in existing_col_names or 'calificacion_org' in existing_col_names
+            calif_col_name = 'calificacion_usuario_org' if 'calificacion_usuario_org' in existing_col_names else ('calificacion_org' if 'calificacion_org' in existing_col_names else None)
+            has_publica_col = 'resena_usuario_publica' in existing_col_names
+        except:
+            has_resena_col = False
+            has_calif_col = False
+            has_publica_col = False
+            resena_col_name = None
+            calif_col_name = None
+        
+        if not has_resena_col:
+            return jsonify({
+                'success': True,
+                'reseñas': []
+            }), 200
+        
+        # Construir consulta SQL para obtener postulaciones con reseñas públicas
+        base_query = """
+            SELECT 
+                p.id as postulacion_id,
+                p.usuario_id,
+                p.oportunidad_id,
+                p.created_at,
+        """
+        
+        if resena_col_name:
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f'p."{resena_col_name}" as reseña,'
+            else:
+                base_query += f'p.{resena_col_name} as reseña,'
+        else:
+            base_query += 'NULL as reseña,'
+        
+        if calif_col_name:
+            base_query += f'p.{calif_col_name} as calificacion,'
+        else:
+            base_query += 'NULL as calificacion,'
+        
+        if has_publica_col:
+            base_query += 'COALESCE(p.resena_usuario_publica, true) as es_publica,'
+        else:
+            base_query += 'true as es_publica,'
+        
+        base_query += """
+                u.nombre as usuario_nombre,
+                u.apellido as usuario_apellido,
+                o.id as organizacion_id,
+                o.nombre as organizacion_nombre,
+                op.titulo as oportunidad_titulo
+            FROM postulaciones p
+            INNER JOIN usuarios u ON p.usuario_id = u.id
+            INNER JOIN oportunidades op ON p.oportunidad_id = op.id
+            INNER JOIN organizaciones o ON op.organizacion_id = o.id
+            WHERE 
+        """
+        
+        if resena_col_name:
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f'p."{resena_col_name}" IS NOT NULL AND p."{resena_col_name}" != \'\''
+            else:
+                base_query += f'p.{resena_col_name} IS NOT NULL AND p.{resena_col_name} != \'\''
+        
+        if has_publica_col:
+            base_query += ' AND COALESCE(p.resena_usuario_publica, true) = true'
+        
+        base_query += """
+            ORDER BY p.created_at DESC
+            LIMIT :limite
+        """
+        
+        # Ejecutar consulta
+        sql_query = text(base_query)
+        results = db.session.execute(sql_query, {'limite': limite}).fetchall()
+        
+        # Procesar resultados
+        reseñas = []
+        for row in results:
+            postulacion_id = row[0]
+            usuario_id = row[1]
+            oportunidad_id = row[2]
+            fecha_creacion = row[3]
+            resena_text = row[4]
+            calificacion = float(row[5]) if row[5] is not None else None
+            es_publica = row[6] if len(row) > 6 else True
+            usuario_nombre = row[7] or ''
+            usuario_apellido = row[8] or ''
+            organizacion_id = row[9]
+            organizacion_nombre = row[10] or 'Organización'
+            oportunidad_titulo = row[11] or 'Oportunidad'
+            
+            nombre_completo = f"{usuario_nombre} {usuario_apellido}".strip() or 'Usuario'
+            
+            reseña_data = {
+                'postulacion_id': postulacion_id,
+                'usuario_id': usuario_id,
+                'usuario_nombre': nombre_completo,
+                'organizacion_id': organizacion_id,
+                'organizacion_nombre': organizacion_nombre,
+                'oportunidad_titulo': oportunidad_titulo,
+                'reseña': resena_text,
+                'calificacion': calificacion,
+                'fecha': fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if fecha_creacion else None
+            }
+            
+            reseñas.append(reseña_data)
+        
+        return jsonify({
+            'success': True,
+            'reseñas': reseñas
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error en obtener_reseñas_publicas: {str(e)}")
+        print(error_trace)
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'Error al obtener reseñas públicas: {str(e)}'
+        }), 500
+
+# Obtener todas las reseñas de todas las organizaciones (para admin)
+@app.route("/api/admin/reseñas/todas", methods=["GET"])
+def obtener_todas_reseñas_admin():
+    try:
+        from sqlalchemy import text
+        
+        # Parámetro para agrupar por organización u oportunidad
+        agrupar_por = request.args.get('agrupar_por', default='oportunidad', type=str)  # 'oportunidad' o 'organizacion'
+        
+        # Limpiar sesión
+        db.session.rollback()
+        
+        # Verificar si existen las columnas de reseña
+        try:
+            check_col_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'postulaciones' 
+                AND (column_name = 'reseña_org' 
+                     OR column_name = 'resena_org'
+                     OR column_name = 'calificacion_usuario_org'
+                     OR column_name = 'calificacion_org'
+                     OR column_name = 'resena_usuario_publica')
+            """)
+            existing_cols = db.session.execute(check_col_query).fetchall()
+            existing_col_names = [row[0] for row in existing_cols]
+            
+            has_resena_col = any(name in existing_col_names for name in [
+                'reseña_org', 'resena_org'
+            ])
+            resena_col_name = None
+            for name in ['reseña_org', 'resena_org']:
+                if name in existing_col_names:
+                    resena_col_name = name
+                    break
+            
+            has_calif_col = 'calificacion_usuario_org' in existing_col_names or 'calificacion_org' in existing_col_names
+            calif_col_name = 'calificacion_usuario_org' if 'calificacion_usuario_org' in existing_col_names else ('calificacion_org' if 'calificacion_org' in existing_col_names else None)
+            has_publica_col = 'resena_usuario_publica' in existing_col_names
+        except:
+            has_resena_col = False
+            has_calif_col = False
+            has_publica_col = False
+            resena_col_name = None
+            calif_col_name = None
+        
+        if not has_resena_col:
+            return jsonify({
+                'success': True,
+                'reseñas': []
+            }), 200
+        
+        # Construir consulta SQL para obtener todas las reseñas
+        base_query = """
+            SELECT 
+                p.id as postulacion_id,
+                p.usuario_id,
+                p.oportunidad_id,
+                p.created_at,
+        """
+        
+        if resena_col_name:
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f'p."{resena_col_name}" as reseña,'
+            else:
+                base_query += f'p.{resena_col_name} as reseña,'
+        else:
+            base_query += 'NULL as reseña,'
+        
+        if calif_col_name:
+            base_query += f'p.{calif_col_name} as calificacion,'
+        else:
+            base_query += 'NULL as calificacion,'
+        
+        if has_publica_col:
+            base_query += 'COALESCE(p.resena_usuario_publica, true) as es_publica,'
+        else:
+            base_query += 'true as es_publica,'
+        
+        base_query += """
+                u.nombre as usuario_nombre,
+                u.apellido as usuario_apellido,
+                o.id as organizacion_id,
+                o.nombre as organizacion_nombre,
+                op.titulo as oportunidad_titulo
+            FROM postulaciones p
+            INNER JOIN usuarios u ON p.usuario_id = u.id
+            INNER JOIN oportunidades op ON p.oportunidad_id = op.id
+            INNER JOIN organizaciones o ON op.organizacion_id = o.id
+            WHERE 
+        """
+        
+        if resena_col_name:
+            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
+                base_query += f'p."{resena_col_name}" IS NOT NULL AND p."{resena_col_name}" != \'\''
+            else:
+                base_query += f'p.{resena_col_name} IS NOT NULL AND p.{resena_col_name} != \'\''
+        
+        base_query += """
+            ORDER BY p.created_at DESC
+        """
+        
+        # Ejecutar consulta
+        sql_query = text(base_query)
+        results = db.session.execute(sql_query).fetchall()
+        
+        # Organizar según el parámetro agrupar_por
+        if agrupar_por == 'organizacion':
+            # Agrupar por organización, luego por oportunidad
+            reseñas_agrupadas = {}
+            
+            for row in results:
+                postulacion_id = row[0]
+                usuario_id = row[1]
+                oportunidad_id = row[2]
+                fecha_creacion = row[3]
+                resena_text = row[4]
+                calificacion = float(row[5]) if row[5] is not None else None
+                es_publica = row[6] if len(row) > 6 else True
+                usuario_nombre = row[7] or ''
+                usuario_apellido = row[8] or ''
+                organizacion_id = row[9]
+                organizacion_nombre = row[10] or 'Organización'
+                oportunidad_titulo = row[11] or 'Oportunidad'
+                
+                nombre_completo = f"{usuario_nombre} {usuario_apellido}".strip() or 'Usuario'
+                
+                if organizacion_id not in reseñas_agrupadas:
+                    reseñas_agrupadas[organizacion_id] = {
+                        'organizacion_id': organizacion_id,
+                        'organizacion_nombre': organizacion_nombre,
+                        'oportunidades': {}
+                    }
+                
+                if oportunidad_id not in reseñas_agrupadas[organizacion_id]['oportunidades']:
+                    reseñas_agrupadas[organizacion_id]['oportunidades'][oportunidad_id] = {
+                        'oportunidad_id': oportunidad_id,
+                        'oportunidad_titulo': oportunidad_titulo,
+                        'reseñas': []
+                    }
+                
+                reseña_data = {
+                    'postulacion_id': postulacion_id,
+                    'usuario_id': usuario_id,
+                    'usuario_nombre': nombre_completo,
+                    'reseña': resena_text,
+                    'calificacion': calificacion,
+                    'fecha': fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if fecha_creacion else None,
+                    'es_publica': es_publica
+                }
+                
+                reseñas_agrupadas[organizacion_id]['oportunidades'][oportunidad_id]['reseñas'].append(reseña_data)
+            
+            # Convertir a lista
+            resultado = []
+            for org_id, org_data in reseñas_agrupadas.items():
+                oportunidades_lista = list(org_data['oportunidades'].values())
+                resultado.append({
+                    'organizacion_id': org_data['organizacion_id'],
+                    'organizacion_nombre': org_data['organizacion_nombre'],
+                    'oportunidades': oportunidades_lista
+                })
+            
+        else:
+            # Agrupar solo por oportunidad (por defecto)
+            reseñas_por_oportunidad = {}
+            
+            for row in results:
+                postulacion_id = row[0]
+                usuario_id = row[1]
+                oportunidad_id = row[2]
+                fecha_creacion = row[3]
+                resena_text = row[4]
+                calificacion = float(row[5]) if row[5] is not None else None
+                es_publica = row[6] if len(row) > 6 else True
+                usuario_nombre = row[7] or ''
+                usuario_apellido = row[8] or ''
+                organizacion_id = row[9]
+                organizacion_nombre = row[10] or 'Organización'
+                oportunidad_titulo = row[11] or 'Oportunidad'
+                
+                nombre_completo = f"{usuario_nombre} {usuario_apellido}".strip() or 'Usuario'
+                
+                if oportunidad_id not in reseñas_por_oportunidad:
+                    reseñas_por_oportunidad[oportunidad_id] = {
+                        'oportunidad_id': oportunidad_id,
+                        'oportunidad_titulo': oportunidad_titulo,
+                        'organizacion_id': organizacion_id,
+                        'organizacion_nombre': organizacion_nombre,
+                        'reseñas': []
+                    }
+                
+                reseña_data = {
+                    'postulacion_id': postulacion_id,
+                    'usuario_id': usuario_id,
+                    'usuario_nombre': nombre_completo,
+                    'reseña': resena_text,
+                    'calificacion': calificacion,
+                    'fecha': fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if fecha_creacion else None,
+                    'es_publica': es_publica
+                }
+                
+                reseñas_por_oportunidad[oportunidad_id]['reseñas'].append(reseña_data)
+            
+            resultado = list(reseñas_por_oportunidad.values())
+        
+        return jsonify({
+            'success': True,
+            'agrupar_por': agrupar_por,
+            'reseñas': resultado
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error en obtener_todas_reseñas_admin: {str(e)}")
+        print(error_trace)
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'Error al obtener todas las reseñas: {str(e)}'
         }), 500
 
 # Endpoint para enviar correo masivo a postulantes

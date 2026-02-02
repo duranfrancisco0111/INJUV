@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Organización - INJUV</title>
+  <link rel="stylesheet" href=""
   <link rel="stylesheet" href="../../typography.css">
   <link rel="stylesheet" href="../../styles.css">
   <link rel="stylesheet" href="dashboard.css">
@@ -33,6 +34,10 @@
         <i class="fas fa-chart-line"></i>
         <span>Reportes de Impacto</span>
       </a>
+      <a href="#" class="org-nav-link" data-section="reseñas">
+        <i class="fas fa-star"></i>
+        <span>Reseñas</span>
+      </a>
       <a href="#" class="org-nav-link" data-section="configuracion">
         <i class="fas fa-cog"></i>
         <span>Configuración</span>
@@ -58,9 +63,6 @@
           <option value="cerrada">Cerradas</option>
         </select>
         <input type="text" id="buscarHistorial" class="filter-input" placeholder="Buscar por título...">
-        <button id="btnCrearOportunidad" class="btn-primary">
-          <i class="fas fa-plus"></i> Crear Nueva Oportunidad
-        </button>
       </div>
 
       <!-- Tabla de oportunidades -->
@@ -71,6 +73,8 @@
               <th>Título</th>
               <th>Estado</th>
               <th>Fecha Límite</th>
+              <th>Fechas VOL</th>
+              <th>Horas VOL</th>
               <th>Postulaciones</th>
               <th>Seleccionados</th>
               <th>Acciones</th>
@@ -78,7 +82,7 @@
           </thead>
           <tbody id="tablaHistorialOportunidades">
             <tr>
-              <td colspan="6" class="text-center text-gray-500 py-8">Cargando oportunidades...</td>
+              <td colspan="8" class="text-center text-gray-500 py-8">Cargando oportunidades...</td>
             </tr>
           </tbody>
         </table>
@@ -249,6 +253,36 @@
       </div>
     </section>
 
+    <!-- Sección: Reseñas -->
+    <section id="reseñas" class="org-content-section">
+      <div class="section-header">
+        <h1>Reseñas de Voluntarios</h1>
+        <p>Visualiza todas las reseñas y calificaciones que los voluntarios han dejado sobre tus oportunidades</p>
+      </div>
+      
+      <!-- Filtros -->
+      <div class="filters-bar">
+        <select id="filtroOportunidadReseñas" class="filter-select">
+          <option value="todas">Todas las oportunidades</option>
+        </select>
+        <select id="filtroCalificacionReseñas" class="filter-select">
+          <option value="todas">Todas las calificaciones</option>
+          <option value="5">5 estrellas</option>
+          <option value="4">4 estrellas</option>
+          <option value="3">3 estrellas</option>
+          <option value="2">2 estrellas</option>
+          <option value="1">1 estrella</option>
+        </select>
+      </div>
+
+      <!-- Contenedor de reseñas organizadas por voluntariado -->
+      <div id="reseñasContainer" class="reseñas-container">
+        <div class="text-center text-gray-500 py-8">
+          Cargando reseñas...
+        </div>
+      </div>
+    </section>
+
     <!-- Sección: Configuración -->
     <section id="configuracion" class="org-content-section">
       <div class="section-header">
@@ -259,7 +293,7 @@
       <div class="config-grid">
         <div class="config-card">
           <h3><i class="fas fa-building"></i> Información General</h3>
-          <button class="btn-secondary" onclick="window.location.href='index.html'">
+          <button class="btn-secondary" onclick="if (typeof window.redirectTo === 'function') { window.redirectTo('index.html'); } else { window.location.href='index.html'; }">
             <i class="fas fa-edit"></i> Editar Perfil
           </button>
         </div>

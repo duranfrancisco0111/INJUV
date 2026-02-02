@@ -82,7 +82,40 @@ function initializeModernAdmin() {
     setupAnimations();
     setupStatCardsClick();
     setupModal();
+    setupAddUserForm();
     loadDashboardData();
+}
+
+// Configurar el formulario de agregar usuario
+function setupAddUserForm() {
+    // Esperar a que el DOM esté completamente cargado
+    setTimeout(() => {
+        const addUserForm = document.getElementById('addUserForm');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleFormSubmission(this);
+            });
+        }
+        
+        // Configurar cierre del modal al hacer clic fuera
+        const modal = document.getElementById('addUserModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal('addUserModal');
+                }
+            });
+        }
+        
+        // Configurar botón de cerrar
+        const closeBtn = modal ? modal.querySelector('.close') : null;
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                closeModal('addUserModal');
+            });
+        }
+    }, 500);
 }
 
 // Configuración de Navegación
@@ -142,9 +175,6 @@ function setupInteractiveElements() {
     
     // Formularios de reportes
     setupReportForms();
-    
-    // Configuración de plataforma
-    setupPlatformSettings();
     
     // Configuración de estadísticas
     setupStatistics();
@@ -479,51 +509,6 @@ function setupReportForms() {
     // No es necesario event delegation general
 }
 
-// Configuración de Configuración de Plataforma
-function setupPlatformSettings() {
-    document.addEventListener('click', function(e) {
-        if (e.target.textContent === 'Guardar Cambios') {
-            savePlatformSettings();
-        }
-    });
-    
-    // Configurar área de upload
-    const uploadAreas = document.querySelectorAll('.upload-area');
-    uploadAreas.forEach(area => {
-        const fileInput = area.querySelector('input[type="file"]');
-        
-        area.addEventListener('click', () => fileInput.click());
-        
-        area.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            area.style.borderColor = '#1976D2';
-            area.style.background = '#F3F4F6';
-        });
-        
-        area.addEventListener('dragleave', () => {
-            area.style.borderColor = '#D1D5DB';
-            area.style.background = 'transparent';
-        });
-        
-        area.addEventListener('drop', (e) => {
-            e.preventDefault();
-            area.style.borderColor = '#D1D5DB';
-            area.style.background = 'transparent';
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFileUpload(files[0]);
-            }
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileUpload(e.target.files[0]);
-            }
-        });
-    });
-}
-
 // Configuración de Animaciones
 function setupAnimations() {
     // Animaciones de entrada para las tarjetas de estadísticas
@@ -649,14 +634,14 @@ function loadSectionData(section) {
                 switchCategory('voluntarios');
             }
             break;
-        case 'platform':
-            loadPlatformSettings();
-            break;
         case 'news':
             loadNewsData();
             break;
         case 'opportunities':
             loadOpportunitiesData();
+            break;
+        case 'reviews':
+            loadAllReviewsData();
             break;
         case 'repository':
             loadRepositoryData();
@@ -679,11 +664,35 @@ async function loadUsersData() {
             setupUsersSearchAndFilter();
         } else {
             console.error('Error al cargar usuarios:', data.error);
-            renderUsersTable([]);
+            const usersTable = document.querySelector('#users .users-table');
+            if (usersTable) {
+                const header = usersTable.querySelector('.user-row.header');
+                usersTable.innerHTML = '';
+                if (header) usersTable.appendChild(header);
+                usersTable.innerHTML += `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <p style="font-weight: 600; margin-bottom: 8px;">Error al cargar usuarios</p>
+                        <p style="font-size: 14px;">${data.error || 'Error desconocido'}</p>
+                    </div>
+                `;
+            }
         }
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
-        renderUsersTable([]);
+        const usersTable = document.querySelector('#users .users-table');
+        if (usersTable) {
+            const header = usersTable.querySelector('.user-row.header');
+            usersTable.innerHTML = '';
+            if (header) usersTable.appendChild(header);
+            usersTable.innerHTML += `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #ef4444;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                    <p style="font-weight: 600; margin-bottom: 8px;">Error de conexión</p>
+                    <p style="font-size: 14px;">No se pudo conectar con el servidor. Verifica tu conexión.</p>
+                </div>
+            `;
+        }
     }
 }
 
@@ -1091,11 +1100,256 @@ window.eliminarUsuario = async function(userId, nombreUsuario) {
     }
 };
 
-// Cargar Configuración de Plataforma
-async function loadPlatformSettings() {
-    console.log('Cargando configuración de plataforma...');
-    // Esta sección puede ser para configuraciones futuras
-    // Por ahora solo asegurarse de que la sección esté visible
+// Cargar todas las reseñas (admin)
+async function loadAllReviewsData() {
+    console.log('Cargando todas las reseñas...');
+    const container = document.getElementById('reviewsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="text-center text-gray-500 py-8">Cargando reseñas...</div>';
+    
+    try {
+        const agruparPor = document.getElementById('filtroAgruparReseñas')?.value || 'oportunidad';
+        const response = await fetch(`${API_BASE_URL}/admin/reseñas/todas?agrupar_por=${agruparPor}`);
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            mostrarTodasReseñas(data.reseñas, data.agrupar_por);
+        } else {
+            container.innerHTML = `<div class="text-center text-red-600 py-8">Error al cargar reseñas: ${data.error || 'Error desconocido'}</div>`;
+        }
+    } catch (error) {
+        console.error('Error cargando todas las reseñas:', error);
+        container.innerHTML = `<div class="text-center text-red-600 py-8">Error de conexión al cargar las reseñas. Verifica tu conexión a internet.</div>`;
+    }
+}
+
+// Mostrar todas las reseñas
+function mostrarTodasReseñas(reseñas, agruparPor) {
+    const container = document.getElementById('reviewsContainer');
+    if (!container) return;
+    
+    if (!reseñas || reseñas.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">No hay reseñas disponibles.</div>';
+        return;
+    }
+    
+    // Aplicar filtro de calificación
+    const filtroCalificacion = document.getElementById('filtroCalificacionReseñasAdmin')?.value || 'todas';
+    let reseñasFiltradas = reseñas;
+    
+    if (agruparPor === 'organizacion') {
+        reseñasFiltradas = reseñas.map(org => {
+            const oportunidadesFiltradas = org.oportunidades.map(op => {
+                const reseñasFiltradasOp = filtroCalificacion !== 'todas' 
+                    ? op.reseñas.filter(r => {
+                        const cal = r.calificacion || 0;
+                        return Math.floor(cal) === parseInt(filtroCalificacion);
+                    })
+                    : op.reseñas;
+                return { ...op, reseñas: reseñasFiltradasOp };
+            }).filter(op => op.reseñas.length > 0);
+            return { ...org, oportunidades: oportunidadesFiltradas };
+        }).filter(org => org.oportunidades.length > 0);
+    } else {
+        reseñasFiltradas = reseñas.map(op => {
+            const reseñasFiltradasOp = filtroCalificacion !== 'todas'
+                ? op.reseñas.filter(r => {
+                    const cal = r.calificacion || 0;
+                    return Math.floor(cal) === parseInt(filtroCalificacion);
+                })
+                : op.reseñas;
+            return { ...op, reseñas: reseñasFiltradasOp };
+        }).filter(op => op.reseñas.length > 0);
+    }
+    
+    if (reseñasFiltradas.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">No hay reseñas que coincidan con los filtros seleccionados.</div>';
+        return;
+    }
+    
+    if (agruparPor === 'organizacion') {
+        container.innerHTML = reseñasFiltradas.map(org => {
+            const oportunidadesHTML = org.oportunidades.map(op => generarHTMLOportunidadReseña(op)).join('');
+            return `
+                <div style="background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h2 style="font-size: 24px; font-weight: 600; color: #1f2937; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb;">
+                        ${org.organizacion_nombre}
+                    </h2>
+                    ${oportunidadesHTML}
+                </div>
+            `;
+        }).join('');
+    } else {
+        container.innerHTML = reseñasFiltradas.map(op => generarHTMLOportunidadReseña(op, true)).join('');
+    }
+    
+    // Guardar datos para filtros
+    window.reseñasDataActualAdmin = reseñas;
+    
+    // Agregar event listeners a los filtros
+    const selectAgrupar = document.getElementById('filtroAgruparReseñas');
+    const selectCalificacion = document.getElementById('filtroCalificacionReseñasAdmin');
+    
+    if (selectAgrupar) {
+        const newSelectAgrupar = selectAgrupar.cloneNode(true);
+        selectAgrupar.parentNode.replaceChild(newSelectAgrupar, selectAgrupar);
+        newSelectAgrupar.addEventListener('change', loadAllReviewsData);
+        newSelectAgrupar.value = agruparPor;
+    }
+    
+    if (selectCalificacion) {
+        const newSelectCalificacion = selectCalificacion.cloneNode(true);
+        selectCalificacion.parentNode.replaceChild(newSelectCalificacion, selectCalificacion);
+        newSelectCalificacion.addEventListener('change', () => {
+            mostrarTodasReseñas(window.reseñasDataActualAdmin || [], 
+                               document.getElementById('filtroAgruparReseñas')?.value || 'oportunidad');
+        });
+    }
+}
+
+// Generar HTML para una oportunidad
+function generarHTMLOportunidadReseña(oportunidad, incluirOrg = false) {
+    const reseñasHTML = oportunidad.reseñas.map(reseña => {
+        const fechaReseña = reseña.fecha 
+            ? new Date(reseña.fecha).toLocaleDateString('es-CL', { 
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric'
+            }) 
+            : 'Fecha no disponible';
+        
+        const estrellasHtml = generarEstrellasReseñasAdmin(reseña.calificacion || 0);
+        const esPublica = reseña.es_publica !== false && reseña.es_publica !== null && reseña.es_publica !== undefined;
+        
+        return `
+            <div style="border-left: 3px solid #3b82f6; padding: 16px; margin-bottom: 16px; background: #f9fafb; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <h4 style="font-weight: 600; color: #1f2937; margin: 0;">${reseña.usuario_nombre}</h4>
+                            <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; ${esPublica ? 'background: #dbeafe; color: #1e40af;' : 'background: #f3f4f6; color: #4b5563;'}">
+                                ${esPublica ? '🌐 Pública' : '🔒 Privada'}
+                            </span>
+                        </div>
+                        <p style="font-size: 12px; color: #6b7280; margin: 0;">${fechaReseña}</p>
+                    </div>
+                    ${reseña.calificacion ? `
+                        <div style="text-align: right; margin-left: 16px;">
+                            <div style="font-size: 18px; line-height: 1;">${estrellasHtml}</div>
+                            <span style="font-size: 14px; color: #6b7280; font-weight: 500;">${reseña.calificacion.toFixed(1)}/5.0</span>
+                        </div>
+                    ` : ''}
+                </div>
+                ${reseña.reseña ? `
+                    <p style="color: #374151; line-height: 1.6; font-style: italic; margin-bottom: 12px;">"${reseña.reseña}"</p>
+                ` : ''}
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button onclick="cambiarVisibilidadResenaAdmin(${reseña.postulacion_id}, ${!esPublica})" 
+                            class="btn-toggle-visibilidad-admin" 
+                            style="padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; ${esPublica ? 'background: #fee2e2; color: #991b1b;' : 'background: #dbeafe; color: #1e40af;'}"
+                            title="${esPublica ? 'Hacer privada (no se mostrará en la página principal)' : 'Hacer pública (se mostrará en la página principal)'}">
+                        ${esPublica ? '🔒 Hacer Privada' : '🌐 Hacer Pública'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    const calificaciones = oportunidad.reseñas.map(r => r.calificacion).filter(c => c !== null && c !== undefined);
+    const promedio = calificaciones.length > 0 
+        ? (calificaciones.reduce((a, b) => a + b, 0) / calificaciones.length).toFixed(1)
+        : null;
+    
+    return `
+        <div style="background: ${incluirOrg ? 'white' : '#f9fafb'}; border-radius: ${incluirOrg ? '12px' : '8px'}; padding: ${incluirOrg ? '24px' : '20px'}; margin-bottom: ${incluirOrg ? '24px' : '16px'}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            ${incluirOrg ? `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 4px;">${oportunidad.oportunidad_titulo}</h3>
+                        <p style="font-size: 14px; color: #6b7280;">Organización: ${oportunidad.organizacion_nombre || 'N/A'}</p>
+                        <p style="font-size: 14px; color: #6b7280;">${oportunidad.reseñas.length} ${oportunidad.reseñas.length === 1 ? 'reseña' : 'reseñas'}</p>
+                    </div>
+                    ${promedio ? `
+                        <div style="text-align: center; padding: 12px 20px; background: #eff6ff; border-radius: 8px;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Promedio</div>
+                            <div style="font-size: 24px; font-weight: 700; color: #2563eb;">${promedio}</div>
+                            <div style="font-size: 12px; color: #6b7280;">/ 5.0</div>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+                    <div>
+                        <h4 style="font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 4px;">${oportunidad.oportunidad_titulo}</h4>
+                        <p style="font-size: 14px; color: #6b7280;">${oportunidad.reseñas.length} ${oportunidad.reseñas.length === 1 ? 'reseña' : 'reseñas'}</p>
+                    </div>
+                    ${promedio ? `
+                        <div style="text-align: center; padding: 8px 16px; background: #eff6ff; border-radius: 8px;">
+                            <div style="font-size: 11px; color: #6b7280; margin-bottom: 2px;">Promedio</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #2563eb;">${promedio}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `}
+            <div>
+                ${reseñasHTML}
+            </div>
+        </div>
+    `;
+}
+
+// Función para generar estrellas
+function generarEstrellasReseñasAdmin(calificacion) {
+    const cal = Math.max(0, Math.min(5, parseFloat(calificacion)));
+    const estrellasCompletas = Math.floor(cal);
+    let estrellasHtml = '⭐'.repeat(estrellasCompletas);
+    const estrellasVacias = 5 - estrellasCompletas;
+    if (estrellasVacias > 0) {
+        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+    }
+    return estrellasHtml;
+}
+
+// Función para cambiar la visibilidad de una reseña (pública/privada) - Admin
+window.cambiarVisibilidadResenaAdmin = async function(postulacionId, nuevaVisibilidad) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/postulaciones/${postulacionId}/resena-visibilidad`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                es_publica: nuevaVisibilidad
+            }),
+            mode: 'cors'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Mostrar notificación
+            showNotification(
+                nuevaVisibilidad 
+                    ? 'Reseña marcada como pública. Ahora se mostrará en la página principal.' 
+                    : 'Reseña marcada como privada. Ya no se mostrará en la página principal.',
+                'success'
+            );
+            
+            // Recargar las reseñas para actualizar la vista
+            await loadAllReviewsData();
+        } else {
+            showNotification('Error al cambiar la visibilidad: ' + (data.error || 'Error desconocido'), 'error');
+        }
+    } catch (error) {
+        console.error('Error cambiando visibilidad de reseña:', error);
+        showNotification('Error de conexión al cambiar la visibilidad de la reseña', 'error');
+    }
 }
 
 // Cargar Datos de Noticias
@@ -1886,12 +2140,6 @@ function showRepositorySection() {
     repoLink.click();
 }
 
-// Mostrar Sección de Plataforma
-function showPlatformSection() {
-    const platformLink = document.querySelector('[data-section="platform"]');
-    platformLink.click();
-}
-
 // Extraer Datos de Usuario de Fila
 function extractUserDataFromRow(row) {
     const nameElement = row.querySelector('.user-name');
@@ -2027,25 +2275,6 @@ window.generarReporteOrganizaciones = async function() {
     }
 };
 
-// Guardar Configuración de Plataforma
-function savePlatformSettings() {
-    console.log('Guardando configuración de plataforma...');
-    
-    // Mostrar indicador de carga
-    const button = document.querySelector('#platform .btn-primary');
-    const originalText = button.textContent;
-    button.textContent = 'Guardando...';
-    button.disabled = true;
-    
-    // Simular proceso de guardado
-    setTimeout(() => {
-        button.textContent = originalText;
-        button.disabled = false;
-        
-        showNotification('Configuración guardada exitosamente', 'success');
-    }, 1500);
-}
-
 // Manejar Upload de Archivo
 function handleFileUpload(file) {
     console.log('Archivo subido:', file.name);
@@ -2079,8 +2308,174 @@ function showEditUserModal(userData) {
 }
 
 // Mostrar Modal de Agregar Usuario
-function showAddUserModal() {
-    showNotification('Para agregar usuarios, dirígete a la página de registro', 'info');
+window.showAddUserModal = function() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) {
+        modal.style.display = 'flex'; // Usar flex para centrar el contenido (modal-overlay usa flex)
+        // Resetear formulario
+        const form = document.getElementById('addUserForm');
+        if (form) {
+            form.reset();
+        }
+    } else {
+        console.error('Modal addUserModal no encontrado');
+        showNotification('Error: No se pudo abrir el modal de agregar usuario', 'error');
+    }
+};
+
+// Función para cerrar modal
+window.closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        // Resetear formulario al cerrar
+        const form = document.getElementById('addUserForm');
+        if (form) {
+            form.reset();
+        }
+    }
+};
+
+// Configurar el formulario de agregar usuario cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar a que el modal se cargue
+    setTimeout(() => {
+        const addUserForm = document.getElementById('addUserForm');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleFormSubmission(this);
+            });
+        }
+    }, 500);
+});
+
+// Manejo de Formularios (igual que register.html)
+function handleFormSubmission(form) {
+    // Obtener campos del formulario (IDs iguales a register.html)
+    const nombre = document.getElementById('nombre').value.trim();
+    const apellido = document.getElementById('apellido').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const rut = document.getElementById('rut').value.trim().toUpperCase();
+    const fechaNacimiento = document.getElementById('fechaNacimiento').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    // Validaciones (igual que register.html)
+    if (!nombre || !apellido || !email || !rut || !fechaNacimiento || !password || !confirmPassword) {
+        showNotification('Por favor, completa todos los campos.', 'error');
+        return;
+    }
+    
+    // Validar formato de RUT chileno
+    const rutRegex = /^(\d{1,2}\.?\d{3}\.?\d{3}-[\dkK])|(\d{7,8}-[\dkK])$/;
+    if (!rutRegex.test(rut)) {
+        showNotification('El RUT debe tener el formato correcto (ejemplo: 12345678-9 o 12.345.678-9)', 'error');
+        return;
+    }
+    
+    // Limpiar RUT (remover puntos) para guardarlo
+    const rutLimpio = rut.replace(/\./g, '').replace(/-/g, '');
+    if (rutLimpio.length < 8 || rutLimpio.length > 9) {
+        showNotification('El RUT debe tener entre 7 y 8 dígitos más el dígito verificador.', 'error');
+        return;
+    }
+    
+    // Validar edad mínima (15 años)
+    const fechaNac = new Date(fechaNacimiento);
+    const hoy = new Date();
+    const edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mes = hoy.getMonth() - fechaNac.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+        if (edad - 1 < 15) {
+            showNotification('Debes tener al menos 15 años para registrarte.', 'error');
+            return;
+        }
+    } else if (edad < 15) {
+        showNotification('Debes tener al menos 15 años para registrarte.', 'error');
+        return;
+    }
+    
+    // Validar que las contraseñas coincidan
+    if (password !== confirmPassword) {
+        showNotification('Las contraseñas no coinciden.', 'error');
+        return;
+    }
+    
+    // Validar longitud mínima de contraseña
+    if (password.length < 8) {
+        showNotification('La contraseña debe tener al menos 8 caracteres.', 'error');
+        return;
+    }
+    
+    // Validar email
+    if (!isValidEmail(email)) {
+        showNotification('Ingrese un correo electrónico válido', 'error');
+        return;
+    }
+    
+    // Preparar datos para enviar (igual que register.html)
+    const userData = {
+        email: email,
+        password: password,
+        nombre: nombre,
+        apellido: apellido,
+        rut: rut.replace(/\./g, ''), // Enviar sin puntos
+        fecha_nacimiento: fechaNacimiento,
+        rol: 'user' // Siempre crear como 'user', luego se puede cambiar el rol desde el panel
+    };
+    
+    // Guardar usuario
+    saveUser(userData).then(success => {
+        if (success) {
+            // Cerrar modal
+            closeModal('addUserModal');
+            
+            // Recargar datos de usuarios
+            if (typeof loadUsersData === 'function') {
+                loadUsersData();
+            }
+            
+            // Limpiar formulario
+            form.reset();
+        }
+    });
+}
+
+// Función de validación de email (helper)
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Función para guardar usuario (igual que register.html)
+async function saveUser(userData) {
+    try {
+        console.log('Guardando usuario:', userData);
+        
+        // Usar el endpoint de registro (igual que register.html)
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.user) {
+            showNotification('Usuario creado exitosamente. El usuario fue creado con rol "user". Puedes cambiar el rol desde el panel de administración.', 'success');
+            return true;
+        } else {
+            showNotification('Error al crear usuario: ' + (data.error || 'Error desconocido'), 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error al guardar usuario:', error);
+        showNotification('Error de conexión al guardar el usuario', 'error');
+        return false;
+    }
 }
 
 // Animar Entrada de Sección
@@ -3146,4 +3541,481 @@ function updatePieChartLegend(labels, values, colors, borderColors) {
             }
         });
     });
-} 
+}
+
+// ==========================================================
+// ========== Funcionalidad de Crear Oportunidad ===========
+// ==========================================================
+
+// Objeto de ubicaciones de Chile (completo, igual que el perfil de organización)
+const ubicacionesChile = {
+    "Arica y Parinacota": {
+        ciudades: {
+            "Arica": ["Arica", "Camarones"],
+            "Parinacota": ["Putre", "General Lagos"]
+        }
+    },
+    "Tarapacá": {
+        ciudades: {
+            "Iquique": ["Iquique", "Alto Hospicio", "Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"],
+            "Tamarugal": ["Pozo Almonte", "Camiña", "Colchane", "Huara", "Pica"]
+        }
+    },
+    "Antofagasta": {
+        ciudades: {
+            "Antofagasta": ["Antofagasta", "Mejillones", "Sierra Gorda", "Taltal"],
+            "El Loa": ["Calama", "Ollagüe", "San Pedro de Atacama"],
+            "Tocopilla": ["Tocopilla", "María Elena"]
+        }
+    },
+    "Atacama": {
+        ciudades: {
+            "Copiapó": ["Copiapó", "Caldera", "Tierra Amarilla"],
+            "Chañaral": ["Chañaral", "Diego de Almagro"],
+            "Huasco": ["Vallenar", "Alto del Carmen", "Freirina", "Huasco"]
+        }
+    },
+    "Coquimbo": {
+        ciudades: {
+            "La Serena": ["La Serena", "Coquimbo", "Andacollo", "La Higuera", "Paiguano", "Vicuña"],
+            "Elqui": ["La Serena", "Vicuña", "Paihuano", "La Higuera"],
+            "Limarí": ["Ovalle", "Combarbalá", "Monte Patria", "Punitaqui", "Río Hurtado"],
+            "Choapa": ["Illapel", "Canela", "Los Vilos", "Salamanca"]
+        }
+    },
+    "Valparaíso": {
+        ciudades: {
+            "Valparaíso": ["Valparaíso", "Viña del Mar", "Concón", "Quintero", "Puchuncaví", "Casablanca", "Juan Fernández"],
+            "Isla de Pascua": ["Isla de Pascua"],
+            "Los Andes": ["Los Andes", "Calle Larga", "Rinconada", "San Esteban"],
+            "Petorca": ["La Ligua", "Cabildo", "Papudo", "Petorca", "Zapallar"],
+            "Quillota": ["Quillota", "Calera", "Hijuelas", "La Cruz", "Nogales"],
+            "San Antonio": ["San Antonio", "Algarrobo", "Cartagena", "El Quisco", "El Tabo", "Santo Domingo"],
+            "San Felipe": ["San Felipe", "Catemu", "Llay Llay", "Panquehue", "Putaendo", "Santa María"],
+            "Marga Marga": ["Quilpué", "Limache", "Olmué", "Villa Alemana"]
+        }
+    },
+    "Región Metropolitana de Santiago": {
+        ciudades: {
+            "Santiago": ["Santiago", "Cerrillos", "Cerro Navia", "Conchalí", "El Bosque", "Estación Central", "Huechuraba", "Independencia", "La Cisterna", "La Florida", "La Granja", "La Pintana", "La Reina", "Las Condes", "Lo Barnechea", "Lo Espejo", "Lo Prado", "Macul", "Maipú", "Ñuñoa", "Pedro Aguirre Cerda", "Peñalolén", "Providencia", "Pudahuel", "Quilicura", "Quinta Normal", "Recoleta", "Renca", "San Joaquín", "San Miguel", "San Ramón", "Vitacura"],
+            "Cordillera": ["Puente Alto", "Pirque", "San José de Maipo"],
+            "Chacabuco": ["Colina", "Lampa", "Tiltil"],
+            "Maipo": ["San Bernardo", "Buin", "Calera de Tango", "Paine"],
+            "Melipilla": ["Melipilla", "Alhué", "Curacaví", "María Pinto", "San Pedro"],
+            "Talagante": ["Talagante", "El Monte", "Isla de Maipo", "Padre Hurtado", "Peñaflor"]
+        }
+    },
+    "O'Higgins": {
+        ciudades: {
+            "Rancagua": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente"],
+            "Cachapoal": ["Rancagua", "Codegua", "Coinco", "Coltauco", "Doñihue", "Graneros", "Las Cabras", "Machalí", "Malloa", "Mostazal", "Olivar", "Peumo", "Pichidegua", "Quinta de Tilcoco", "Rengo", "Requínoa", "San Vicente"],
+            "Colchagua": ["San Fernando", "Chépica", "Chimbarongo", "Lolol", "Nancagua", "Palmilla", "Peralillo", "Placilla", "Pumanque", "Santa Cruz"],
+            "Cardenal Caro": ["Pichilemu", "La Estrella", "Litueche", "Marchihue", "Navidad", "Paredones"]
+        }
+    },
+    "Maule": {
+        ciudades: {
+            "Talca": ["Talca", "Constitución", "Curepto", "Empedrado", "Maule", "Pelarco", "Pencahue", "Río Claro", "San Clemente", "San Rafael"],
+            "Cauquenes": ["Cauquenes", "Chanco", "Pelluhue"],
+            "Curicó": ["Curicó", "Hualañé", "Licantén", "Molina", "Rauco", "Romeral", "Sagrada Familia", "Teno", "Vichuquén"],
+            "Linares": ["Linares", "Colbún", "Longaví", "Parral", "Retiro", "San Javier", "Villa Alegre", "Yerbas Buenas"]
+        }
+    },
+    "Ñuble": {
+        ciudades: {
+            "Chillán": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"],
+            "Diguillín": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"],
+            "Itata": ["Cobquecura", "Coelemu", "Ninhue", "Portezuelo", "Quirihue", "Ránquil", "Treguaco"],
+            "Punilla": ["Coihueco", "Ñiquén", "San Carlos", "San Fabián", "San Nicolás"]
+        }
+    },
+    "Bío Bío": {
+        ciudades: {
+            "Concepción": ["Concepción", "Coronel", "Chiguayante", "Florida", "Hualqui", "Lota", "Penco", "San Pedro de la Paz", "Santa Juana", "Talcahuano", "Tomé"],
+            "Arauco": ["Lebu", "Arauco", "Cañete", "Contulmo", "Curanilahue", "Los Álamos", "Tirúa"],
+            "Bío Bío": ["Los Ángeles", "Antuco", "Cabrero", "Laja", "Mulchén", "Nacimiento", "Negrete", "Quilaco", "Quilleco", "San Rosendo", "Santa Bárbara", "Tucapel", "Yumbel"],
+            "Ñuble": ["Chillán", "Bulnes", "Chillán Viejo", "El Carmen", "Pemuco", "Pinto", "Quillón", "San Ignacio", "Yungay"]
+        }
+    },
+    "Araucanía": {
+        ciudades: {
+            "Temuco": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre Las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol"],
+            "Cautín": ["Temuco", "Carahue", "Cunco", "Curarrehue", "Freire", "Galvarino", "Gorbea", "Lautaro", "Loncoche", "Melipeuco", "Nueva Imperial", "Padre Las Casas", "Perquenco", "Pitrufquén", "Pucón", "Saavedra", "Teodoro Schmidt", "Toltén", "Vilcún", "Villarrica", "Cholchol"],
+            "Malleco": ["Angol", "Collipulli", "Curacautín", "Ercilla", "Lonquimay", "Los Sauces", "Lumaco", "Purén", "Renaico", "Traiguén", "Victoria"]
+        }
+    },
+    "Los Ríos": {
+        ciudades: {
+            "Valdivia": ["Valdivia", "Corral", "Lanco", "Los Lagos", "Máfil", "Mariquina", "Paillaco", "Panguipulli"],
+            "Ranco": ["La Unión", "Futrono", "Lago Ranco", "Río Bueno"]
+        }
+    },
+    "Los Lagos": {
+        ciudades: {
+            "Puerto Montt": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas"],
+            "Osorno": ["Osorno", "Puerto Octay", "Purranque", "Puyehue", "Río Negro", "San Juan de la Costa", "San Pablo"],
+            "Llanquihue": ["Puerto Montt", "Calbuco", "Cochamó", "Fresia", "Frutillar", "Los Muermos", "Llanquihue", "Maullín", "Puerto Varas"],
+            "Chiloé": ["Castro", "Ancud", "Chonchi", "Curaco de Vélez", "Dalcahue", "Puqueldón", "Queilén", "Quellón", "Quemchi", "Quinchao"],
+            "Palena": ["Chaitén", "Futaleufú", "Hualaihué", "Palena"]
+        }
+    },
+    "Aysén": {
+        ciudades: {
+            "Coyhaique": ["Coyhaique", "Lago Verde"],
+            "Aysén": ["Aysén", "Cisnes", "Guaitecas"],
+            "Capitán Prat": ["Cochrane", "O'Higgins", "Tortel"],
+            "General Carrera": ["Chile Chico", "Río Ibáñez"]
+        }
+    },
+    "Magallanes y de la Antártica Chilena": {
+        ciudades: {
+            "Punta Arenas": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio"],
+            "Magallanes": ["Punta Arenas", "Laguna Blanca", "Río Verde", "San Gregorio"],
+            "Tierra del Fuego": ["Porvenir", "Primavera", "Timaukel"],
+            "Antártica": ["Antártica", "Cabo de Hornos"],
+            "Última Esperanza": ["Natales", "Torres del Paine"]
+        }
+    }
+};
+
+// Mostrar modal para crear oportunidad (igual que el perfil de organización)
+window.showAddOpportunityModal = async function() {
+    // Crear modal dinámicamente (igual estructura que el perfil de organización)
+    const modal = document.createElement('div');
+    modal.id = 'modalCrearOportunidad';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4';
+    modal.style.paddingTop = '80px'; // Agregar padding superior para evitar que se corte con el header
+    
+    // Cargar organizaciones
+    let organizaciones = [];
+    try {
+        const orgResponse = await fetch(`${API_BASE_URL}/admin/organizaciones`);
+        const orgData = await orgResponse.json();
+        if (orgData.success && orgData.organizaciones) {
+            organizaciones = orgData.organizaciones;
+        }
+    } catch (error) {
+        console.error('Error al cargar organizaciones:', error);
+    }
+    
+    const organizacionesOptions = organizaciones.length > 0 
+        ? organizaciones.map(org => `<option value="${org.id}">${org.nombre}</option>`).join('')
+        : '<option value="">No hay organizaciones disponibles</option>';
+    
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold">Crear Nueva Oportunidad</h3>
+                    <button onclick="cerrarModalCrearOportunidad()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                <form id="formCrearOportunidad" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Organización *</label>
+                        <select id="organizacionId" required class="w-full border rounded-lg p-2">
+                            <option value="">Seleccione una organización</option>
+                            ${organizacionesOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Título *</label>
+                        <input type="text" id="tituloOportunidad" required autocomplete="off" class="w-full border rounded-lg p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Descripción *</label>
+                        <textarea id="descripcionOportunidad" required rows="4" class="w-full border rounded-lg p-2"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Meta de postulantes</label>
+                            <input type="number" id="metaPostulantes" min="1" autocomplete="off" class="w-full border rounded-lg p-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Cupo máximo</label>
+                            <input type="number" id="cupoMaximo" min="1" autocomplete="off" class="w-full border rounded-lg p-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Fecha límite de postulación</label>
+                        <input type="date" id="fechaLimite" class="w-full border rounded-lg p-2">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Área de Voluntariado</label>
+                        <select id="areaVoluntariado" class="w-full border rounded-lg p-2" autocomplete="off">
+                            <option value="">Seleccione un área</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Medio Ambiente">Medio Ambiente</option>
+                            <option value="Salud">Salud</option>
+                            <option value="Comunidad">Comunidad</option>
+                            <option value="Deporte">Deporte</option>
+                            <option value="Cultura">Cultura</option>
+                            <option value="Emergencia">Emergencia</option>
+                            <option value="Desarrollo Social">Desarrollo Social</option>
+                            <option value="Tecnología">Tecnología</option>
+                            <option value="Arte">Arte</option>
+                            <option value="Animales">Animales</option>
+                            <option value="Adultos Mayores">Adultos Mayores</option>
+                            <option value="Niños y Jóvenes">Niños y Jóvenes</option>
+                            <option value="Discapacidad">Discapacidad</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div id="areaOtroContainer" class="hidden">
+                        <label class="block text-sm font-medium mb-1">Especificar área</label>
+                        <input type="text" id="areaOtro" autocomplete="off" placeholder="Escriba el área de voluntariado" class="w-full border rounded-lg p-2">
+                    </div>
+                    
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="text-lg font-semibold mb-3">Información del Responsable</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Nombre del responsable</label>
+                                <input type="text" id="responsableNombre" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Apellido del responsable</label>
+                                <input type="text" id="responsableApellido" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Email del responsable</label>
+                                <input type="email" id="responsableEmail" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Email institucional</label>
+                                <input type="email" id="responsableEmailInstitucional" autocomplete="off" class="w-full border rounded-lg p-2">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium mb-1">Teléfono del responsable</label>
+                            <input type="tel" id="responsableTelefono" autocomplete="off" class="w-full border rounded-lg p-2">
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4 mt-4">
+                        <h4 class="text-lg font-semibold mb-3">Ubicación de la Oportunidad</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Región</label>
+                                <select id="regionOportunidad" class="w-full border rounded-lg p-2">
+                                    <option value="">Seleccione una región</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Ciudad</label>
+                                <select id="ciudadOportunidad" disabled class="w-full border rounded-lg p-2">
+                                    <option value="">Primero seleccione una región</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Comuna</label>
+                                <select id="comunaOportunidad" disabled class="w-full border rounded-lg p-2">
+                                    <option value="">Primero seleccione una ciudad</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-4">
+                        <button type="button" onclick="cerrarModalCrearOportunidad()" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Crear Oportunidad
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Inicializar selectores de ubicación
+    inicializarSelectoresUbicacionOportunidad();
+    
+    // Manejar cambio en área de voluntariado (igual que el perfil de organización)
+    setTimeout(() => {
+        const areaSelect = document.getElementById('areaVoluntariado');
+        const areaOtroContainer = document.getElementById('areaOtroContainer');
+        const areaOtroInput = document.getElementById('areaOtro');
+        
+        if (areaSelect) {
+            areaSelect.addEventListener('change', function() {
+                if (this.value === 'Otro') {
+                    if (areaOtroContainer) areaOtroContainer.classList.remove('hidden');
+                    if (areaOtroInput) areaOtroInput.required = true;
+                } else {
+                    if (areaOtroContainer) areaOtroContainer.classList.add('hidden');
+                    if (areaOtroInput) {
+                        areaOtroInput.required = false;
+                        areaOtroInput.value = '';
+                    }
+                }
+            });
+        }
+    }, 100);
+    
+    // Manejar envío del formulario
+    const form = document.getElementById('formCrearOportunidad');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await crearOportunidadAdmin();
+        });
+    }
+};
+
+// Función para inicializar los selectores de ubicación
+function inicializarSelectoresUbicacionOportunidad() {
+    const regionSelect = document.getElementById('regionOportunidad');
+    const ciudadSelect = document.getElementById('ciudadOportunidad');
+    const comunaSelect = document.getElementById('comunaOportunidad');
+    
+    if (!regionSelect || !ciudadSelect || !comunaSelect) return;
+    
+    // Llenar el selector de regiones
+    Object.keys(ubicacionesChile).forEach(region => {
+        const option = document.createElement('option');
+        option.value = region;
+        option.textContent = region;
+        regionSelect.appendChild(option);
+    });
+    
+    // Cuando se selecciona una región, actualizar ciudades
+    regionSelect.addEventListener('change', function() {
+        const regionSeleccionada = this.value;
+        
+        ciudadSelect.innerHTML = '<option value="">Seleccione una ciudad</option>';
+        comunaSelect.innerHTML = '<option value="">Primero seleccione una ciudad</option>';
+        
+        if (regionSeleccionada && ubicacionesChile[regionSeleccionada]) {
+            ciudadSelect.disabled = false;
+            const ciudades = Object.keys(ubicacionesChile[regionSeleccionada].ciudades);
+            
+            ciudades.forEach(ciudad => {
+                const option = document.createElement('option');
+                option.value = ciudad;
+                option.textContent = ciudad;
+                ciudadSelect.appendChild(option);
+            });
+        } else {
+            ciudadSelect.disabled = true;
+            comunaSelect.disabled = true;
+        }
+    });
+    
+    // Cuando se selecciona una ciudad, actualizar comunas
+    ciudadSelect.addEventListener('change', function() {
+        const regionSeleccionada = regionSelect.value;
+        const ciudadSeleccionada = this.value;
+        
+        comunaSelect.innerHTML = '<option value="">Seleccione una comuna</option>';
+        
+        if (regionSeleccionada && ciudadSeleccionada && 
+            ubicacionesChile[regionSeleccionada] && 
+            ubicacionesChile[regionSeleccionada].ciudades[ciudadSeleccionada]) {
+            comunaSelect.disabled = false;
+            const comunas = ubicacionesChile[regionSeleccionada].ciudades[ciudadSeleccionada];
+            
+            comunas.forEach(comuna => {
+                const option = document.createElement('option');
+                option.value = comuna;
+                option.textContent = comuna;
+                comunaSelect.appendChild(option);
+            });
+        } else {
+            comunaSelect.disabled = true;
+        }
+    });
+}
+
+// Función para crear oportunidad desde el panel de admin
+async function crearOportunidadAdmin() {
+    const organizacionId = document.getElementById('organizacionId')?.value;
+    const titulo = document.getElementById('tituloOportunidad')?.value;
+    const descripcion = document.getElementById('descripcionOportunidad')?.value;
+    const metaPostulantes = document.getElementById('metaPostulantes')?.value;
+    const cupoMaximo = document.getElementById('cupoMaximo')?.value;
+    const fechaLimite = document.getElementById('fechaLimite')?.value;
+    
+    const responsableNombre = document.getElementById('responsableNombre')?.value;
+    const responsableApellido = document.getElementById('responsableApellido')?.value;
+    const responsableEmail = document.getElementById('responsableEmail')?.value;
+    const responsableEmailInstitucional = document.getElementById('responsableEmailInstitucional')?.value;
+    const responsableTelefono = document.getElementById('responsableTelefono')?.value;
+    
+    const regionOpor = document.getElementById('regionOportunidad')?.value;
+    const ciudadOpor = document.getElementById('ciudadOportunidad')?.value;
+    const comunaOpor = document.getElementById('comunaOportunidad')?.value;
+    
+    const areaVoluntariado = document.getElementById('areaVoluntariado')?.value;
+    const areaOtro = document.getElementById('areaOtro')?.value;
+    const areaFinal = areaVoluntariado === 'Otro' ? (areaOtro?.trim() || null) : (areaVoluntariado || null);
+    
+    if (!organizacionId) {
+        showNotification('Por favor, seleccione una organización', 'error');
+        return;
+    }
+    
+    if (!titulo || !descripcion) {
+        showNotification('Título y descripción son requeridos', 'error');
+        return;
+    }
+    
+    if (areaVoluntariado === 'Otro' && !areaOtro?.trim()) {
+        showNotification('Por favor, especifique el área de voluntariado', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/oportunidades`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                organizacion_id: parseInt(organizacionId),
+                titulo: titulo.trim(),
+                descripcion: descripcion.trim(),
+                meta_postulantes: metaPostulantes ? parseInt(metaPostulantes) : null,
+                cupo_maximo: cupoMaximo ? parseInt(cupoMaximo) : null,
+                fecha_limite_postulacion: fechaLimite || null,
+                responsable_nombre: responsableNombre?.trim() || null,
+                responsable_apellido: responsableApellido?.trim() || null,
+                responsable_email: responsableEmail?.trim() || null,
+                responsable_email_institucional: responsableEmailInstitucional?.trim() || null,
+                responsable_telefono: responsableTelefono?.trim() || null,
+                region_opor: regionOpor || null,
+                ciudad_opor: ciudadOpor || null,
+                comuna_opor: comunaOpor || null,
+                area_voluntariado: areaFinal,
+                tipo_de_voluntariado: areaFinal
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Oportunidad creada exitosamente', 'success');
+            closeModalCrearOportunidad();
+            // Recargar oportunidades si existe la función
+            if (typeof loadOpportunitiesData === 'function') {
+                loadOpportunitiesData();
+            }
+        } else {
+            showNotification('Error al crear oportunidad: ' + (data.error || 'Error desconocido'), 'error');
+        }
+    } catch (error) {
+        console.error('Error al crear oportunidad:', error);
+        showNotification('Error de conexión al crear la oportunidad', 'error');
+    }
+}
+
+// Función para cerrar el modal de crear oportunidad
+window.closeModalCrearOportunidad = function() {
+    const modal = document.getElementById('modalCrearOportunidad');
+    if (modal) {
+        modal.remove();
+    }
+}; 

@@ -33,10 +33,6 @@
         <i class="fas fa-chart-bar"></i>
         <span>Estadísticas</span>
       </a>
-      <a href="#" class="admin-nav-link" data-section="platform">
-        <i class="fas fa-palette"></i>
-        <span>Plataforma</span>
-      </a>
       <a href="#" class="admin-nav-link" data-section="news">
         <i class="fas fa-newspaper"></i>
         <span>Noticias</span>
@@ -44,6 +40,10 @@
       <a href="#" class="admin-nav-link" data-section="opportunities">
         <i class="fas fa-lightbulb"></i>
         <span>Oportunidades</span>
+      </a>
+      <a href="#" class="admin-nav-link" data-section="reviews">
+        <i class="fas fa-star"></i>
+        <span>Reseñas</span>
       </a>
       <a href="#" class="admin-nav-link" data-section="repository">
         <i class="fas fa-database"></i>
@@ -102,39 +102,13 @@
           </div>
         </div>
       </div>
-      
-      <div class="quick-actions">
-        <h2>Acciones Rápidas</h2>
-        <div class="actions-grid">
-          <button class="action-btn">
-            <i class="fas fa-plus"></i>
-            <span>Agregar Usuario</span>
-          </button>
-          <button class="action-btn" data-section="statistics">
-            <i class="fas fa-chart-bar"></i>
-            <span>Estadísticas</span>
-          </button>
-          <button class="action-btn" onclick="irANoticias()">
-            <i class="fas fa-newspaper"></i>
-            <span>Noticias</span>
-          </button>
-          <button class="action-btn">
-            <i class="fas fa-upload"></i>
-            <span>Subir Documento</span>
-          </button>
-          <button class="action-btn">
-            <i class="fas fa-cog"></i>
-            <span>Configuración</span>
-          </button>
-        </div>
-      </div>
     </section>
 
     <!-- Users Section -->
     <section id="users" class="content-section">
       <div class="section-header">
         <h1>Gestión de Usuarios</h1>
-        <button class="btn-primary">
+        <button class="btn-primary" onclick="showAddUserModal()">
           <i class="fas fa-plus"></i>
           Nuevo Usuario
         </button>
@@ -334,64 +308,6 @@
       </div>
     </section>
 
-    <!-- Platform Section -->
-    <section id="platform" class="content-section">
-      <div class="section-header">
-        <h1>Configuración de la Plataforma</h1>
-        <p>Personaliza la apariencia y funcionalidad</p>
-      </div>
-      
-      <div class="settings-grid">
-        <div class="setting-card">
-          <h3>Colores del Tema</h3>
-          <div class="color-settings">
-            <div class="color-option">
-              <label>Color Principal</label>
-              <input type="color" value="#1976D2">
-            </div>
-            <div class="color-option">
-              <label>Color Secundario</label>
-              <input type="color" value="#D32F2F">
-            </div>
-            <div class="color-option">
-              <label>Color de Fondo</label>
-              <input type="color" value="#FAFAFA">
-            </div>
-          </div>
-        </div>
-        
-        <div class="setting-card">
-          <h3>Logo y Branding</h3>
-          <div class="logo-settings">
-            <div class="upload-area">
-              <i class="fas fa-upload"></i>
-              <p>Arrastra el logo aquí o haz clic para seleccionar</p>
-              <input type="file" accept="image/*">
-            </div>
-          </div>
-        </div>
-        
-        <div class="setting-card">
-          <h3>Texto del Sitio</h3>
-          <div class="text-settings">
-            <div class="form-group">
-              <label>Título Principal</label>
-              <input type="text" value="Plataforma de Voluntariado INJUV">
-            </div>
-            <div class="form-group">
-              <label>Descripción</label>
-              <textarea>Conecta con proyectos que cambian vidas en todo Chile</textarea>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="settings-actions">
-        <button class="btn-secondary">Cancelar</button>
-        <button class="btn-primary">Guardar Cambios</button>
-      </div>
-    </section>
-
     <!-- News Section -->
     <section id="news" class="content-section">
       <div class="section-header">
@@ -411,7 +327,7 @@
     <section id="opportunities" class="content-section">
       <div class="section-header">
         <h1>Gestión de Oportunidades</h1>
-        <button class="btn-primary">
+        <button class="btn-primary" onclick="showAddOpportunityModal()">
           <i class="fas fa-plus"></i>
           Nueva Oportunidad
         </button>
@@ -466,6 +382,43 @@
         </div>
       </div>
     </section>
+
+    <!-- Reviews Section -->
+    <section id="reviews" class="content-section">
+      <div class="section-header">
+        <h1>Gestión de Reseñas</h1>
+        <p>Todas las reseñas de voluntarios sobre organizaciones y oportunidades</p>
+      </div>
+      
+      <!-- Filtros y agrupación -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Agrupar por:</label>
+          <select id="filtroAgruparReseñas" class="filter-select" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px;">
+            <option value="oportunidad">Por Oportunidad</option>
+            <option value="organizacion">Por Organización</option>
+          </select>
+        </div>
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Filtrar por calificación:</label>
+          <select id="filtroCalificacionReseñasAdmin" class="filter-select" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px;">
+            <option value="todas">Todas las calificaciones</option>
+            <option value="5">5 estrellas</option>
+            <option value="4">4 estrellas</option>
+            <option value="3">3 estrellas</option>
+            <option value="2">2 estrellas</option>
+            <option value="1">1 estrella</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Contenedor de reseñas -->
+      <div id="reviewsContainer" style="margin-top: 1rem;">
+        <div class="text-center text-gray-500 py-8">
+          Cargando reseñas...
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Modal para mostrar detalles -->
@@ -502,7 +455,6 @@
     </div>
   </div>
 
-  <script src="admin-modern.js"></script>
   <script>
     // Cargar header y configurar enlaces
     fetch('../../header.html')
@@ -523,7 +475,22 @@
               if (experiencias) experiencias.href = '../../index.html#experiencias-voluntariado';
               
               const noticias = document.getElementById('news-link');
-              if (noticias) noticias.href = '../../index.html#news';
+              if (noticias) {
+                noticias.href = '../../index.html#news';
+                noticias.onclick = function(e) {
+                  if (window.goToNoticias) {
+                    window.goToNoticias(e);
+                  } else {
+                    e.preventDefault();
+                    if (typeof window.redirectTo === 'function') {
+                      window.redirectTo('../../index.html#news');
+                    } else {
+                      window.location.href = '../../index.html#news';
+                    }
+                  }
+                  return false;
+                };
+              }
               
               const login = document.getElementById('login-link');
               if (login) login.href = '../../inicio de sesion/login.html';
@@ -532,5 +499,130 @@
         .catch(error => console.error('Error:', error));
   </script>
   <script src="../../script.js"></script>
+
+  <!-- Modal para Agregar Usuario -->
+  <div id="addUserModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Agregar Nuevo Usuario</h2>
+        <button class="modal-close" onclick="closeModal('addUserModal')" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+      <form class="modal-form" id="addUserForm" style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Formulario idéntico al de registro -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <label for="nombre" class="block text-sm font-medium mb-1">
+              Nombre
+            </label>
+            <input
+              id="nombre"
+              type="text"
+              required
+              placeholder="Tu nombre"
+              autocomplete="off"
+              class="form-input"
+            />
+          </div>
+          <div>
+            <label for="apellido" class="block text-sm font-medium mb-1">
+              Apellido
+            </label>
+            <input
+              id="apellido"
+              type="text"
+              required
+              placeholder="Tu apellido"
+              autocomplete="off"
+              class="form-input"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium mb-1">
+            Correo electrónico
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            placeholder="tuname@dominio.cl"
+            autocomplete="off"
+            class="form-input"
+          />
+        </div>
+
+        <div>
+          <label for="rut" class="block text-sm font-medium mb-1">
+            RUT
+          </label>
+          <input
+            id="rut"
+            type="text"
+            required
+            placeholder="12345678-9"
+            maxlength="12"
+            autocomplete="off"
+            class="form-input"
+          />
+          <p class="text-xs text-gray-500 mt-1">Formato: 12345678-9 (con guion y dígito verificador)</p>
+        </div>
+
+        <div>
+          <label for="fechaNacimiento" class="block text-sm font-medium mb-1">
+            Fecha de nacimiento
+          </label>
+          <input
+            id="fechaNacimiento"
+            type="date"
+            required
+            autocomplete="off"
+            class="form-input"
+          />
+          <p class="text-xs text-gray-500 mt-1">Debes tener al menos 15 años para registrarte.</p>
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium mb-1">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            minlength="8"
+            placeholder="Mínimo 8 caracteres"
+            autocomplete="off"
+            class="form-input"
+          />
+          <p class="text-xs text-gray-500 mt-1">Mínimo 8 caracteres.</p>
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="block text-sm font-medium mb-1">
+            Confirmar contraseña
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            required
+            minlength="8"
+            placeholder="Repite tu contraseña"
+            autocomplete="off"
+            class="form-input"
+          />
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal('addUserModal')">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Usuario</button>
+        </div>
+      </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin-modern.js"></script>
 </body>
 </html> 

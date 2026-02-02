@@ -210,49 +210,117 @@ function closeModal(modalId) {
     }
 }
 
+// Función para mostrar/ocultar campos según el rol (accesible globalmente)
+window.toggleOrganizationField = function() {
+    const roleSelect = document.getElementById('roleSelect');
+    const organizationGroup = document.getElementById('organizationGroup');
+    const organizationInput = document.getElementById('organizationInput');
+    const rutGroup = document.getElementById('rutGroup');
+    const nombreGroup = document.getElementById('nombreGroup');
+    const apellidoGroup = document.getElementById('apellidoGroup');
+    const usernameGroup = document.getElementById('usernameGroup');
+    const phoneGroup = document.getElementById('phoneGroup');
+    const phoneInput = document.getElementById('phoneInput');
+    
+    if (!roleSelect) return;
+    
+    const selectedRole = roleSelect.value;
+    
+    if (selectedRole === 'user') {
+        // Si es usuario normal, ocultar organización y mostrar campos de usuario
+        if (organizationGroup) {
+            organizationGroup.style.display = 'none';
+            if (organizationInput) organizationInput.removeAttribute('required');
+        }
+        if (usernameGroup) usernameGroup.style.display = 'none';
+        if (phoneGroup) {
+            phoneGroup.style.display = 'none';
+            if (phoneInput) phoneInput.removeAttribute('required');
+        }
+        if (rutGroup) rutGroup.style.display = 'block';
+        if (nombreGroup) nombreGroup.style.display = 'block';
+        if (apellidoGroup) apellidoGroup.style.display = 'block';
+    } else {
+        // Si es organización u otro rol, mostrar organización y ocultar campos de usuario
+        if (organizationGroup) {
+            organizationGroup.style.display = 'block';
+            if (organizationInput) organizationInput.setAttribute('required', 'required');
+        }
+        if (usernameGroup) usernameGroup.style.display = 'block';
+        if (phoneGroup) {
+            phoneGroup.style.display = 'block';
+            if (phoneInput) phoneInput.setAttribute('required', 'required');
+        }
+        if (rutGroup) rutGroup.style.display = 'none';
+        if (nombreGroup) nombreGroup.style.display = 'none';
+        if (apellidoGroup) apellidoGroup.style.display = 'none';
+    }
+};
+
 // Manejo de Formularios
 function handleFormSubmission(form) {
     const formData = new FormData(form);
-    const userData = {
-        username: formData.get('username') || form.querySelector('input[type="text"]').value,
-        password: formData.get('password') || form.querySelector('input[type="password"]').value,
-        organization: formData.get('organization') || form.querySelector('input[placeholder*="Organización"]').value,
-        email: formData.get('email') || form.querySelector('input[type="email"]').value,
-        phone: formData.get('phone') || form.querySelector('input[type="tel"]').value,
-        role: formData.get('role') || form.querySelector('select').value
-    };
+    const roleSelect = document.getElementById('roleSelect');
+    const role = roleSelect ? roleSelect.value : form.querySelector('select').value;
+    
+    // Obtener campos del formulario usando IDs
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const usernameInput = document.getElementById('usernameInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const organizationInput = document.getElementById('organizationInput');
+    const nombreInput = document.getElementById('nombreInput');
+    const apellidoInput = document.getElementById('apellidoInput');
+    const rutInput = document.getElementById('rutInput');
+    
+    let userData = {};
+    
+    if (role === 'user') {
+        // Para usuarios normales, usar el endpoint de registro
+        userData = {
+            email: emailInput ? emailInput.value.trim() : '',
+            password: passwordInput ? passwordInput.value : '',
+            nombre: nombreInput ? nombreInput.value.trim() : '',
+            apellido: apellidoInput ? apellidoInput.value.trim() : '',
+            rut: rutInput ? rutInput.value.trim() : '',
+            rol: 'user'
+        };
+    } else {
+        // Para otros roles, mantener el formato anterior
+        userData = {
+            username: usernameInput ? usernameInput.value.trim() : '',
+            password: passwordInput ? passwordInput.value : '',
+            organization: organizationInput ? organizationInput.value.trim() : '',
+            email: emailInput ? emailInput.value.trim() : '',
+            phone: phoneInput ? phoneInput.value.trim() : '',
+            role: role
+        };
+    }
     
     // Validar datos
-    if (validateUserData(userData)) {
-        // Simular envío de datos
-        saveUser(userData);
-        
-        // Cerrar modal
-        const modal = form.closest('.modal');
-        closeModal(modal.id);
-        
-        // Recargar datos de usuarios
-        loadSectionData('users');
-        
-        // Mostrar mensaje de éxito
-        showNotification('Usuario guardado exitosamente', 'success');
+    if (validateUserData(userData, role)) {
+        // Guardar usuario (ahora es async)
+        saveUser(userData, role).then(success => {
+            if (success) {
+                // Cerrar modal
+                const modal = form.closest('.modal');
+                closeModal(modal.id);
+                
+                // Recargar datos de usuarios
+                loadSectionData('users');
+                
+                // Limpiar formulario
+                form.reset();
+                toggleOrganizationField(); // Resetear visibilidad de campos
+            }
+        });
     }
 }
 
 // Validación de Datos
-function validateUserData(userData) {
-    if (!userData.username || userData.username.trim().length < 3) {
-        showNotification('El nombre de usuario debe tener al menos 3 caracteres', 'error');
-        return false;
-    }
-    
+function validateUserData(userData, role) {
     if (!userData.password || userData.password.length < 6) {
         showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
-        return false;
-    }
-    
-    if (!userData.organization || userData.organization.trim().length < 2) {
-        showNotification('El nombre de la organización es requerido', 'error');
         return false;
     }
     
@@ -261,12 +329,39 @@ function validateUserData(userData) {
         return false;
     }
     
-    if (!userData.phone || userData.phone.trim().length < 8) {
-        showNotification('Ingrese un número de teléfono válido', 'error');
-        return false;
+    if (role === 'user') {
+        // Validaciones específicas para usuarios normales
+        if (!userData.rut || userData.rut.trim().length < 8) {
+            showNotification('El RUT es requerido y debe tener al menos 8 caracteres', 'error');
+            return false;
+        }
+        if (!userData.nombre || userData.nombre.trim().length < 2) {
+            showNotification('El nombre es requerido', 'error');
+            return false;
+        }
+        if (!userData.apellido || userData.apellido.trim().length < 2) {
+            showNotification('El apellido es requerido', 'error');
+            return false;
+        }
+    } else {
+        // Validaciones para otros roles (organización, admin, etc.)
+        if (!userData.username || userData.username.trim().length < 3) {
+            showNotification('El nombre de usuario debe tener al menos 3 caracteres', 'error');
+            return false;
+        }
+        
+        if (!userData.organization || userData.organization.trim().length < 2) {
+            showNotification('El nombre de la organización es requerido', 'error');
+            return false;
+        }
+        
+        if (!userData.phone || userData.phone.trim().length < 8) {
+            showNotification('Ingrese un número de teléfono válido', 'error');
+            return false;
+        }
     }
     
-    if (!userData.role) {
+    if (!role) {
         showNotification('Seleccione un rol para el usuario', 'error');
         return false;
     }
@@ -372,16 +467,41 @@ function loadPlatformSettings() {
 }
 
 // Funciones de Acción
-function saveUser(userData) {
-    // Simular guardado en API
-    console.log('Guardando usuario:', userData);
+async function saveUser(userData, role) {
+    const API_BASE_URL = 'http://127.0.0.1:5000/api';
     
-    // Aquí se haría la llamada real a la API
-    // fetch('/api/users', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(userData)
-    // });
+    try {
+        console.log('Guardando usuario:', userData);
+        
+        if (role === 'user') {
+            // Para usuarios normales, usar el endpoint de registro
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification('Usuario creado exitosamente', 'success');
+                return true;
+            } else {
+                showNotification('Error al crear usuario: ' + (data.error || 'Error desconocido'), 'error');
+                return false;
+            }
+        } else {
+            // Para otros roles, usar el endpoint correspondiente (si existe)
+            // Por ahora, solo mostrar un mensaje
+            showNotification('Funcionalidad para crear usuarios de organización próximamente', 'info');
+            console.log('Datos del usuario (no implementado aún):', userData);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error al guardar usuario:', error);
+        showNotification('Error de conexión al guardar el usuario', 'error');
+        return false;
+    }
 }
 
 function deleteUser(userData) {

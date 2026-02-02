@@ -52,7 +52,22 @@
                     if (experiencias) experiencias.href = '../index.html#experiencias-voluntariado';
                     
                     const noticias = document.getElementById('news-link');
-                    if (noticias) noticias.href = 'index.html';
+                    if (noticias) {
+                        noticias.href = '../index.html#news';
+                        noticias.onclick = function(e) {
+                            if (window.goToNoticias) {
+                                window.goToNoticias(e);
+                            } else {
+                                e.preventDefault();
+                                if (typeof window.redirectTo === 'function') {
+                                  window.redirectTo('../index.html#news');
+                                } else {
+                                  window.location.href = '../index.html#news';
+                                }
+                            }
+                            return false;
+                        };
+                    }
                     
                     const login = document.getElementById('login-link');
                     if (login) login.href = '../inicio de sesion/login.html';
@@ -120,11 +135,6 @@
                 <p class="hero-subtitle">
                     Mantente informado sobre las últimas noticias, eventos y actividades de voluntariado
                 </p>
-            </div>
-            <div class="hero-news-back-link">
-                <a href="../index.html" class="view-all">
-                    <i class="fas fa-arrow-left"></i> Volver al inicio
-                </a>
             </div>
         </div>
     </section>
@@ -270,15 +280,31 @@
 
         // Cargar noticias desde el backend
         async function cargarNoticias() {
+            const loadingEl = document.getElementById('loading-news');
+            const newsGrid = document.getElementById('news-grid-container');
+            const loadMoreContainer = document.getElementById('load-more-container');
+            
+            if (loadingEl) loadingEl.style.display = 'none';
+            
             try {
                 const response = await fetch(`${API_BASE_URL}/noticias?estado=activa`);
-                const data = await response.json();
                 
-                const loadingEl = document.getElementById('loading-news');
-                const newsGrid = document.getElementById('news-grid-container');
-                const loadMoreContainer = document.getElementById('load-more-container');
+                // Verificar si la respuesta es OK (status 200-299)
+                if (!response.ok) {
+                    console.error('Error del servidor:', response.status, response.statusText);
+                    mostrarMensajeSinNoticias(newsGrid, loadMoreContainer);
+                    return;
+                }
                 
-                if (loadingEl) loadingEl.style.display = 'none';
+                // Intentar parsear JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Error al parsear JSON:', jsonError);
+                    mostrarMensajeSinNoticias(newsGrid, loadMoreContainer);
+                    return;
+                }
                 
                 if (data.success && data.noticias && data.noticias.length > 0) {
                     if (newsGrid) {
@@ -292,18 +318,13 @@
                         }
                     }
                 } else {
-                    // Si no hay noticias, mostrar noticias de ejemplo
-                    mostrarNoticiasEjemplo(newsGrid, loadMoreContainer);
+                    // Si no hay noticias, mostrar mensaje
+                    mostrarMensajeSinNoticias(newsGrid, loadMoreContainer);
                 }
             } catch (error) {
-                console.error('Error al cargar noticias:', error);
-                const loadingEl = document.getElementById('loading-news');
-                const newsGrid = document.getElementById('news-grid-container');
-                const loadMoreContainer = document.getElementById('load-more-container');
-                
-                if (loadingEl) loadingEl.style.display = 'none';
-                // Mostrar noticias de ejemplo en caso de error
-                mostrarNoticiasEjemplo(newsGrid, loadMoreContainer);
+                console.error('Error al cargar noticias (backend probablemente apagado):', error);
+                // Si hay un error de red o conexión, mostrar mensaje
+                mostrarMensajeSinNoticias(newsGrid, loadMoreContainer);
             }
         }
 
@@ -421,86 +442,24 @@
             });
         }
 
-        // Noticias de ejemplo para mostrar cuando no hay respuesta del backend
-        const noticiasEjemplo = [
-            {
-                id: 1,
-                titulo: "INJUV abre convocatoria para programa de voluntariado 2025 en 140 comunas de Chile",
-                contenido: "El Instituto Nacional de la Juventud invita a jóvenes entre 18 y 29 años a participar en proyectos de desarrollo comunitario, medio ambiente y apoyo social. Se espera beneficiar a más de 10,000 jóvenes este año con certificación oficial y experiencia laboral. Las inscripciones están abiertas hasta el 31 de enero de 2025.",
-                resumen: "El Instituto Nacional de la Juventud invita a jóvenes entre 18 y 29 años a participar en proyectos de desarrollo comunitario, medio ambiente y apoyo social. Se espera beneficiar a más de 10,000 jóvenes este año con certificación oficial y experiencia laboral.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 11, 9, 9, 0)
-            },
-            {
-                id: 2,
-                titulo: "INJUV y CONAF lanzan programa de voluntariado ambiental para la reforestación nacional",
-                contenido: "Jóvenes voluntarios trabajarán en la restauración de ecosistemas afectados por incendios forestales, con especial énfasis en la Región de Valparaíso y la Araucanía. El programa incluye capacitación en técnicas de reforestación y conservación de especies nativas. Los participantes recibirán certificación en conservación ambiental.",
-                resumen: "Jóvenes voluntarios trabajarán en la restauración de ecosistemas afectados por incendios forestales, con especial énfasis en la Región de Valparaíso y la Araucanía. El programa incluye capacitación en técnicas de reforestación y conservación de especies nativas.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 11, 6, 14, 30)
-            },
-            {
-                id: 3,
-                titulo: "Programa de voluntariado educativo: INJUV busca tutores para apoyar a estudiantes vulnerables",
-                contenido: "Iniciativa dirigida a universitarios y profesionales jóvenes para brindar apoyo académico a estudiantes de enseñanza básica y media en situación de vulnerabilidad. Los voluntarios recibirán capacitación pedagógica y certificación oficial de INJUV. El programa busca reducir la brecha educacional y fomentar el acceso a la educación superior.",
-                resumen: "Iniciativa dirigida a universitarios y profesionales jóvenes para brindar apoyo académico a estudiantes de enseñanza básica y media en situación de vulnerabilidad. Los voluntarios recibirán capacitación pedagógica y certificación oficial de INJUV.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 11, 4, 11, 15)
-            },
-            {
-                id: 4,
-                titulo: "INJUV presenta nueva plataforma digital para gestión de voluntariados",
-                contenido: "La nueva plataforma permite a jóvenes inscribirse en programas de voluntariado, realizar seguimiento de sus actividades y descargar certificaciones de manera digital. El sistema está disponible 24/7 y optimizado para dispositivos móviles, facilitando el acceso de jóvenes de todo el país.",
-                resumen: "La nueva plataforma permite a jóvenes inscribirse en programas de voluntariado, realizar seguimiento de sus actividades y descargar certificaciones de manera digital. El sistema está disponible 24/7 y optimizado para dispositivos móviles.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 11, 2, 16, 0)
-            },
-            {
-                id: 5,
-                titulo: "Voluntarios de INJUV participan en campaña de ayuda humanitaria tras emergencias climáticas",
-                contenido: "Más de 500 jóvenes voluntarios de INJUV participaron en la coordinación de ayudas para familias afectadas por las últimas emergencias climáticas en el sur de Chile. Los voluntarios colaboraron en la distribución de alimentos, ropa y medicamentos, además de brindar apoyo emocional a las comunidades afectadas.",
-                resumen: "Más de 500 jóvenes voluntarios de INJUV participaron en la coordinación de ayudas para familias afectadas por las últimas emergencias climáticas en el sur de Chile. Los voluntarios colaboraron en la distribución de alimentos, ropa y medicamentos.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 10, 28, 10, 30)
-            },
-            {
-                id: 6,
-                titulo: "INJUV celebra Día Internacional del Voluntariado con reconocimiento a jóvenes destacados",
-                contenido: "El 5 de diciembre, INJUV realizó una ceremonia de reconocimiento a más de 100 jóvenes voluntarios destacados de todo el país. Los premiados fueron seleccionados por su compromiso, liderazgo y aporte significativo a sus comunidades durante el año 2024. La ceremonia contó con la presencia de autoridades gubernamentales y representantes de organizaciones colaboradoras.",
-                resumen: "El 5 de diciembre, INJUV realizó una ceremonia de reconocimiento a más de 100 jóvenes voluntarios destacados de todo el país. Los premiados fueron seleccionados por su compromiso, liderazgo y aporte significativo a sus comunidades durante el año 2024.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 11, 5, 18, 0)
-            },
-            {
-                id: 7,
-                titulo: "Programa de voluntariado en salud mental: INJUV capacita a jóvenes como primeros respondedores",
-                contenido: "Nueva iniciativa de INJUV busca formar a jóvenes en primeros auxilios psicológicos y apoyo en salud mental comunitaria. El programa incluye talleres sobre reconocimiento de señales de alerta, técnicas de escucha activa y derivación a servicios especializados. Los voluntarios trabajarán en centros comunitarios y espacios de atención a jóvenes.",
-                resumen: "Nueva iniciativa de INJUV busca formar a jóvenes en primeros auxilios psicológicos y apoyo en salud mental comunitaria. El programa incluye talleres sobre reconocimiento de señales de alerta, técnicas de escucha activa y derivación a servicios especializados.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 10, 25, 13, 45)
-            },
-            {
-                id: 8,
-                titulo: "INJUV y SENDA firman convenio para voluntariado en prevención de consumo problemático",
-                contenido: "El convenio permitirá que jóvenes voluntarios de INJUV participen en programas de prevención del consumo de alcohol y drogas en establecimientos educacionales y comunidades. Los voluntarios recibirán capacitación especializada y trabajarán en actividades de sensibilización y educación preventiva dirigidas a sus pares.",
-                resumen: "El convenio permitirá que jóvenes voluntarios de INJUV participen en programas de prevención del consumo de alcohol y drogas en establecimientos educacionales y comunidades. Los voluntarios recibirán capacitación especializada y trabajarán en actividades de sensibilización.",
-                autor_nombre: "INJUV",
-                fecha_publicacion: new Date(2024, 10, 20, 11, 20)
-            }
-        ];
-
-        // Función para mostrar noticias de ejemplo
-        function mostrarNoticiasEjemplo(newsGrid, loadMoreContainer) {
+        // Mostrar mensaje cuando no hay noticias disponibles
+        function mostrarMensajeSinNoticias(newsGrid, loadMoreContainer) {
             if (!newsGrid) return;
             
-            newsGrid.style.display = 'grid';
-            renderizarNoticias(noticiasEjemplo, newsGrid);
-            
-            // Mostrar botón "Ver más" si hay más de 6 noticias
-            if (noticiasEjemplo.length > 6 && loadMoreContainer) {
-                loadMoreContainer.style.display = 'block';
-                configurarBotonVerMas(newsGrid, loadMoreContainer);
+            if (loadMoreContainer) {
+                loadMoreContainer.style.display = 'none';
             }
+            
+            newsGrid.style.display = 'grid';
+            newsGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; color: #666;">
+                    <i class="fas fa-newspaper" style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.3;"></i>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 0.75rem; font-weight: 500; color: #333;">No hay noticias disponibles</h3>
+                    <p style="font-size: 1rem; opacity: 0.8; max-width: 500px; margin: 0 auto;">
+                        Las noticias se cargarán al momento de tener conexion con el servidor.
+                    </p>
+                </div>
+            `;
         }
 
         // Función para ver el detalle completo de una noticia

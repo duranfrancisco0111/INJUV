@@ -304,7 +304,11 @@ async function enviarFormulario() {
                 alert(`¡Organización registrada exitosamente!\n\nNombre: ${resultado.organizacion.nombre}\nEmail: ${resultado.organizacion.email_contacto}\nRegión: ${resultado.organizacion.region}\nCiudad: ${resultado.organizacion.ciudad || 'N/A'}\nComuna: ${resultado.organizacion.comuna}\n\nSerás redirigido a tu perfil de organización.`);
                 
                 // Redirigir al perfil de organización o página principal
-                window.location.href = '../Perfil_organizacion/index.html';
+                if (typeof window.redirectTo === 'function') {
+                    window.redirectTo('../Perfil_organizacion/index.html');
+                } else {
+                    window.location.href = '../Perfil_organizacion/index.html';
+                }
             }, 1000);
         } else {
             mostrarMensaje('❌ Error: ' + (resultado.error || 'No se pudo registrar la organización'), 'error');
@@ -337,7 +341,11 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
         alert('Debes iniciar sesión para registrar una organización.\n\nSerás redirigido a la página de inicio de sesión.');
         setTimeout(() => {
-            window.location.href = '../../inicio de sesion/login.html';
+            if (typeof window.redirectTo === 'function') {
+                window.redirectTo('../../inicio de sesion/login.html');
+            } else {
+                window.location.href = '../../inicio de sesion/login.html';
+            }
         }, 2000);
     }
 

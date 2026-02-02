@@ -892,8 +892,27 @@
               <rect x="3" y="4" width="18" height="18" rx="2"></rect>
               <path d="M16 2v4M8 2v4M3 10h18"></path>
             </svg>
-            ${fechaLimite}
+            Postulación hasta: ${fechaLimite}
           </li>
+          ${(op.fecha_inicio_voluntariado || op.fecha_fin_voluntariado) ? `
+          <li class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-[18px] w-[18px] text-green-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
+            </svg>
+            <span class="text-green-700 font-medium">
+              ${op.fecha_inicio_voluntariado ? new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL') : 'TBD'} - ${op.fecha_fin_voluntariado ? new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
+            </span>
+          </li>
+          ` : ''}
+          ${(op.horas_voluntariado !== null && op.horas_voluntariado !== undefined && op.horas_voluntariado !== '') ? `
+          <li class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-[18px] w-[18px] text-purple-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 8v4l3 3"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="text-purple-700 font-medium">${op.horas_voluntariado} horas</span>
+          </li>
+          ` : ''}
           <li class="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-[18px] w-[18px] text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -929,7 +948,11 @@
       
       if (!userId) {
         alert('Debes iniciar sesión para postular a una oportunidad');
-        window.location.href = '../inicio de sesion/login.html';
+        if (typeof window.redirectTo === 'function') {
+          window.redirectTo('../inicio de sesion/login.html');
+        } else {
+          window.location.href = '../inicio de sesion/login.html';
+        }
         return;
       }
 
@@ -1078,6 +1101,22 @@
                 <h4 class="font-semibold text-slate-900 mb-2">Cupos disponibles</h4>
                 <p class="text-slate-600">${op.cupo_maximo || 'No especificado'}</p>
               </div>
+              ${op.horas_voluntariado !== null && op.horas_voluntariado !== undefined && op.horas_voluntariado !== '' ? `
+              <div>
+                <h4 class="font-semibold text-slate-900 mb-2">Horas del voluntariado</h4>
+                <p class="text-slate-600">${op.horas_voluntariado} horas</p>
+              </div>
+              ` : ''}
+              ${(op.fecha_inicio_voluntariado || op.fecha_fin_voluntariado) ? `
+              <div>
+                <h4 class="font-semibold text-slate-900 mb-2">Fechas del voluntariado</h4>
+                <p class="text-slate-600">
+                  ${op.fecha_inicio_voluntariado ? new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
+                  -
+                  ${op.fecha_fin_voluntariado ? new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
+                </p>
+              </div>
+              ` : ''}
               ${op.fecha_limite_postulacion ? `
               <div>
                 <h4 class="font-semibold text-slate-900 mb-2">Fecha límite de postulación</h4>
@@ -1104,7 +1143,11 @@
           cerrarModal();
         } else {
           alert('Debes iniciar sesión para postular');
-          window.location.href = '../inicio de sesion/login.html';
+          if (typeof window.redirectTo === 'function') {
+            window.redirectTo('../inicio de sesion/login.html');
+          } else {
+            window.location.href = '../inicio de sesion/login.html';
+          }
         }
       }
     }
@@ -1244,7 +1287,11 @@
       event.stopPropagation();
       const profileDropdown = document.getElementById('profileDropdown');
       if (profileDropdown) profileDropdown.classList.remove('active');
-      window.location.href = '../Roles/Perfil_usuario/index.html';
+      if (typeof window.redirectTo === 'function') {
+        window.redirectTo('../Roles/Perfil_usuario/index.html');
+      } else {
+        window.location.href = '../Roles/Perfil_usuario/index.html';
+      }
     };
     
     window.handleLogout = function(event) {
@@ -1263,7 +1310,11 @@
         sessionStorage.removeItem('userEmail');
         sessionStorage.removeItem('userRol');
         sessionStorage.removeItem('userRole'); // Mantener por compatibilidad
-        window.location.href = '../inicio de sesion/login.html';
+        if (typeof window.redirectTo === 'function') {
+          window.redirectTo('../inicio de sesion/login.html');
+        } else {
+          window.location.href = '../inicio de sesion/login.html';
+        }
       }
     };
     
@@ -1371,7 +1422,22 @@
           if (experiencias) experiencias.href = '../index.html#experiencias-voluntariado';
 
           const noticias = document.getElementById('news-link');
-          if (noticias) noticias.href = '../index.html#news';
+          if (noticias) {
+            noticias.href = '../index.html#news';
+            noticias.onclick = function(e) {
+              if (window.goToNoticias) {
+                window.goToNoticias(e);
+              } else {
+                e.preventDefault();
+                if (typeof window.redirectTo === 'function') {
+                  window.redirectTo('../index.html#news');
+                } else {
+                  window.location.href = '../index.html#news';
+                }
+              }
+              return false;
+            };
+          }
 
           const login = document.getElementById('login-link');
           if (login) login.href = '../inicio de sesion/login.html';

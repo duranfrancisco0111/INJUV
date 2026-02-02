@@ -661,7 +661,22 @@
           if (experiencias) experiencias.href = '../../index.html#experiencias-voluntariado';
           
           const noticias = document.getElementById('news-link');
-          if (noticias) noticias.href = '../../index.html#news';
+          if (noticias) {
+            noticias.href = '../../index.html#news';
+            noticias.onclick = function(e) {
+              if (window.goToNoticias) {
+                window.goToNoticias(e);
+              } else {
+                e.preventDefault();
+                if (typeof window.redirectTo === 'function') {
+                  window.redirectTo('../../index.html#news');
+                } else {
+                  window.location.href = '../../index.html#news';
+                }
+              }
+              return false;
+            };
+          }
           
           const login = document.getElementById('login-link');
           if (login) login.href = '../../inicio de sesion/login.html';
@@ -669,6 +684,71 @@
       })
       .catch(error => console.error('Error:', error));
   </script>
+  <!-- Modal para detalles del voluntariado -->
+  <div id="modalDetallesVoluntariado" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <h3 class="text-2xl font-semibold text-gray-900">Detalles del Voluntariado</h3>
+        <button id="cerrarModalDetalles" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
+      </div>
+      
+      <div class="p-6 space-y-6">
+        <!-- Información básica -->
+        <div>
+          <h4 id="modalTitulo" class="text-xl font-semibold text-gray-900 mb-2"></h4>
+          <p id="modalOrganizacion" class="text-blue-600 font-medium mb-1"></p>
+          <p id="modalFecha" class="text-sm text-gray-600"></p>
+        </div>
+        
+        <!-- Horas de voluntariado -->
+        <div class="border-t border-gray-200 pt-4">
+          <h5 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <span>⏱</span> Horas de Voluntariado
+          </h5>
+          <div id="modalHoras" class="text-gray-700">
+            <p class="text-sm">Cargando información...</p>
+          </div>
+        </div>
+        
+        <!-- Reseña de la organización -->
+        <div class="border-t border-gray-200 pt-4">
+          <h5 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <span>⭐</span> Reseña de la Organización
+          </h5>
+          <div id="modalResena">
+            <p class="text-gray-600 italic">No hay reseña disponible aún.</p>
+          </div>
+        </div>
+        
+        <!-- Mi reseña sobre la organización -->
+        <div class="border-t border-gray-200 pt-4">
+          <h5 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <span>💬</span> Mi Reseña sobre la Organización
+          </h5>
+          <div id="modalMiResena">
+            <p class="text-gray-600 italic">Cargando información...</p>
+          </div>
+        </div>
+        
+        <!-- Certificado -->
+        <div class="border-t border-gray-200 pt-4">
+          <h5 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <span>📜</span> Certificado
+          </h5>
+          <div id="modalCertificado">
+            <p class="text-gray-600">No hay certificado disponible aún.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+        <button id="cerrarModalDetallesBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="../../script.js"></script>
   <script src="app.js"></script>
 </body>

@@ -464,6 +464,7 @@ async function cargarDatosOrganizacion() {
         actualizarUIOrganizacion(data.organizacion);
         cargarOportunidades();
         cargarEstadisticas();
+        cargarResenasPublicas(); // Cargar reseñas públicas
         return;
       } else {
         // Si hay organizacion_id en la URL pero no se encontró la organización
@@ -512,7 +513,11 @@ async function cargarDatosOrganizacion() {
             // Limpiar localStorage para forzar nuevo login
             localStorage.clear();
             sessionStorage.clear();
-            window.location.href = '../../inicio de sesion/login.html';
+            if (typeof window.redirectTo === 'function') {
+                window.redirectTo('../../inicio de sesion/login.html');
+            } else {
+                window.location.href = '../../inicio de sesion/login.html';
+            }
             return;
           }
           
@@ -545,6 +550,9 @@ async function cargarDatosOrganizacion() {
           
           // Cargar estadísticas
           cargarEstadisticas();
+          
+          // Cargar reseñas públicas
+          cargarResenasPublicas();
           return;
         } else {
           console.error('No se encontró organización para el usuario:', data.error || 'Error desconocido');
@@ -1054,6 +1062,17 @@ function mostrarOportunidadesActivas() {
         </div>
         <p class="text-sm text-gray-600 mb-2">📍 ${obtenerUbicacionOportunidad(op)}</p>
         <p class="text-gray-700 mb-2">${op.descripcion.substring(0, 150)}${op.descripcion.length > 150 ? '...' : ''}</p>
+        ${op.fecha_inicio_voluntariado || op.fecha_fin_voluntariado ? `
+        <div class="flex items-center gap-2 mt-2 mb-2">
+          ${op.fecha_inicio_voluntariado ? `<span class="text-xs text-gray-600">📅 Inicio: ${new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL')}</span>` : ''}
+          ${op.fecha_fin_voluntariado ? `<span class="text-xs text-gray-600">📅 Fin: ${new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL')}</span>` : ''}
+        </div>
+        ` : ''}
+        ${op.horas_voluntariado !== null && op.horas_voluntariado !== undefined && op.horas_voluntariado !== '' ? `
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs text-gray-600">⏱ Horas: ${op.horas_voluntariado}</span>
+        </div>
+        ` : ''}
         <div class="flex items-center gap-2 mt-3">
           <span class="text-xs text-gray-600">📊 ${op.num_postulaciones || 0} postulaciones</span>
           <span class="text-xs text-gray-600">👥 ${op.cupo_maximo || 'N/A'} cupos</span>
@@ -1177,8 +1196,11 @@ function mostrarModalCrearOportunidad() {
             <input type="text" id="tituloOportunidad" required autocomplete="off" class="w-full border rounded-lg p-2">
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Descripción *</label>
-            <textarea id="descripcionOportunidad" required rows="4" class="w-full border rounded-lg p-2"></textarea>
+            <label class="block text-sm font-medium mb-1">Descripción * (Máximo 500 caracteres)</label>
+            <textarea id="descripcionOportunidad" required rows="4" maxlength="500" class="w-full border rounded-lg p-2"></textarea>
+            <div class="text-xs text-gray-500 mt-1">
+              <span id="descripcionContador">0</span>/500 caracteres
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -1190,9 +1212,23 @@ function mostrarModalCrearOportunidad() {
               <input type="number" id="cupoMaximo" min="1" autocomplete="off" class="w-full border rounded-lg p-2">
             </div>
           </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Fecha límite de postulación</label>
+              <input type="date" id="fechaLimite" class="w-full border rounded-lg p-2">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Fecha de inicio del voluntariado</label>
+              <input type="date" id="fechaInicioVol" class="w-full border rounded-lg p-2">
+            </div>
+          </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Fecha límite de postulación</label>
-            <input type="date" id="fechaLimite" class="w-full border rounded-lg p-2">
+            <label class="block text-sm font-medium mb-1">Fecha de fin del voluntariado</label>
+            <input type="date" id="fechaFinVol" class="w-full border rounded-lg p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Horas del voluntariado (estimadas)</label>
+            <input type="number" id="horasVoluntariado" min="0" step="1" autocomplete="off" class="w-full border rounded-lg p-2" placeholder="Ej: 20">
           </div>
           
           <div>
@@ -1310,6 +1346,23 @@ function mostrarModalCrearOportunidad() {
         }
       });
     }
+    
+    // Contador de caracteres para descripción
+    const descripcionTextarea = $('#descripcionOportunidad');
+    const descripcionContador = $('#descripcionContador');
+    if (descripcionTextarea && descripcionContador) {
+      descripcionTextarea.addEventListener('input', function() {
+        const length = this.value.length;
+        descripcionContador.textContent = length;
+        if (length > 500) {
+          descripcionContador.classList.add('text-red-600');
+          descripcionContador.classList.remove('text-gray-500');
+        } else {
+          descripcionContador.classList.remove('text-red-600');
+          descripcionContador.classList.add('text-gray-500');
+        }
+      });
+    }
   }, 100);
 
   $('#formCrearOportunidad')?.addEventListener('submit', async (e) => {
@@ -1399,6 +1452,24 @@ async function crearOportunidad() {
   const metaPostulantes = $('#metaPostulantes')?.value;
   const cupoMaximo = $('#cupoMaximo')?.value;
   const fechaLimite = $('#fechaLimite')?.value;
+  const fechaInicioVol = $('#fechaInicioVol')?.value;
+  const fechaFinVol = $('#fechaFinVol')?.value;
+  const horasVoluntariado = $('#horasVoluntariado')?.value;
+  
+  // Validar longitud de descripción
+  if (descripcion && descripcion.length > 500) {
+    alert('La descripción no puede exceder 500 caracteres');
+    return;
+  }
+
+  // Validar horas del voluntariado (si viene)
+  if (horasVoluntariado !== undefined && horasVoluntariado !== null && horasVoluntariado !== '') {
+    const horasInt = parseInt(horasVoluntariado);
+    if (isNaN(horasInt) || horasInt < 0) {
+      alert('Horas del voluntariado inválidas (debe ser un número mayor o igual a 0)');
+      return;
+    }
+  }
   
   // Campos del responsable
   const responsableNombre = $('#responsableNombre')?.value;
@@ -1438,6 +1509,9 @@ async function crearOportunidad() {
         meta_postulantes: metaPostulantes ? parseInt(metaPostulantes) : null,
         cupo_maximo: cupoMaximo ? parseInt(cupoMaximo) : null,
         fecha_limite_postulacion: fechaLimite || null,
+        fecha_inicio_voluntariado: fechaInicioVol || null,
+        fecha_fin_voluntariado: fechaFinVol || null,
+        horas_voluntariado: horasVoluntariado !== undefined && horasVoluntariado !== null && horasVoluntariado !== '' ? parseInt(horasVoluntariado) : null,
         responsable_nombre: responsableNombre?.trim() || null,
         responsable_apellido: responsableApellido?.trim() || null,
         responsable_email: responsableEmail?.trim() || null,
@@ -2082,6 +2156,22 @@ window.editarOportunidad = async function(oportunidadId) {
               <label class="block text-sm font-medium mb-1">Fecha límite de postulación</label>
               <input type="date" id="editFechaLimite" value="${op.fecha_limite_postulacion || ''}" class="w-full border rounded-lg p-2">
             </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">Fecha de inicio del voluntariado</label>
+                <input type="date" id="editFechaInicioVol" value="${op.fecha_inicio_voluntariado || ''}" class="w-full border rounded-lg p-2">
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">Fecha de fin del voluntariado</label>
+                <input type="date" id="editFechaFinVol" value="${op.fecha_fin_voluntariado || ''}" class="w-full border rounded-lg p-2">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Horas del voluntariado (estimadas)</label>
+              <input type="number" id="editHorasVoluntariado" min="0" step="1" autocomplete="off" value="${op.horas_voluntariado ?? ''}" class="w-full border rounded-lg p-2" placeholder="Ej: 20">
+            </div>
             
             <div>
               <label class="block text-sm font-medium mb-1">Tipo de Voluntariado</label>
@@ -2201,6 +2291,9 @@ async function guardarEdicionOportunidad(oportunidadId) {
   const metaPostulantes = $('#editMetaPostulantes')?.value;
   const cupoMaximo = $('#editCupoMaximo')?.value;
   const fechaLimite = $('#editFechaLimite')?.value;
+  const fechaInicioVol = $('#editFechaInicioVol')?.value;
+  const fechaFinVol = $('#editFechaFinVol')?.value;
+  const horasVoluntariado = $('#editHorasVoluntariado')?.value;
   const regionOpor = $('#editRegionOportunidad')?.value;
   const ciudadOpor = $('#editCiudadOportunidad')?.value;
   const comunaOpor = $('#editComunaOportunidad')?.value;
@@ -2215,6 +2308,14 @@ async function guardarEdicionOportunidad(oportunidadId) {
     return;
   }
 
+  if (horasVoluntariado !== undefined && horasVoluntariado !== null && horasVoluntariado !== '') {
+    const horasInt = parseInt(horasVoluntariado);
+    if (isNaN(horasInt) || horasInt < 0) {
+      alert('Horas del voluntariado inválidas (debe ser un número mayor o igual a 0)');
+      return;
+    }
+  }
+
   try {
     const response = await fetch(`${API_BASE_URL}/oportunidades/${oportunidadId}`, {
       method: 'PUT',
@@ -2225,6 +2326,9 @@ async function guardarEdicionOportunidad(oportunidadId) {
         meta_postulantes: metaPostulantes ? parseInt(metaPostulantes) : null,
         cupo_maximo: cupoMaximo ? parseInt(cupoMaximo) : null,
         fecha_limite_postulacion: fechaLimite || null,
+        fecha_inicio_voluntariado: fechaInicioVol || null,
+        fecha_fin_voluntariado: fechaFinVol || null,
+        horas_voluntariado: horasVoluntariado !== undefined && horasVoluntariado !== null && horasVoluntariado !== '' ? parseInt(horasVoluntariado) : null,
         region_opor: regionOpor || null,
         ciudad_opor: ciudadOpor || null,
         comuna_opor: comunaOpor || null,
@@ -2665,54 +2769,9 @@ async function cargarEstadisticas() {
 // ========== Paginación de Reseñas ========================
 // ==========================================================
 (() => {
-  const reviews = [
-    {
-      userName: "María González",
-      volunteerTitle: "Tutor de Matemáticas",
-      rating: 5,
-      comment: "Excelente organización, muy profesional y comprometida con la educación. Los voluntarios son muy bien recibidos y el ambiente es muy positivo.",
-      date: "2024-11-15"
-    },
-    {
-      userName: "Carlos Rodríguez",
-      volunteerTitle: "Coordinador de Talleres Recreativos",
-      rating: 5,
-      comment: "Una experiencia increíble. La organización valora mucho el trabajo de los voluntarios y siempre está dispuesta a ayudar.",
-      date: "2024-10-28"
-    },
-    {
-      userName: "Ana Martínez",
-      volunteerTitle: "Mentor de Orientación Vocacional",
-      rating: 4,
-      comment: "Buen ambiente de trabajo y proyectos muy significativos. Recomiendo totalmente esta organización.",
-      date: "2024-09-12"
-    },
-    {
-      userName: "Luis Fernández",
-      volunteerTitle: "Apoyo en Biblioteca Comunitaria",
-      rating: 5,
-      comment: "Organización muy seria y comprometida. Los beneficiarios están muy agradecidos con el trabajo realizado.",
-      date: "2024-08-20"
-    },
-    {
-      userName: "Sofía Pérez",
-      volunteerTitle: "Voluntario en Refugio de Animales",
-      rating: 4,
-      comment: "Excelente experiencia. El equipo es muy profesional y el impacto en la comunidad es evidente.",
-      date: "2024-07-05"
-    },
-    {
-      userName: "Diego Torres",
-      volunteerTitle: "Asistente en Talleres de Cocina",
-      rating: 5,
-      comment: "Una de las mejores experiencias de voluntariado que he tenido. La organización realmente hace la diferencia.",
-      date: "2024-06-18"
-    }
-  ];
-
+  let allReviews = []; // Se llenará con las reseñas del backend
   const itemsPerPage = 2;
   let currentPage = 1;
-  const totalPages = Math.ceil(reviews.length / itemsPerPage);
 
   const container = document.getElementById('reviewsContainer');
   const prevBtn = document.getElementById('prevReviewsBtn');
@@ -2720,29 +2779,134 @@ async function cargarEstadisticas() {
   const currentPageSpan = document.getElementById('currentReviewsPage');
   const totalPagesSpan = document.getElementById('totalReviewsPages');
 
-  function renderStars(rating) {
-    let starsHTML = '';
-    for (let i = 1; i <= 5; i++) {
-      if (i <= rating) {
-        starsHTML += '<span class="text-yellow-400">★</span>';
-      } else {
-        starsHTML += '<span class="text-gray-300">★</span>';
+  // Función para generar estrellas con medias estrellas
+  function generarEstrellasReseñas(calificacion) {
+    const cal = Math.max(0, Math.min(5, parseFloat(calificacion)));
+    const estrellasCompletas = Math.floor(cal);
+    const decimal = cal % 1;
+    const tieneMediaEstrella = decimal >= 0.25 && decimal < 0.75;
+    const tieneCuartoEstrella = decimal >= 0.75;
+    
+    let estrellasHtml = '⭐'.repeat(estrellasCompletas);
+    
+    if (tieneMediaEstrella) {
+      estrellasHtml += '<span style="display: inline-block; width: 0.5em; overflow: hidden; position: relative; vertical-align: baseline;"><span style="position: absolute; left: 0;">⭐</span></span>';
+      const estrellasVacias = 5 - estrellasCompletas - 1;
+      if (estrellasVacias > 0) {
+        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+      }
+    } else if (tieneCuartoEstrella) {
+      estrellasHtml += '⭐';
+      const estrellasVacias = 5 - estrellasCompletas - 1;
+      if (estrellasVacias > 0) {
+        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+      }
+    } else {
+      const estrellasVacias = 5 - estrellasCompletas;
+      if (estrellasVacias > 0) {
+        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
       }
     }
-    return starsHTML;
+    
+    return estrellasHtml;
+  }
+
+  // Cargar reseñas desde el backend
+  async function cargarResenasPublicas() {
+    if (!organizacionId) {
+      if (container) {
+        container.innerHTML = '<p class="text-gray-600 text-center py-4">No se pudo cargar las reseñas.</p>';
+      }
+      return;
+    }
+
+    try {
+      // Cargar solo reseñas públicas para el perfil público
+      const response = await fetch(`${API_BASE_URL}/organizaciones/${organizacionId}/reseñas?solo_publicas=true`, {
+        mode: 'cors'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.reseñas_por_voluntariado) {
+        // Aplanar todas las reseñas de todos los voluntariados
+        allReviews = [];
+        data.reseñas_por_voluntariado.forEach(voluntariado => {
+          voluntariado.reseñas.forEach(reseña => {
+            // Solo incluir reseñas públicas
+            // es_publica es true por defecto si no existe el campo o es null
+            const esPublica = reseña.es_publica !== false && reseña.es_publica !== null && reseña.es_publica !== undefined;
+            console.log('Reseña:', reseña.usuario_nombre, '- es_publica:', reseña.es_publica, '- esPublica calculado:', esPublica);
+            if (esPublica) {
+              allReviews.push({
+                userName: reseña.usuario_nombre,
+                volunteerTitle: voluntariado.oportunidad_titulo,
+                rating: reseña.calificacion || 0,
+                comment: reseña.reseña || '',
+                date: reseña.fecha_postulacion || new Date().toISOString().split('T')[0]
+              });
+            }
+          });
+        });
+        
+        console.log('Total reseñas públicas encontradas:', allReviews.length);
+
+        // Ordenar por fecha (más recientes primero)
+        allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        currentPage = 1;
+        renderReviews();
+      } else {
+        if (container) {
+          container.innerHTML = '<p class="text-gray-600 text-center py-4">Aún no hay reseñas públicas disponibles.</p>';
+        }
+        allReviews = [];
+        renderReviews();
+      }
+    } catch (error) {
+      console.error('Error cargando reseñas:', error);
+      if (container) {
+        container.innerHTML = '<p class="text-gray-600 text-center py-4">Error al cargar las reseñas.</p>';
+      }
+      allReviews = [];
+      renderReviews();
+    }
   }
 
   function renderReviews() {
+    if (!container) return;
+
+    if (allReviews.length === 0) {
+      container.innerHTML = '<p class="text-gray-600 text-center py-4">Aún no hay reseñas públicas disponibles.</p>';
+      if (prevBtn) prevBtn.disabled = true;
+      if (nextBtn) nextBtn.disabled = true;
+      if (currentPageSpan) currentPageSpan.textContent = '1';
+      if (totalPagesSpan) totalPagesSpan.textContent = '1';
+      return;
+    }
+
+    const totalPages = Math.ceil(allReviews.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const pageReviews = reviews.slice(startIndex, endIndex);
+    const pageReviews = allReviews.slice(startIndex, endIndex);
 
-    if (!container) return;
     container.innerHTML = '';
 
     pageReviews.forEach(review => {
       const article = document.createElement('article');
       article.className = 'border border-gray-200 rounded-lg px-4 py-3 mb-4';
+      
+      const fecha = review.date ? new Date(review.date).toLocaleDateString('es-CL', { 
+        year: 'numeric', 
+        month: 'long',
+        day: 'numeric'
+      }) : 'Fecha no disponible';
+      
+      const estrellasHtml = generarEstrellasReseñas(review.rating);
       
       article.innerHTML = `
         <div class="flex items-start justify-between">
@@ -2751,11 +2915,12 @@ async function cargarEstadisticas() {
             <p class="text-sm text-gray-600">${review.volunteerTitle}</p>
           </div>
           <div class="flex items-center gap-1">
-            ${renderStars(review.rating)}
+            <span style="font-size: 18px;">${estrellasHtml}</span>
+            ${review.rating > 0 ? `<span class="text-sm text-gray-600 ml-1">${review.rating.toFixed(1)}</span>` : ''}
           </div>
         </div>
-        <p class="mt-3 italic text-gray-800">"${review.comment}"</p>
-        <p class="mt-3 text-xs text-gray-500">${review.date}</p>
+        ${review.comment ? `<p class="mt-3 italic text-gray-800">"${review.comment}"</p>` : ''}
+        <p class="mt-3 text-xs text-gray-500">${fecha}</p>
       `;
 
       container.appendChild(article);
@@ -2778,14 +2943,18 @@ async function cargarEstadisticas() {
   });
 
   nextBtn?.addEventListener('click', () => {
+    const totalPages = Math.ceil(allReviews.length / itemsPerPage);
     if (currentPage < totalPages) {
       currentPage++;
       renderReviews();
     }
   });
 
-  // Renderizar inicialmente
-  renderReviews();
+  // Hacer la función accesible globalmente
+  window.cargarResenasPublicas = cargarResenasPublicas;
+
+  // No renderizar inicialmente, esperar a que se carguen los datos
+  // renderReviews();
 })();
 
 // ==========================================================

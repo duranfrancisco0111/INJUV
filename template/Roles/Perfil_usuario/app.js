@@ -1912,7 +1912,11 @@ function showEditOptions() {
         alert('Tu cuenta ha sido eliminada exitosamente. Serás redirigido a la página principal.');
         
         // Redirigir a la página principal
-        window.location.href = '../../index.html';
+        if (typeof window.redirectTo === 'function') {
+          window.redirectTo('../../index.html');
+        } else {
+          window.location.href = '../../index.html';
+        }
       } else {
         alert('Error al eliminar la cuenta: ' + (data.error || 'Error desconocido'));
         deleteAccountBtn.disabled = false;
@@ -2078,31 +2082,38 @@ async function loadUserDataFromBackend() {
 // Función para actualizar estadísticas
 async function updateStatistics(userId) {
   try {
-    // Cargar datos del usuario para obtener las horas de voluntariado
-    const userResponse = await fetch(`${API_BASE_URL}/usuario/${userId}`, { mode: 'cors' });
-    let totalHours = 0;
-    
-    if (userResponse.ok) {
-      const userData = await userResponse.json();
-      if (userData.success && userData.usuario) {
-        totalHours = userData.usuario.hora_voluntariado || 0;
-      }
-    }
-    
     // Cargar postulaciones para calcular estadísticas
     const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/postulaciones`, { mode: 'cors' });
     const data = await response.json();
     
+    let totalHours = 0;
     let totalProjects = 0;
     let totalCertificates = 0;
     
     if (data.success && data.postulaciones) {
       totalProjects = data.postulaciones.length;
       
+      // Sumar las horas de todas las postulaciones (cada postulación tiene sus propias horas)
+      totalHours = data.postulaciones.reduce((suma, post) => {
+        const horas = post.horas_voluntariado || 0;
+        return suma + (typeof horas === 'number' ? horas : parseInt(horas) || 0);
+      }, 0);
+      
       // Contar certificados disponibles
       totalCertificates = data.postulaciones.filter(post => 
         post.tiene_certificado && post.ruta_certificado_pdf
       ).length;
+    }
+    
+    // Si no hay postulaciones, intentar obtener horas del usuario directamente (fallback)
+    if (totalHours === 0) {
+      const userResponse = await fetch(`${API_BASE_URL}/usuario/${userId}`, { mode: 'cors' });
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.success && userData.usuario) {
+          totalHours = userData.usuario.hora_voluntariado || 0;
+        }
+      }
     }
     
     // Actualizar estadísticas en el DOM
@@ -2132,36 +2143,79 @@ async function updateStatistics(userId) {
 // Cargar postulaciones del usuario y mostrarlas como experiencias
 async function loadUserPostulations(userId) {
   try {
-    console.log('Cargando postulaciones para usuario:', userId);
-    const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/postulaciones`, {
+    // Asegurar que userId sea un número
+    const userIdNum = parseInt(userId);
+    if (isNaN(userIdNum)) {
+      console.error('❌ userId no es un número válido:', userId);
+      return;
+    }
+    
+    console.log('🔍 Cargando postulaciones para usuario:', userIdNum, '(tipo:', typeof userIdNum, ')');
+    const url = `${API_BASE_URL}/usuarios/${userIdNum}/postulaciones`;
+    console.log('📍 URL:', url);
+    
+    const response = await fetch(url, {
       mode: 'cors'
     });
     
+    console.log('📡 Respuesta recibida:', response.status, response.statusText);
+    
     if (!response.ok) {
-      console.error('Error en respuesta:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('❌ Error en respuesta:', response.status, response.statusText);
+      console.error('📄 Contenido del error:', errorText);
+      
+      // Intentar parsear como JSON si es posible
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+        console.error('📋 Datos del error:', errorData);
+      } catch (e) {
+        console.error('⚠️ No se pudo parsear el error como JSON');
+      }
+      
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
     
     const data = await response.json();
-    console.log('Postulaciones recibidas:', data);
+    console.log('✅ Datos recibidos:', data);
     
-    if (data.success && data.postulaciones) {
-      console.log('Mostrando', data.postulaciones.length, 'postulaciones');
+    if (data.success && Array.isArray(data.postulaciones)) {
+      console.log('📊 Total de postulaciones recibidas:', data.postulaciones.length);
+      if (data.postulaciones.length > 0) {
+        console.log('📝 Primera postulación completa:', JSON.stringify(data.postulaciones[0], null, 2));
+        console.log('📝 Todas las postulaciones:', data.postulaciones.map(p => ({
+          id: p.id,
+          oportunidad_titulo: p.oportunidad_titulo,
+          estado: p.estado,
+          organizacion_nombre: p.organizacion_nombre
+        })));
+      } else {
+        console.warn('⚠️ No se recibieron postulaciones en el array');
+      }
       displayPostulationsAsExperiences(data.postulaciones);
       // Cargar reseñas públicas de las organizaciones
       cargarResenasPublicas(data.postulaciones);
-    } else {
-      console.error('Error en respuesta:', data.error);
+    } else if (data.success && !data.postulaciones) {
+      console.warn('⚠️ Respuesta exitosa pero sin postulaciones:', data);
       const experiencesList = $('#experiencesList');
       if (experiencesList) {
-        experiencesList.innerHTML = '<p class="text-gray-600 text-center py-4">Error al cargar las experiencias. Por favor, recarga la página.</p>';
+        experiencesList.innerHTML = '<p class="text-gray-600 text-center py-4">No tienes experiencias de voluntariado registradas aún.</p>';
+      }
+    } else {
+      console.error('❌ Error en respuesta:', data.error || 'Error desconocido');
+      console.error('📋 Datos completos:', data);
+      const experiencesList = $('#experiencesList');
+      if (experiencesList) {
+        experiencesList.innerHTML = `<p class="text-gray-600 text-center py-4">Error al cargar las experiencias: ${data.error || 'Error desconocido'}. Por favor, recarga la página.</p>`;
       }
     }
   } catch (error) {
-    console.error('Error al cargar postulaciones:', error);
+    console.error('❌ Error al cargar postulaciones:', error);
+    console.error('🔍 Stack trace:', error.stack);
     const experiencesList = $('#experiencesList');
     if (experiencesList) {
-      experiencesList.innerHTML = '<p class="text-red-600 text-center py-4">Error de conexión al cargar las experiencias. Verifica tu conexión a internet.</p>';
+      experiencesList.innerHTML = `<p class="text-red-600 text-center py-4">Error de conexión al cargar las experiencias: ${error.message}. Verifica tu conexión a internet y que el servidor esté funcionando.</p>`;
     }
   }
 }
@@ -2338,19 +2392,26 @@ window.descargarCertificado = async function(postulacionId) {
 
 // Mostrar postulaciones como experiencias de voluntariado
 function displayPostulationsAsExperiences(postulaciones) {
+  console.log('🎯 displayPostulationsAsExperiences llamado con', postulaciones.length, 'postulaciones');
   const experiencesList = $('#experiencesList');
   
-  if (!experiencesList) return;
+  if (!experiencesList) {
+    console.error('❌ No se encontró el elemento experiencesList');
+    return;
+  }
   
   // Limpiar contenido existente
   experiencesList.innerHTML = '';
   
-  if (postulaciones.length === 0) {
+  if (!postulaciones || postulaciones.length === 0) {
+    console.warn('⚠️ No hay postulaciones para mostrar');
     experiencesList.innerHTML = `
       <p class="text-gray-600 text-center py-4">No tienes experiencias de voluntariado registradas aún.</p>
     `;
     return;
   }
+  
+  console.log('✅ Procesando', postulaciones.length, 'postulaciones para mostrar');
   
   // Crear artículos para cada postulación
   postulaciones.forEach(post => {
@@ -2398,8 +2459,9 @@ function displayPostulationsAsExperiences(postulaciones) {
     
     // Obtener organizacion_id desde la postulación (viene del backend)
     const organizacionId = post.organizacion_id || null;
+    // Usar data attribute y event listener en lugar de onclick para evitar problemas
     const verPerfilBtn = organizacionId 
-      ? `<button onclick="verPerfilOrganizacion(${organizacionId})" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2">
+      ? `<button data-org-id="${organizacionId}" class="ver-perfil-org-btn px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
           </svg>
@@ -2471,17 +2533,33 @@ function displayPostulationsAsExperiences(postulaciones) {
     }
     
     const article = document.createElement('article');
-    article.className = 'border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-sm transition';
+    article.className = 'border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition cursor-pointer bg-white';
+    article.setAttribute('data-postulacion-id', post.id);
+    article.setAttribute('data-oportunidad-titulo', post.oportunidad_titulo || 'Oportunidad de voluntariado');
+    article.setAttribute('data-organizacion-nombre', post.organizacion_nombre || 'Organización');
+    article.setAttribute('data-fecha', fecha);
+    article.setAttribute('data-estado', post.estado || 'Pendiente');
+    article.addEventListener('click', function(e) {
+      // Evitar que se abra el modal si se hace clic en los botones
+      if (e.target.closest('button')) {
+        return;
+      }
+      abrirModalDetallesVoluntariado(post);
+    });
     article.innerHTML = `
       <div class="flex items-start justify-between">
         <div class="flex-1">
-          <h4 class="font-semibold text-gray-900 mb-1">${post.oportunidad_titulo || 'Oportunidad de voluntariado'}</h4>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-semibold text-gray-900 mb-1">${post.oportunidad_titulo || 'Oportunidad de voluntariado'}</h4>
+            <span class="text-xs text-gray-500">👆 Click para ver detalles</span>
+          </div>
           <p class="text-blue-600 font-medium mb-1">${post.organizacion_nombre || 'Organización'}</p>
           <p class="text-sm text-gray-600 mb-3">${fecha}</p>
           <div class="flex items-center gap-4 mb-3">
             <span class="text-xs px-2 py-1 rounded-full ${estadoClass}">${estadoText}</span>
             ${post.oportunidad_cerrada ? '<span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800">Voluntariado terminado</span>' : ''}
             ${post.tiene_certificado ? '<span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">Certificado disponible</span>' : ''}
+            ${post.horas_voluntariado ? `<span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">⏱ ${post.horas_voluntariado} horas</span>` : ''}
           </div>
           ${motivoHtml}
           ${valoracionHtml}
@@ -2492,6 +2570,18 @@ function displayPostulationsAsExperiences(postulaciones) {
         </div>
       </div>
     `;
+    
+    // Agregar event listener al botón de ver perfil después de insertar el HTML
+    if (organizacionId) {
+      const verPerfilButton = article.querySelector('.ver-perfil-org-btn');
+      if (verPerfilButton) {
+        verPerfilButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.verPerfilOrganizacion(organizacionId);
+        });
+      }
+    }
     
     experiencesList.appendChild(article);
   });
@@ -2504,20 +2594,480 @@ window.verPerfilOrganizacion = function(organizacionId) {
     return;
   }
   
-  // Redirigir al perfil de organización con el organizacion_id
-  const currentPath = window.location.pathname;
-  let profileUrl = '';
-  
-  if (currentPath.includes('Perfil_usuario')) {
-    profileUrl = `../Perfil_organizacion/index.html?organizacion_id=${organizacionId}`;
-  } else if (currentPath.includes('template/Roles/Perfil_usuario')) {
-    profileUrl = `../Perfil_organizacion/index.html?organizacion_id=${organizacionId}`;
-  } else {
-    profileUrl = `Roles/Perfil_organizacion/index.html?organizacion_id=${organizacionId}`;
+  // Convertir a número para asegurar que sea válido
+  const orgId = parseInt(organizacionId);
+  if (isNaN(orgId)) {
+    alert('ID de organización inválido');
+    return;
   }
   
-  window.location.href = profileUrl;
+  // Construir la ruta de manera absoluta y directa
+  // Siempre usar la ruta completa desde la raíz para evitar problemas
+  const baseUrl = window.location.origin;
+  
+  // Construir la URL de manera explícita y segura
+  const profileUrl = baseUrl + '/template/Roles/Perfil_organizacion/index.html?organizacion_id=' + orgId;
+  
+  console.log('=== Redirección a Perfil de Organización ===');
+  console.log('Ruta actual:', window.location.pathname);
+  console.log('Base URL:', baseUrl);
+  console.log('Organización ID:', orgId);
+  console.log('URL final:', profileUrl);
+  console.log('==========================================');
+  
+  // Redirigir directamente usando href
+  try {
+    window.location.href = profileUrl;
+  } catch (error) {
+    console.error('Error al redirigir:', error);
+    alert('Error al redirigir. Por favor, intenta nuevamente.');
+  }
 };
+
+// Función para abrir el modal con detalles del voluntariado
+window.abrirModalDetallesVoluntariado = function(post) {
+  const modal = $('#modalDetallesVoluntariado');
+  if (!modal) return;
+  
+  // Mostrar información básica
+  const modalTitulo = $('#modalTitulo');
+  const modalOrganizacion = $('#modalOrganizacion');
+  const modalFecha = $('#modalFecha');
+  const modalHoras = $('#modalHoras');
+  const modalResena = $('#modalResena');
+  const modalCertificado = $('#modalCertificado');
+  
+  if (modalTitulo) modalTitulo.textContent = post.oportunidad_titulo || 'Oportunidad de voluntariado';
+  if (modalOrganizacion) modalOrganizacion.textContent = post.organizacion_nombre || 'Organización';
+  
+  // Fecha
+  if (modalFecha && post.created_at) {
+    const fecha = new Date(post.created_at);
+    modalFecha.textContent = fecha.toLocaleDateString('es-CL', { 
+      year: 'numeric', 
+      month: 'long',
+      day: 'numeric'
+    });
+  } else if (modalFecha) {
+    modalFecha.textContent = 'Fecha no disponible';
+  }
+  
+  // Horas de voluntariado - mostrar las horas específicas de esta postulación y las totales
+  if (modalHoras) {
+    const horasPostulacion = post.horas_voluntariado || 0;
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    
+    // Mostrar primero las horas de esta postulación
+    let horasHtml = `
+      <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-2xl font-bold text-blue-700">${horasPostulacion}</span>
+          <span class="text-gray-700 font-medium">horas en este voluntariado</span>
+        </div>
+        <p class="text-sm text-gray-600">Horas completadas específicamente en esta oportunidad.</p>
+      </div>
+    `;
+    
+    // Intentar obtener las horas totales del usuario
+    if (userId) {
+      fetch(`${API_BASE_URL}/usuario/${userId}`, { mode: 'cors' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.usuario) {
+            const horasTotales = data.usuario.hora_voluntariado || 0;
+            horasHtml += `
+              <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl font-bold text-purple-700">${horasTotales}</span>
+                  <span class="text-gray-700 font-medium">horas totales acumuladas</span>
+                </div>
+                <p class="text-sm text-gray-600">Suma de todas tus horas de voluntariado en todas las oportunidades.</p>
+              </div>
+            `;
+          }
+          modalHoras.innerHTML = horasHtml;
+        })
+        .catch(error => {
+          console.error('Error al cargar horas totales:', error);
+          modalHoras.innerHTML = horasHtml + '<p class="text-sm text-gray-500 mt-2">No se pudieron cargar las horas totales.</p>';
+        });
+    } else {
+      modalHoras.innerHTML = horasHtml;
+    }
+  }
+  
+  // Reseña de la organización
+  if (modalResena) {
+    const esResenaPublica = post.resena_org_publica === true || post.resena_org_publica === 'true' || post.resena_org_publica === 1;
+    const tieneResena = post.resena_org_sobre_voluntario && post.resena_org_sobre_voluntario.trim() !== '';
+    
+    if (esResenaPublica && tieneResena) {
+      let resenaHtml = '';
+      
+      // Calificación si existe
+      if (post.calificacion_org !== null && post.calificacion_org !== undefined && !isNaN(post.calificacion_org)) {
+        const calificacion = parseFloat(post.calificacion_org);
+        const estrellasHtml = generarEstrellas(calificacion);
+        resenaHtml += `
+          <div class="mb-3 p-3 bg-blue-50 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-lg">${estrellasHtml}</span>
+              <span class="text-sm text-gray-700 font-medium">${calificacion.toFixed(1)}/5.0</span>
+            </div>
+            <p class="text-gray-800 italic leading-relaxed">"${post.resena_org_sobre_voluntario}"</p>
+          </div>
+        `;
+      } else {
+        resenaHtml += `
+          <div class="mb-3 p-3 bg-blue-50 rounded-lg">
+            <p class="text-gray-800 italic leading-relaxed">"${post.resena_org_sobre_voluntario}"</p>
+          </div>
+        `;
+      }
+      
+      modalResena.innerHTML = resenaHtml;
+    } else {
+      modalResena.innerHTML = '<p class="text-gray-600 italic">La organización aún no ha dejado una reseña pública.</p>';
+    }
+  }
+  
+  // Mi reseña sobre la organización
+  const modalMiResena = $('#modalMiResena');
+  if (modalMiResena) {
+    // Usar reseña_org (nuevo), reseña_organizacion o resena_usuario_sobre_org (retrocompatibilidad)
+    const resenaTexto = post.reseña_org || post.reseña_organizacion || post.resena_usuario_sobre_org || '';
+    const tieneResenaUsuario = resenaTexto && resenaTexto.trim() !== '';
+    const tieneCalificacionUsuario = post.calificacion_usuario_org !== null && post.calificacion_usuario_org !== undefined && !isNaN(post.calificacion_usuario_org);
+    
+    if (tieneResenaUsuario || tieneCalificacionUsuario) {
+      // Ya hay reseña, mostrarla con opción de editar y cambiar visibilidad
+      console.log('📋 Datos de la postulación:', post);
+      console.log('🔍 resena_usuario_publica:', post.resena_usuario_publica, 'tipo:', typeof post.resena_usuario_publica);
+      
+      // Determinar si es pública: por defecto es true si no está definido o es null
+      let esPublica = true; // Por defecto es pública
+      if (post.resena_usuario_publica !== undefined && post.resena_usuario_publica !== null) {
+        // Si el campo existe y no es null/undefined, usar su valor
+        esPublica = post.resena_usuario_publica === true || post.resena_usuario_publica === 1 || post.resena_usuario_publica === 'true';
+      }
+      
+      console.log('🌐 Es pública (calculado):', esPublica);
+      let resenaHtml = '';
+      if (tieneCalificacionUsuario) {
+        const calificacion = parseFloat(post.calificacion_usuario_org);
+        const estrellasHtml = generarEstrellas(calificacion);
+        resenaHtml += `
+          <div class="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">${estrellasHtml}</span>
+                <span class="text-sm text-gray-700 font-medium">${calificacion.toFixed(1)}/5.0</span>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full ${esPublica ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
+                ${esPublica ? '🌐 Pública' : '🔒 Privada'}
+              </span>
+            </div>
+            ${tieneResenaUsuario ? `<p class="text-gray-800 italic leading-relaxed">"${resenaTexto}"</p>` : ''}
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editarResenaUsuario(${post.id})" 
+                    class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-medium">
+              ✏️ Editar reseña
+            </button>
+          </div>
+        `;
+      } else if (tieneResenaUsuario) {
+        resenaHtml += `
+          <div class="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs px-2 py-1 rounded-full ${esPublica ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
+                ${esPublica ? '🌐 Pública' : '🔒 Privada'}
+              </span>
+            </div>
+            <p class="text-gray-800 italic leading-relaxed">"${resenaTexto}"</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editarResenaUsuario(${post.id})" 
+                    class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-medium">
+              ✏️ Editar reseña
+            </button>
+          </div>
+        `;
+      }
+      modalMiResena.innerHTML = resenaHtml;
+    } else {
+      // No hay reseña, mostrar formulario para dejar una
+      // Solo permitir dejar reseña si el voluntariado está cerrado o si fue seleccionado
+      const puedeDejarResena = post.oportunidad_cerrada || post.estado === 'Seleccionado' || post.estado === 'seleccionado';
+      
+      if (puedeDejarResena) {
+        modalMiResena.innerHTML = `
+          <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <p class="text-sm text-gray-700 mb-4">Deja tu opinión sobre esta organización y tu experiencia en este voluntariado.</p>
+            <form id="formResenaUsuario" onsubmit="guardarResenaUsuario(event, ${post.id})">
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Calificación *</label>
+                <div class="flex items-center gap-2 mb-2">
+                  <input type="range" id="calificacionUsuario" min="0" max="5" step="0.5" value="5" 
+                         class="flex-1" oninput="actualizarEstrellasUsuario(this.value)">
+                  <span id="valorCalificacionUsuario" class="text-lg font-semibold text-blue-700 w-12">5.0</span>
+                </div>
+                <div id="estrellasUsuarioPreview" class="text-2xl text-yellow-400">⭐⭐⭐⭐⭐</div>
+              </div>
+              <div class="mb-4">
+                <label for="resenaUsuario" class="block text-sm font-medium text-gray-700 mb-2">Tu reseña *</label>
+                <textarea id="resenaUsuario" rows="4" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Comparte tu experiencia con esta organización..." required></textarea>
+              </div>
+              <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-gray-700">
+                  <span class="font-medium text-blue-800">ℹ️ Información:</span>
+                  <span class="text-gray-600 block mt-1">La visibilidad de tu reseña (pública o privada) será determinada por la organización.</span>
+                </p>
+              </div>
+              <button type="submit" 
+                      class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                Guardar Reseña
+              </button>
+            </form>
+          </div>
+        `;
+        // Configurar el event listener para el slider
+        setTimeout(() => {
+          const slider = document.getElementById('calificacionUsuario');
+          if (slider) {
+            slider.addEventListener('input', function() {
+              actualizarEstrellasUsuario(this.value);
+            });
+          }
+        }, 100);
+      } else {
+        modalMiResena.innerHTML = '<p class="text-gray-600 italic">Podrás dejar una reseña una vez que el voluntariado haya terminado o hayas sido seleccionado.</p>';
+      }
+    }
+  }
+  
+  // Certificado
+  if (modalCertificado) {
+    if (post.tiene_certificado && post.ruta_certificado_pdf) {
+      modalCertificado.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="flex-1">
+            <p class="text-gray-700 mb-2">Tu certificado está disponible para descargar.</p>
+            <button onclick="descargarCertificado(${post.id}); event.stopPropagation();" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Descargar Certificado
+            </button>
+          </div>
+        </div>
+      `;
+    } else if (post.oportunidad_cerrada) {
+      modalCertificado.innerHTML = '<p class="text-gray-600">El voluntariado ha terminado, pero aún no hay certificado disponible.</p>';
+    } else {
+      modalCertificado.innerHTML = '<p class="text-gray-600">El certificado estará disponible una vez que el voluntariado haya terminado y la organización lo haya generado.</p>';
+    }
+  }
+  
+  // Mostrar el modal
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+};
+
+// Función para actualizar la vista previa de estrellas en el formulario de reseña
+window.actualizarEstrellasUsuario = function(valor) {
+  const calificacion = parseFloat(valor);
+  const valorSpan = document.getElementById('valorCalificacionUsuario');
+  const estrellasPreview = document.getElementById('estrellasUsuarioPreview');
+  
+  if (valorSpan) {
+    valorSpan.textContent = calificacion.toFixed(1);
+  }
+  
+  if (estrellasPreview) {
+    const estrellasHtml = generarEstrellas(calificacion);
+    estrellasPreview.innerHTML = estrellasHtml;
+  }
+};
+
+// Función para editar la reseña del usuario
+
+window.editarResenaUsuario = function(postulacionId) {
+  // Obtener los datos actuales de la postulación
+  const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+  if (!userId) return;
+  
+  fetch(`${API_BASE_URL}/usuarios/${userId}/postulaciones`, { mode: 'cors' })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.postulaciones) {
+        const post = data.postulaciones.find(p => p.id === postulacionId);
+        if (post) {
+          // Mostrar formulario con valores actuales
+          const modalMiResena = $('#modalMiResena');
+          if (modalMiResena) {
+            const resenaTexto = post.reseña_org || post.reseña_organizacion || post.resena_usuario_sobre_org || '';
+            const calificacion = post.calificacion_usuario_org || 5;
+            const esPublica = post.resena_usuario_publica !== false;
+            
+            modalMiResena.innerHTML = `
+              <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p class="text-sm text-gray-700 mb-4">Edita tu opinión sobre esta organización y tu experiencia en este voluntariado.</p>
+                <form id="formResenaUsuario" onsubmit="guardarResenaUsuario(event, ${post.id})">
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Calificación *</label>
+                    <div class="flex items-center gap-2 mb-2">
+                      <input type="range" id="calificacionUsuario" min="0" max="5" step="0.5" value="${calificacion}" 
+                             class="flex-1" oninput="actualizarEstrellasUsuario(this.value)">
+                      <span id="valorCalificacionUsuario" class="text-lg font-semibold text-blue-700 w-12">${calificacion.toFixed(1)}</span>
+                    </div>
+                    <div id="estrellasUsuarioPreview" class="text-2xl text-yellow-400">${generarEstrellas(calificacion)}</div>
+                  </div>
+                  <div class="mb-4">
+                    <label for="resenaUsuario" class="block text-sm font-medium text-gray-700 mb-2">Tu reseña *</label>
+                    <textarea id="resenaUsuario" rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Comparte tu experiencia con esta organización..." required>${resenaTexto}</textarea>
+                  </div>
+                  <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-gray-700">
+                      <span class="font-medium text-blue-800">ℹ️ Información:</span>
+                      <span class="text-gray-600 block mt-1">La visibilidad de tu reseña (pública o privada) será determinada por la organización.</span>
+                      ${esPublica ? '<span class="text-blue-700 block mt-1">Estado actual: 🌐 Pública</span>' : '<span class="text-gray-600 block mt-1">Estado actual: 🔒 Privada</span>'}
+                    </p>
+                  </div>
+                  <button type="submit" 
+                          class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                    Guardar Cambios
+                  </button>
+                </form>
+              </div>
+            `;
+            // Configurar el event listener para el slider
+            setTimeout(() => {
+              const slider = document.getElementById('calificacionUsuario');
+              if (slider) {
+                slider.addEventListener('input', function() {
+                  actualizarEstrellasUsuario(this.value);
+                });
+              }
+            }, 100);
+          }
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar datos:', error);
+      alert('Error al cargar los datos de la reseña');
+    });
+};
+
+// Función para guardar la reseña del usuario sobre la organización
+window.guardarResenaUsuario = async function(event, postulacionId) {
+  event.preventDefault();
+  
+  const resena = document.getElementById('resenaUsuario').value.trim();
+  const calificacion = document.getElementById('calificacionUsuario').value;
+  // La visibilidad la decide la organización, no el usuario
+  
+  if (!resena) {
+    alert('Por favor, completa la reseña.');
+    return;
+  }
+  
+  if (!calificacion) {
+    alert('Por favor, selecciona una calificación.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/postulaciones/${postulacionId}/resena-usuario`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        resena: resena,
+        calificacion: parseFloat(calificacion)
+        // La visibilidad (es_publica) será determinada por la organización
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('¡Reseña guardada exitosamente!');
+      // Recargar los datos de la postulación para actualizar el modal
+      const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (userId) {
+        loadUserPostulations(parseInt(userId));
+        // Cerrar el modal y volver a abrirlo con los datos actualizados
+        cerrarModalDetallesVoluntariado();
+        // Esperar un momento y buscar la postulación actualizada
+        setTimeout(() => {
+          fetch(`${API_BASE_URL}/usuarios/${userId}/postulaciones`, { mode: 'cors' })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.postulaciones) {
+                const postActualizada = data.postulaciones.find(p => p.id === postulacionId);
+                if (postActualizada) {
+                  abrirModalDetallesVoluntariado(postActualizada);
+                }
+              }
+            })
+            .catch(error => console.error('Error al recargar:', error));
+        }, 500);
+      }
+    } else {
+      alert('Error: ' + (data.error || 'No se pudo guardar la reseña'));
+    }
+  } catch (error) {
+    console.error('Error al guardar reseña:', error);
+    alert('Error de conexión al guardar la reseña');
+  }
+};
+
+// Función para cerrar el modal de detalles
+function cerrarModalDetallesVoluntariado() {
+  const modal = $('#modalDetallesVoluntariado');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+// Configurar event listeners para cerrar el modal cuando se carga la página
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupModalDetallesListeners);
+} else {
+  setupModalDetallesListeners();
+}
+
+function setupModalDetallesListeners() {
+  const cerrarBtn = $('#cerrarModalDetalles');
+  const cerrarBtnFooter = $('#cerrarModalDetallesBtn');
+  const modal = $('#modalDetallesVoluntariado');
+  
+  if (cerrarBtn) {
+    cerrarBtn.addEventListener('click', cerrarModalDetallesVoluntariado);
+  }
+  
+  if (cerrarBtnFooter) {
+    cerrarBtnFooter.addEventListener('click', cerrarModalDetallesVoluntariado);
+  }
+  
+  // Cerrar al hacer clic fuera del modal
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        cerrarModalDetallesVoluntariado();
+      }
+    });
+  }
+}
 
 // Actualizar información de contacto en el backend
 async function updateContactInfoInBackend(email, telefono, region, comuna, ciudad) {

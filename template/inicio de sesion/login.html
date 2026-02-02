@@ -297,7 +297,7 @@
                     // Guardar objeto completo del usuario para compatibilidad
                     localStorage.setItem('loggedUser', JSON.stringify(data.user));
                     
-                    // Redirigir según el rol del usuario (usando rutas relativas simples)
+                    // Redirigir según el rol del usuario
                     let redirectUrl = '';
                     
                     if (userRol === 'admin') {
@@ -310,22 +310,28 @@
                     
                     console.log('Redirigiendo usuario con rol:', userRol);
                     console.log('Ruta de redirección:', redirectUrl);
-                    console.log('Ruta completa será:', window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + redirectUrl.replace('../', ''));
                     
-                    // Redirigir inmediatamente (usar replace para evitar que el usuario pueda volver atrás)
+                    // Usar función helper si está disponible, sino usar ruta relativa
                     setTimeout(() => {
                         try {
-                            console.log('Intentando redirigir a:', redirectUrl);
-                            // Usar replace en lugar de href para evitar problemas de historial
-                            window.location.replace(redirectUrl);
+                            if (typeof window.redirectTo === 'function') {
+                                window.redirectTo(redirectUrl, true);
+                            } else {
+                                // Fallback: construir ruta absoluta manualmente
+                                const basePath = '../';
+                                const finalPath = basePath + redirectUrl.replace(/^(\.\.\/)+/, '');
+                                window.location.replace(finalPath);
+                            }
                         } catch (error) {
                             console.error('Error al redirigir:', error);
                             // Fallback: intentar con href
                             try {
-                                window.location.href = redirectUrl;
+                                const basePath = '../';
+                                const finalPath = basePath + redirectUrl.replace(/^(\.\.\/)+/, '');
+                                window.location.href = finalPath;
                             } catch (error2) {
                                 console.error('Error en fallback de redirección:', error2);
-                                showError('Error al redirigir. Por favor, navega manualmente a: ' + redirectUrl);
+                                showError('Error al redirigir. Por favor, navega manualmente.');
                             }
                         }
                     }, 800);

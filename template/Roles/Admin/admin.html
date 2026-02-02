@@ -370,44 +370,50 @@
         <h3>Agregar Nuevo Usuario</h3>
         <span class="close">&times;</span>
       </div>
-      <form class="modal-form">
-        <div class="form-group">
+      <form class="modal-form" id="addUserForm">
+        <div class="form-group" id="usernameGroup">
           <label>Usuario:</label>
-          <input type="text" required>
+          <input type="text" id="usernameInput" required>
         </div>
         <div class="form-group">
           <label>Clave:</label>
-          <input type="password" required>
+          <input type="password" id="passwordInput" required>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="organizationGroup">
           <label>Nombre de la Organización:</label>
-          <input type="text" required>
+          <input type="text" id="organizationInput" required>
         </div>
         <div class="form-group">
-          <label>Correo 1:</label>
-          <input type="email" required>
+          <label>Correo:</label>
+          <input type="email" id="emailInput" required>
         </div>
-        <div class="form-group">
-          <label>Correo 2:</label>
-          <input type="email">
-        </div>
-        <div class="form-group">
-          <label>Teléfono 1:</label>
-          <input type="tel" required>
-        </div>
-        <div class="form-group">
-          <label>Teléfono 2:</label>
-          <input type="tel">
+        <div class="form-group" id="phoneGroup">
+          <label>Teléfono:</label>
+          <input type="tel" id="phoneInput" required>
         </div>
         <div class="form-group">
           <label>Rol:</label>
-          <select required>
+          <select id="roleSelect" required onchange="toggleOrganizationField()">
             <option value="">Seleccionar rol</option>
+            <option value="user">Usuario (Registrarse)</option>
+            <option value="organizacion">Organización</option>
             <option value="admin">Administrador</option>
             <option value="moderator">Moderador</option>
             <option value="editor">Editor</option>
             <option value="viewer">Visualizador</option>
           </select>
+        </div>
+        <div class="form-group" id="rutGroup" style="display: none;">
+          <label>RUT: <span style="color: red;">*</span></label>
+          <input type="text" id="rutInput" placeholder="12345678-9" required>
+        </div>
+        <div class="form-group" id="nombreGroup" style="display: none;">
+          <label>Nombre: <span style="color: red;">*</span></label>
+          <input type="text" id="nombreInput" required>
+        </div>
+        <div class="form-group" id="apellidoGroup" style="display: none;">
+          <label>Apellido: <span style="color: red;">*</span></label>
+          <input type="text" id="apellidoInput" required>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-secondary" onclick="closeModal('addUserModal')">Cancelar</button>
