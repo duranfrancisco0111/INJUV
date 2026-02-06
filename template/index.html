@@ -1198,8 +1198,38 @@
         async function cargarBibliotecaHome() {
             const container = document.getElementById('biblioteca-grid-home');
             if (!container) return;
-            // No hay endpoint aún → mostrar estado vacío (sin datos predeterminados)
-            mostrarMensajeSinContenido(container, 'Biblioteca / estudios');
+            try {
+                const response = await fetch(`${API_BASE_URL}/biblioteca/documentos`);
+                const data = await response.json();
+                if (data.success && data.documentos && data.documentos.length > 0) {
+                    const docs = data.documentos.slice(0, 3);
+                    container.innerHTML = docs.map(doc => {
+                        const desc = (doc.descripcion || '').slice(0, 100) + ((doc.descripcion || '').length > 100 ? '…' : '');
+                        const tematica = doc.tematica_nombre ? `<span class="category">${doc.tematica_nombre}</span>` : '';
+                        return `
+                            <article class="news-card">
+                                <div class="news-image">
+                                    <div class="image-placeholder" style="display:flex;"><i class="fas fa-file-alt"></i></div>
+                                    <div class="news-categories">${tematica}</div>
+                                </div>
+                                <div class="news-content">
+                                    <h3>${(doc.nombre_archivo || '').slice(0, 60)}${(doc.nombre_archivo || '').length > 60 ? '…' : ''}</h3>
+                                    ${desc ? `<p class="news-description">${desc}</p>` : ''}
+                                    <div class="news-meta">
+                                        <span class="news-date"><i class="fas fa-user"></i> ${doc.autor || '—'}</span>
+                                        <span class="news-date"><i class="fas fa-calendar-alt"></i> ${doc.fecha_edicion || '—'}</span>
+                                        <a href="biblioteca/index.html" class="read-more">Ver más</a>
+                                    </div>
+                                </div>
+                            </article>
+                        `;
+                    }).join('');
+                } else {
+                    mostrarMensajeSinContenido(container, 'Biblioteca / estudios');
+                }
+            } catch (e) {
+                mostrarMensajeSinContenido(container, 'Biblioteca / estudios');
+            }
         }
         
         // Cargar usuarios registrados

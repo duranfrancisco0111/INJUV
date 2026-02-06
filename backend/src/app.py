@@ -184,6 +184,27 @@ class Noticia(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
 
+class BibliotecaTematica(db.Model):
+    __tablename__ = 'biblioteca_tematicas'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(80), nullable=False, unique=True)
+
+
+class BibliotecaDocumento(db.Model):
+    __tablename__ = 'biblioteca_documentos'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_archivo = db.Column(db.String(255), nullable=False)
+    archivo_filename = db.Column(db.String(255), nullable=False)
+    archivo_mime = db.Column(db.String(120), nullable=True)
+    archivo_tamano_bytes = db.Column(db.BigInteger, nullable=True)
+    autor = db.Column(db.String(150), nullable=True)
+    fecha_edicion = db.Column(db.DateTime, nullable=True)
+    descripcion = db.Column(db.String(500), nullable=True)
+    tematica_id = db.Column(db.Integer, db.ForeignKey('biblioteca_tematicas.id', ondelete='SET NULL'), nullable=True)
+    organizacion_id = db.Column(db.Integer, db.ForeignKey('organizaciones.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
 
 @app.route("/")
 def home():
@@ -2164,6 +2185,195 @@ def eliminar_noticia(noticia_id):
             'success': False,
             'error': str(e)
         }), 500
+
+
+# ============================================
+# ENDPOINTS BIBLIOTECA (repositorio de documentos)
+# ============================================
+
+# Directorio donde se guardan los archivos subidos de la biblioteca
+BIBLIOTECA_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'documentos_biblioteca')
+
+@app.route("/api/biblioteca/tematicas", methods=["GET"])
+def listar_tematicas_biblioteca():
+    try:
+        tematicas = BibliotecaTematica.query.order_by(BibliotecaTematica.nombre).all()
+        return jsonify({
+            'success': True,
+            'tematicas': [{'id': t.id, 'nombre': t.nombre} for t in tematicas]
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/biblioteca/documentos", methods=["GET"])
+def listar_documentos_biblioteca():
+    try:
+        organizacion_id = request.args.get('organizacion_id', type=int)
+        tematica_id = request.args.get('tematica_id', type=int)
+        fecha_desde = request.args.get('fecha_desde')  # YYYY-MM-DD
+        fecha_hasta = request.args.get('fecha_hasta')
+        busqueda = request.args.get('q', '').strip()
+
+        query = BibliotecaDocumento.query
+        if organizacion_id:
+            query = query.filter_by(organizacion_id=organizacion_id)
+        if tematica_id:
+            query = query.filter_by(tematica_id=tematica_id)
+        if fecha_desde:
+            try:
+                fd = datetime.strptime(fecha_desde, '%Y-%m-%d').date()
+                query = query.filter(db.func.date(BibliotecaDocumento.fecha_edicion) >= fd)
+            except ValueError:
+                pass
+        if fecha_hasta:
+            try:
+                fh = datetime.strptime(fecha_hasta, '%Y-%m-%d').date()
+                query = query.filter(db.func.date(BibliotecaDocumento.fecha_edicion) <= fh)
+            except ValueError:
+                pass
+        if busqueda:
+            term = f'%{busqueda}%'
+            query = query.filter(
+                db.or_(
+                    BibliotecaDocumento.nombre_archivo.ilike(term),
+                    BibliotecaDocumento.descripcion.ilike(term),
+                    BibliotecaDocumento.autor.ilike(term)
+                )
+            )
+        documentos = query.order_by(BibliotecaDocumento.fecha_edicion.desc().nulls_last(), BibliotecaDocumento.created_at.desc()).all()
+
+        resultado = []
+        for doc in documentos:
+            tematica = BibliotecaTematica.query.get(doc.tematica_id) if doc.tematica_id else None
+            org = Organizacion.query.get(doc.organizacion_id) if doc.organizacion_id else None
+            resultado.append({
+                'id': doc.id,
+                'nombre_archivo': doc.nombre_archivo,
+                'archivo_filename': doc.archivo_filename,
+                'archivo_mime': doc.archivo_mime,
+                'autor': doc.autor or '',
+                'fecha_edicion': doc.fecha_edicion.strftime('%Y-%m-%d %H:%M') if doc.fecha_edicion else None,
+                'descripcion': doc.descripcion or '',
+                'tematica_id': doc.tematica_id,
+                'tematica_nombre': tematica.nombre if tematica else None,
+                'organizacion_id': doc.organizacion_id,
+                'organizacion_nombre': org.nombre if org else None,
+                'created_at': doc.created_at.strftime('%Y-%m-%d %H:%M') if doc.created_at else None,
+            })
+        return jsonify({'success': True, 'documentos': resultado}), 200
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/biblioteca/documentos/<int:doc_id>", methods=["GET"])
+def obtener_documento_biblioteca(doc_id):
+    try:
+        doc = BibliotecaDocumento.query.get(doc_id)
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        tematica = BibliotecaTematica.query.get(doc.tematica_id) if doc.tematica_id else None
+        org = Organizacion.query.get(doc.organizacion_id) if doc.organizacion_id else None
+        return jsonify({
+            'success': True,
+            'documento': {
+                'id': doc.id,
+                'nombre_archivo': doc.nombre_archivo,
+                'archivo_filename': doc.archivo_filename,
+                'autor': doc.autor or '',
+                'fecha_edicion': doc.fecha_edicion.strftime('%Y-%m-%d %H:%M') if doc.fecha_edicion else None,
+                'descripcion': doc.descripcion or '',
+                'tematica_nombre': tematica.nombre if tematica else None,
+                'organizacion_nombre': org.nombre if org else None,
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/biblioteca/documentos/<int:doc_id>/descargar", methods=["GET"])
+def descargar_documento_biblioteca(doc_id):
+    try:
+        doc = BibliotecaDocumento.query.get(doc_id)
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        if not os.path.isdir(BIBLIOTECA_UPLOAD_FOLDER):
+            return jsonify({'success': False, 'error': 'Carpeta de documentos no disponible'}), 404
+        filepath = os.path.join(BIBLIOTECA_UPLOAD_FOLDER, doc.archivo_filename)
+        if not os.path.isfile(filepath):
+            return jsonify({'success': False, 'error': 'Archivo no encontrado en el servidor'}), 404
+        return send_file(filepath, as_attachment=True, download_name=doc.nombre_archivo or doc.archivo_filename)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/biblioteca/documentos", methods=["POST"])
+def subir_documento_biblioteca():
+    try:
+        if 'archivo' not in request.files:
+            return jsonify({'success': False, 'error': 'No se envió ningún archivo'}), 400
+        file = request.files['archivo']
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'Nombre de archivo vacío'}), 400
+
+        nombre_archivo = request.form.get('nombre_archivo') or file.filename
+        autor = request.form.get('autor', '').strip()
+        descripcion = request.form.get('descripcion', '').strip()
+        tematica_id = request.form.get('tematica_id', type=int)
+        organizacion_id = request.form.get('organizacion_id', type=int)
+        fecha_edicion_str = request.form.get('fecha_edicion')
+
+        fecha_edicion = None
+        if fecha_edicion_str:
+            try:
+                fecha_edicion = datetime.strptime(fecha_edicion_str, '%Y-%m-%d')
+            except ValueError:
+                pass
+
+        if not os.path.isdir(BIBLIOTECA_UPLOAD_FOLDER):
+            os.makedirs(BIBLIOTECA_UPLOAD_FOLDER, exist_ok=True)
+
+        from werkzeug.utils import secure_filename
+        ext = os.path.splitext(file.filename)[1] or ''
+        unique_name = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{secure_filename(file.filename)}"
+        filepath = os.path.join(BIBLIOTECA_UPLOAD_FOLDER, unique_name)
+        file.save(filepath)
+        size_bytes = os.path.getsize(filepath)
+
+        doc = BibliotecaDocumento(
+            nombre_archivo=nombre_archivo,
+            archivo_filename=unique_name,
+            archivo_mime=file.content_type,
+            archivo_tamano_bytes=size_bytes,
+            autor=autor or None,
+            fecha_edicion=fecha_edicion,
+            descripcion=descripcion or None,
+            tematica_id=tematica_id,
+            organizacion_id=organizacion_id,
+        )
+        db.session.add(doc)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'documento': {
+                'id': doc.id,
+                'nombre_archivo': doc.nombre_archivo,
+                'autor': doc.autor,
+                'fecha_edicion': doc.fecha_edicion.strftime('%Y-%m-%d %H:%M') if doc.fecha_edicion else None,
+                'descripcion': doc.descripcion,
+                'tematica_id': doc.tematica_id,
+                'organizacion_id': doc.organizacion_id,
+            }
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # Eliminar una oportunidad (voluntariado)
 @app.route("/api/oportunidades/<int:oportunidad_id>", methods=["DELETE"])

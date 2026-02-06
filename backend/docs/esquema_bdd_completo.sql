@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS biblioteca_tematicas (
 );
 
 -- -----------------------------------------------------------------------------
--- 7. BIBLIOTECA - Documentos
+-- 7. BIBLIOTECA - Documentos (repositorio abierto para voluntarios)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS biblioteca_documentos (
     id SERIAL PRIMARY KEY,
@@ -164,12 +164,14 @@ CREATE TABLE IF NOT EXISTS biblioteca_documentos (
     fecha_edicion TIMESTAMP,
     descripcion VARCHAR(500),
     tematica_id INTEGER REFERENCES biblioteca_tematicas(id) ON DELETE SET NULL,
+    organizacion_id INTEGER REFERENCES organizaciones(id) ON DELETE SET NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_biblioteca_documentos_tematica ON biblioteca_documentos(tematica_id);
 CREATE INDEX IF NOT EXISTS idx_biblioteca_documentos_fecha_edicion ON biblioteca_documentos(fecha_edicion);
+CREATE INDEX IF NOT EXISTS idx_biblioteca_documentos_organizacion ON biblioteca_documentos(organizacion_id);
 
 -- =============================================================================
 -- FIN DEL ESQUEMA
