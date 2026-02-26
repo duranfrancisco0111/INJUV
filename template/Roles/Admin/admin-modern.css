@@ -223,14 +223,14 @@ body {
 /* Navegación interna del admin */
 .admin-internal-nav {
   position: fixed;
-  top: 80px;
+  top: 72px;
   left: 0;
   right: 0;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e0e0e0;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
   z-index: 999;
-  padding: 0.5rem 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  padding: 0.4rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .admin-nav-container {
@@ -238,39 +238,52 @@ body {
   margin: 0 auto;
   padding: 0 2rem;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
   overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-nav-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.admin-nav-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .admin-nav-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  color: #333;
+  padding: 0.55rem 1rem;
+  color: #475569;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.2s ease;
   white-space: nowrap;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
 }
 
 .admin-nav-link:hover {
-  background: #e9ecef;
+  background: #f1f5f9;
   color: #0066CC;
 }
 
 .admin-nav-link.active {
-  background: #0066CC;
-  color: white;
+  background: linear-gradient(135deg, #0066CC 0%, #0052CC 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3);
 }
 
 /* Main Content */
 .main-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 150px var(--space-6) var(--space-8) var(--space-6);
+  padding: 140px var(--space-6) var(--space-8) var(--space-6);
 }
 
 .content-section {
@@ -1178,6 +1191,162 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+.repo-document-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.repo-estado-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.85rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  min-width: 160px;
+}
+
+.repo-estado-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.repo-estado-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.repo-estado-controls .document-estado-select {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 0.65rem center;
+  background-size: 12px;
+  color: #334155;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.repo-estado-controls .document-estado-select:hover {
+  border-color: #94a3b8;
+}
+
+.repo-estado-controls .document-estado-select:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+}
+
+.btn-confirmar-estado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(13, 148, 136, 0.25);
+  letter-spacing: 0.01em;
+}
+
+.btn-confirmar-estado:hover {
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+}
+
+.btn-confirmar-estado:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(13, 148, 136, 0.3);
+}
+
+.btn-repo-detalle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-repo-detalle:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+}
+
+.btn-repo-descargar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-repo-descargar:hover {
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-repo-eliminar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-repo-eliminar:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
 }
 
 /* Buttons */

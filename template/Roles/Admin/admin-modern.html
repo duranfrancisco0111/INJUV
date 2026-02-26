@@ -101,6 +101,26 @@
             <i class="fas fa-newspaper"></i>
           </div>
         </div>
+        
+        <div class="stat-card primary clickable-stat" data-type="academia">
+          <div class="stat-content">
+            <div class="stat-number" id="stat-academia">0</div>
+            <div class="stat-label">Documentos Academia</div>
+          </div>
+          <div class="stat-icon">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+        </div>
+        
+        <div class="stat-card accent clickable-stat" data-type="biblioteca">
+          <div class="stat-content">
+            <div class="stat-number" id="stat-biblioteca">0</div>
+            <div class="stat-label">Documentos Biblioteca</div>
+          </div>
+          <div class="stat-icon">
+            <i class="fas fa-book"></i>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -342,44 +362,26 @@
     <section id="repository" class="content-section">
       <div class="section-header">
         <h1>Repositorio de Documentos</h1>
-        <button class="btn-primary">
-          <i class="fas fa-upload"></i>
-          Subir Documento
-        </button>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+          <label style="font-weight: 600; color: #374151;">Ver:</label>
+          <select id="repositorioFiltroSeccion" class="filter-select" style="min-width: 140px;">
+            <option value="todos">Todos</option>
+            <option value="biblioteca">Biblioteca</option>
+            <option value="academia">Academia</option>
+          </select>
+          <button type="button" class="btn-primary" id="btnSubirDocumentoRepo">
+            <i class="fas fa-upload"></i>
+            Subir Documento
+          </button>
+          <button type="button" class="btn-secondary" id="btnActualizarRepositorio" title="Actualizar lista">
+            <i class="fas fa-sync-alt"></i>
+            Actualizar
+          </button>
+        </div>
       </div>
-      
-      <div class="documents-grid">
-        <div class="document-card pending">
-          <div class="document-icon">
-            <i class="fas fa-file-pdf"></i>
-          </div>
-          <div class="document-info">
-            <h3>Manual de Voluntariado 2024</h3>
-            <p>PDF • 2.3 MB • Subido por: admin_org1</p>
-            <div class="document-status">Pendiente de Aprobación</div>
-          </div>
-          <div class="document-actions">
-            <button class="btn-success">Aprobar</button>
-            <button class="btn-danger">Rechazar</button>
-            <button class="btn-secondary">Descargar</button>
-          </div>
-        </div>
-        
-        <div class="document-card approved">
-          <div class="document-icon">
-            <i class="fas fa-file-word"></i>
-          </div>
-          <div class="document-info">
-            <h3>Formulario de Postulación</h3>
-            <p>DOCX • 156 KB • Subido por: user_org2</p>
-            <div class="document-status">Aprobado</div>
-          </div>
-          <div class="document-actions">
-            <button class="btn-secondary">Editar</button>
-            <button class="btn-danger">Eliminar</button>
-            <button class="btn-secondary">Descargar</button>
-          </div>
-        </div>
+      <p class="section-description" style="margin-bottom: 1rem; color: #6b7280;">Documentos de Biblioteca y Academia. Los documentos subidos por organizaciones aparecen como <strong>Pendiente</strong> hasta que un administrador los apruebe; solo los aprobados son públicos.</p>
+      <div id="repositorioDocumentsGrid" class="documents-grid">
+        <!-- Se llena por loadRepositoryData() -->
       </div>
     </section>
 

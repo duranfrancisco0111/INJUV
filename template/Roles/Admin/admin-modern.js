@@ -182,14 +182,44 @@ function setupInteractiveElements() {
 
 // Configurar clics en las tarjetas de estadísticas
 function setupStatCardsClick() {
+    // Usar event delegation para manejar clics en tarjetas, incluso si se agregan dinámicamente
+    const statsContainer = document.querySelector('.stats-overview');
+    if (statsContainer) {
+        // Remover listeners anteriores si existen
+        statsContainer.removeEventListener('click', handleStatCardClick);
+        // Agregar listener con event delegation
+        statsContainer.addEventListener('click', handleStatCardClick);
+    }
+    
+    // También configurar directamente las tarjetas existentes
     const statCards = document.querySelectorAll('.clickable-stat');
     statCards.forEach(card => {
         card.style.cursor = 'pointer';
-        card.addEventListener('click', function() {
-            const dataType = this.getAttribute('data-type');
-            openDetailsModal(dataType);
-        });
     });
+}
+
+function handleStatCardClick(e) {
+    const card = e.target.closest('.clickable-stat');
+    if (!card) return;
+    
+    const type = card.getAttribute('data-type');
+    if (type === 'academia' || type === 'biblioteca') {
+        // Redirigir a Repositorio con el filtro correspondiente
+        const navLink = document.querySelector('.admin-nav-link[data-section="repository"]');
+        if (navLink) {
+            navLink.click();
+            setTimeout(() => {
+                const filtroRepo = document.getElementById('repositorioFiltroSeccion');
+                if (filtroRepo) {
+                    filtroRepo.value = type;
+                    filtroRepo.dispatchEvent(new Event('change'));
+                }
+            }, 200);
+        }
+    } else {
+        // Para otros tipos, abrir modal de detalles
+        openDetailsModal(type);
+    }
 }
 
 // Configurar el modal
@@ -551,6 +581,8 @@ function loadDashboardData() {
                 const voluntariadosEl = document.getElementById('stat-voluntariados');
                 const organizacionesEl = document.getElementById('stat-organizaciones');
                 const noticiasEl = document.getElementById('stat-noticias');
+                const academiaEl = document.getElementById('stat-academia');
+                const bibliotecaEl = document.getElementById('stat-biblioteca');
                 
                 if (usuariosEl) {
                     animateNumber(usuariosEl, stats.usuarios_registrados || 0);
@@ -564,6 +596,15 @@ function loadDashboardData() {
                 if (noticiasEl) {
                     animateNumber(noticiasEl, stats.noticias_activas || 0);
                 }
+                if (academiaEl) {
+                    animateNumber(academiaEl, stats.documentos_academia || 0);
+                }
+                if (bibliotecaEl) {
+                    animateNumber(bibliotecaEl, stats.documentos_biblioteca || 0);
+                }
+                
+                // Reconfigurar los event listeners después de cargar los datos
+                setupStatCardsClick();
             } else {
                 console.error('Error al cargar estadísticas:', data.error);
                 // Mostrar valores por defecto en caso de error
@@ -602,11 +643,15 @@ function setDefaultStats() {
     const voluntariadosEl = document.getElementById('stat-voluntariados');
     const organizacionesEl = document.getElementById('stat-organizaciones');
     const noticiasEl = document.getElementById('stat-noticias');
+    const academiaEl = document.getElementById('stat-academia');
+    const bibliotecaEl = document.getElementById('stat-biblioteca');
     
     if (usuariosEl) usuariosEl.textContent = '0';
     if (voluntariadosEl) voluntariadosEl.textContent = '0';
     if (organizacionesEl) organizacionesEl.textContent = '0';
     if (noticiasEl) noticiasEl.textContent = '0';
+    if (academiaEl) academiaEl.textContent = '0';
+    if (bibliotecaEl) bibliotecaEl.textContent = '0';
 }
 
 // Cargar Actividad Reciente
@@ -2093,19 +2138,466 @@ window.eliminarOportunidad = async function(opportunidadId, titulo) {
     }
 };
 
-// Cargar Datos del Repositorio
+// Cargar Datos del Repositorio (Biblioteca + Academia)
+let repositorioDocumentosCache = { biblioteca: [], academia: [] };
+
 async function loadRepositoryData() {
-    console.log('Cargando datos del repositorio...');
-    // El repositorio puede implementarse en el futuro
-    // Por ahora mostrar mensaje informativo
-    const repoSection = document.getElementById('repository');
-    if (repoSection) {
-        const documentsGrid = repoSection.querySelector('.documents-grid');
-        if (documentsGrid && documentsGrid.children.length > 0) {
-            // Ya hay contenido, mantenerlo
+    const grid = document.getElementById('repositorioDocumentsGrid');
+    if (!grid) return;
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#6b7280;"><i class="fas fa-spinner fa-spin"></i> Cargando documentos...</div>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/repositorio/documentos`);
+        const text = await response.text();
+        let data = {};
+        try {
+            data = JSON.parse(text);
+        } catch (_) {
+            data = { success: false, error: !response.ok ? ('Servidor ' + response.status + (text ? ': ' + text.slice(0, 300) : '')) : 'Respuesta no válida' };
+        }
+        if (data.success) {
+            repositorioDocumentosCache = { biblioteca: data.biblioteca || [], academia: data.academia || [] };
+            renderRepositorioDocumentos();
+        } else {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#dc2626;">Error: ' + (data.error || 'No se pudieron cargar los documentos') + '</div>';
+        }
+    } catch (err) {
+        console.error('Error cargando repositorio:', err);
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#dc2626;">Error de conexión. Verifica que el servidor esté en marcha.</div>';
+    }
+}
+
+function formatBytes(bytes) {
+    if (bytes == null || bytes === 0) return '—';
+    var u = 0, s = bytes;
+    while (s >= 1024 && u < 3) { s /= 1024; u++; }
+    return s.toFixed(1).replace(/\.0$/, '') + ' ' + ['B', 'KB', 'MB', 'GB'][u];
+}
+
+function renderRepositorioDocumentos() {
+    const grid = document.getElementById('repositorioDocumentsGrid');
+    const filtro = document.getElementById('repositorioFiltroSeccion');
+    if (!grid) return;
+    const seccionFiltro = (filtro && filtro.value) ? filtro.value : 'todos';
+    const todos = [...(repositorioDocumentosCache.biblioteca || []), ...(repositorioDocumentosCache.academia || [])];
+    const list = seccionFiltro === 'todos' ? todos : todos.filter(d => d.seccion === seccionFiltro);
+
+    if (list.length === 0) {
+        const totalBiblioteca = (repositorioDocumentosCache.biblioteca || []).length;
+        const totalAcademia = (repositorioDocumentosCache.academia || []).length;
+        let hint = 'Usa "Subir Documento" para agregar archivos. Los documentos subidos por organizaciones aparecen en <strong>Academia</strong>.';
+        if (seccionFiltro === 'biblioteca' && totalAcademia > 0) {
+            hint = 'No hay documentos en Biblioteca. Hay ' + totalAcademia + ' en Academia. Cambia el filtro a <strong>Todos</strong> o <strong>Academia</strong>.';
+        } else if (seccionFiltro === 'academia' && totalBiblioteca > 0) {
+            hint = 'No hay documentos en Academia. Hay ' + totalBiblioteca + ' en Biblioteca. Cambia el filtro a <strong>Todos</strong>.';
+        }
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:#6b7280;"><i class="fas fa-folder-open" style="font-size:2.5rem;margin-bottom:1rem;opacity:0.4;"></i><p>No hay documentos' + (seccionFiltro !== 'todos' ? ' en ' + (seccionFiltro === 'academia' ? 'Academia' : 'Biblioteca') : ' en el repositorio') + '.</p><p style="font-size:0.9rem;">' + hint + '</p><p style="margin-top:1rem;"><button type="button" class="btn-secondary" id="btnActualizarRepositorioVacio"><i class="fas fa-sync-alt"></i> Actualizar lista</button></p></div>';
+        const btnEmpty = document.getElementById('btnActualizarRepositorioVacio');
+        if (btnEmpty) btnEmpty.addEventListener('click', function() { loadRepositoryData(); });
+        return;
+    }
+
+    grid.innerHTML = list.map(doc => {
+        const seccionLabel = doc.seccion === 'biblioteca' ? 'Biblioteca' : 'Academia';
+        let estado = String(doc.estado || 'pendiente').toLowerCase();
+        if (!['pendiente', 'aprobado', 'rechazado'].includes(estado)) estado = 'pendiente';
+        const estadoLabel = estado === 'aprobado' ? 'Aprobado' : estado === 'rechazado' ? 'Rechazado' : 'Pendiente';
+        const estadoClass = estado === 'aprobado' ? 'approved' : estado === 'rechazado' ? 'rejected' : 'pending';
+        const seccionClass = doc.seccion === 'biblioteca' ? 'approved' : estadoClass;
+        const sizeStr = formatBytes(doc.archivo_tamano_bytes);
+        const authorStr = doc.autor ? 'Autor: ' + doc.autor : '';
+        const orgStr = doc.organizacion_nombre ? 'Org: ' + doc.organizacion_nombre : '';
+        const meta = [sizeStr, authorStr, orgStr].filter(Boolean).join(' • ');
+        const selectEstado = doc.seccion === 'academia'
+            ? `<div class="repo-estado-block">
+                 <label class="repo-estado-label">Estado</label>
+                 <div class="repo-estado-controls">
+                   <select class="document-estado-select" data-id="${doc.id}">
+                     <option value="pendiente" ${estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                     <option value="aprobado" ${estado === 'aprobado' ? 'selected' : ''}>Aprobado</option>
+                     <option value="rechazado" ${estado === 'rechazado' ? 'selected' : ''}>Rechazado</option>
+                   </select>
+                   <button type="button" class="btn-confirmar-estado" data-id="${doc.id}" title="Aplicar este estado">
+                     <i class="fas fa-check"></i> Confirmar
+                   </button>
+                 </div>
+               </div>`
+            : '';
+        return `
+        <div class="document-card ${seccionClass}" data-doc-id="${doc.id}" data-seccion="${doc.seccion}">
+          <div class="document-icon"><i class="fas fa-file-pdf"></i></div>
+          <div class="document-info">
+            <span class="document-badge-seccion" style="display:inline-block;font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:4px;background:#e0e7ff;color:#3730a3;margin-bottom:0.35rem;">${seccionLabel}</span>
+            ${doc.seccion === 'academia' ? `<span class="document-badge-estado" style="display:inline-block;font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:4px;margin-left:0.25rem;background:${estado === 'aprobado' ? '#d1fae5' : estado === 'rechazado' ? '#fee2e2' : '#fef3c7'};color:${estado === 'aprobado' ? '#065f46' : estado === 'rechazado' ? '#b91c1c' : '#92400e'};">${estadoLabel}</span>` : ''}
+            <h3>${escapeHtml(doc.nombre_archivo || doc.archivo_filename || 'Sin nombre')}</h3>
+            <p>${escapeHtml(meta || 'Documento')}</p>
+            <div class="document-status">${doc.seccion === 'academia' ? estadoLabel : seccionLabel}</div>
+          </div>
+          <div class="document-actions repo-document-actions">
+            ${selectEstado}
+            <button type="button" class="btn-repo-detalle btn-detalle-repo" data-id="${doc.id}" data-seccion="${doc.seccion}" title="Ver detalles del documento" style="display:inline-flex;align-items:center;gap:0.35rem;padding:0.45rem 0.75rem;font-size:0.8125rem;font-weight:500;color:#fff;background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);border:none;border-radius:6px;cursor:pointer;transition:all 0.2s ease;white-space:nowrap;"><i class="fas fa-info-circle"></i> Detalle</button>
+            <button type="button" class="btn-repo-descargar btn-descargar-repo" data-id="${doc.id}" data-seccion="${doc.seccion}"><i class="fas fa-download"></i> Descargar</button>
+            <button type="button" class="btn-repo-eliminar btn-eliminar-repo" data-id="${doc.id}" data-seccion="${doc.seccion}"><i class="fas fa-trash-alt"></i> Eliminar</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.btn-aprobar-repo').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'), 10);
+            actualizarEstadoDocumentoAcademia(id, 'aprobado');
+        });
+    });
+    grid.querySelectorAll('.btn-rechazar-repo').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'), 10);
+            actualizarEstadoDocumentoAcademia(id, 'rechazado');
+        });
+    });
+    grid.querySelectorAll('.btn-confirmar-estado').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'), 10);
+            const block = this.closest('.repo-estado-block');
+            const select = block ? block.querySelector('.document-estado-select') : null;
+            const estado = select ? select.value : '';
+            if (estado) actualizarEstadoDocumentoAcademia(id, estado);
+        });
+    });
+    grid.querySelectorAll('.btn-detalle-repo, .btn-repo-detalle').forEach(btn => {
+        console.log('Botón Detalle encontrado:', btn);
+        btn.addEventListener('click', function() {
+            const id = parseInt(this.getAttribute('data-id'), 10);
+            const seccion = this.getAttribute('data-seccion');
+            const doc = list.find(d => d.id === id && d.seccion === seccion);
+            if (doc) mostrarModalDetalleDocumento(doc);
+        });
+    });
+    grid.querySelectorAll('.btn-descargar-repo').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const seccion = this.getAttribute('data-seccion');
+            window.open(`${API_BASE_URL}/repositorio/documento/${seccion}/${id}/descargar`, '_blank');
+        });
+    });
+    grid.querySelectorAll('.btn-eliminar-repo').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const seccion = this.getAttribute('data-seccion');
+            if (confirm('¿Eliminar este documento?')) eliminarDocumentoRepositorio(seccion, parseInt(id, 10));
+        });
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+async function eliminarDocumentoRepositorio(seccion, id) {
+    try {
+        const url = seccion === 'biblioteca'
+            ? `${API_BASE_URL}/biblioteca/documentos/${id}`
+            : `${API_BASE_URL}/academia/documentos/${id}`;
+        const res = await fetch(url, { method: 'DELETE' });
+        const data = await res.json().catch(() => ({}));
+        if (data.success) {
+            showNotification('Documento eliminado', 'success');
+            loadRepositoryData();
+        } else {
+            showNotification(data.error || 'Error al eliminar', 'error');
+        }
+    } catch (e) {
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+async function actualizarEstadoDocumentoAcademia(docId, estado) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/admin/academia/documentos/${docId}/estado`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estado: estado })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data.success) {
+            const msg = estado === 'aprobado' ? 'Documento aprobado. Ya es público.' : estado === 'rechazado' ? 'Documento rechazado.' : 'Estado cambiado a pendiente.';
+            showNotification(msg, 'success');
+            loadRepositoryData();
+        } else {
+            showNotification(data.error || 'Error al actualizar estado', 'error');
+        }
+    } catch (e) {
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+function mostrarModalDetalleDocumento(doc) {
+    const modalExistente = document.getElementById('modalDetalleDocumentoRepo');
+    if (modalExistente) modalExistente.remove();
+    
+    const formatFecha = (iso) => {
+        if (!iso) return '—';
+        try {
+            return new Date(iso).toLocaleString('es-CL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return iso; }
+    };
+    
+    const categoriaLabels = {
+        guias_manuales: 'Guías y Manuales',
+        plantillas_formatos: 'Plantillas y Formatos',
+        videos_tutoriales: 'Videos Tutoriales'
+    };
+    
+    const estadoLabels = {
+        aprobado: 'Aprobado',
+        rechazado: 'Rechazado',
+        pendiente: 'Pendiente'
+    };
+    
+    const estadoColors = {
+        aprobado: { bg: '#d1fae5', color: '#065f46' },
+        rechazado: { bg: '#fee2e2', color: '#b91c1c' },
+        pendiente: { bg: '#fef3c7', color: '#92400e' }
+    };
+    
+    const estado = (doc.estado || 'pendiente').toLowerCase();
+    const estadoInfo = estadoColors[estado] || estadoColors.pendiente;
+    
+    const modal = document.createElement('div');
+    modal.id = 'modalDetalleDocumentoRepo';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;padding:1rem;';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:12px;padding:1.5rem;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;border-bottom:1px solid #e5e7eb;padding-bottom:1rem;">
+          <h2 style="margin:0;font-size:1.5rem;font-weight:600;">Detalles del Documento</h2>
+          <button type="button" id="btnCerrarDetalleRepo" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6b7280;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">&times;</button>
+        </div>
+        <div style="display:grid;gap:1rem;">
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Sección</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${doc.seccion === 'biblioteca' ? 'Biblioteca' : 'Academia'}</div>
+          </div>
+          ${doc.seccion === 'academia' && doc.estado ? `
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Estado</label>
+            <div style="padding:0.5rem;background:${estadoInfo.bg};color:${estadoInfo.color};border-radius:6px;font-weight:500;display:inline-block;">${estadoLabels[estado] || estado}</div>
+          </div>
+          ` : ''}
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Nombre del archivo</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;word-break:break-word;">${escapeHtml(doc.nombre_archivo || doc.archivo_filename || 'Sin nombre')}</div>
+          </div>
+          ${doc.descripcion ? `
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Descripción</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;white-space:pre-wrap;word-break:break-word;">${escapeHtml(doc.descripcion)}</div>
+          </div>
+          ` : ''}
+          ${doc.seccion === 'academia' && doc.categoria ? `
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Categoría</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${escapeHtml(categoriaLabels[doc.categoria] || doc.categoria)}</div>
+          </div>
+          ` : ''}
+          ${doc.organizacion_nombre ? `
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Organización</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${escapeHtml(doc.organizacion_nombre)}</div>
+          </div>
+          ` : ''}
+          ${doc.autor ? `
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Autor</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${escapeHtml(doc.autor)}</div>
+          </div>
+          ` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            ${doc.fecha_edicion ? `
+            <div>
+              <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Fecha de edición</label>
+              <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${formatFecha(doc.fecha_edicion)}</div>
+            </div>
+            ` : ''}
+            ${doc.created_at ? `
+            <div>
+              <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Fecha de creación</label>
+              <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${formatFecha(doc.created_at)}</div>
+            </div>
+            ` : ''}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            ${doc.archivo_tamano_bytes ? `
+            <div>
+              <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Tamaño</label>
+              <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${formatBytes(doc.archivo_tamano_bytes)}</div>
+            </div>
+            ` : ''}
+            ${doc.archivo_mime ? `
+            <div>
+              <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Tipo MIME</label>
+              <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;">${escapeHtml(doc.archivo_mime)}</div>
+            </div>
+            ` : ''}
+          </div>
+          ${doc.archivo_filename ? `
+          <div>
+            <label style="display:block;font-weight:600;color:#374151;margin-bottom:0.25rem;font-size:0.875rem;">Nombre técnico del archivo</label>
+            <div style="padding:0.5rem;background:#f3f4f6;border-radius:6px;color:#1f2937;font-family:monospace;font-size:0.875rem;word-break:break-all;">${escapeHtml(doc.archivo_filename)}</div>
+          </div>
+          ` : ''}
+        </div>
+        <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;display:flex;gap:0.75rem;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" id="btnCerrarDetalleRepo2">Cerrar</button>
+          <a href="${API_BASE_URL}/repositorio/documento/${doc.seccion}/${doc.id}/descargar" target="_blank" rel="noopener" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;">
+            <i class="fas fa-download"></i> Descargar
+          </a>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.querySelector('#btnCerrarDetalleRepo').addEventListener('click', () => modal.remove());
+    modal.querySelector('#btnCerrarDetalleRepo2').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+// Filtro del repositorio
+document.addEventListener('DOMContentLoaded', function() {
+    const filtroRepo = document.getElementById('repositorioFiltroSeccion');
+    if (filtroRepo) {
+        filtroRepo.addEventListener('change', function() {
+            if (repositorioDocumentosCache.biblioteca || repositorioDocumentosCache.academia) {
+                renderRepositorioDocumentos();
+            }
+        });
+    }
+    const btnSubir = document.getElementById('btnSubirDocumentoRepo');
+    if (btnSubir) {
+        btnSubir.addEventListener('click', function() { openModalSubirDocumentoRepo(); });
+    }
+    const btnActualizarRepo = document.getElementById('btnActualizarRepositorio');
+    if (btnActualizarRepo) {
+        btnActualizarRepo.addEventListener('click', function() {
+            btnActualizarRepo.disabled = true;
+            loadRepositoryData().then(function() { btnActualizarRepo.disabled = false; }).catch(function() { btnActualizarRepo.disabled = false; });
+        });
+    }
+});
+
+function openModalSubirDocumentoRepo() {
+    const modal = document.getElementById('modalSubirDocumentoRepo');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('formSubirDocumentoRepo').reset();
+        return;
+    }
+    const m = document.createElement('div');
+    m.id = 'modalSubirDocumentoRepo';
+    m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+    m.innerHTML = `
+      <div style="background:#fff;border-radius:12px;padding:1.5rem;min-width:320px;max-width:420px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+        <h3 style="margin:0 0 1rem;">Subir documento</h3>
+        <form id="formSubirDocumentoRepo">
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Sección</label>
+            <select name="seccion" required style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;">
+              <option value="biblioteca">Biblioteca</option>
+              <option value="academia">Academia</option>
+            </select>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Archivo</label>
+            <input type="file" name="archivo" id="inputArchivoRepo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v" required style="width:100%;padding:0.35rem;">
+            <small id="hintArchivoRepo" style="display:block;color:#6b7280;margin-top:0.25rem;font-size:0.875rem;">Biblioteca: documentos hasta 25MB. Academia: documentos o videos hasta 500MB</small>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Nombre (opcional)</label>
+            <input type="text" name="nombre_archivo" placeholder="Nombre para mostrar" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;">
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Autor (opcional)</label>
+            <input type="text" name="autor" placeholder="Autor" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;">
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Descripción <span id="descripcionReqLabel" style="color:#dc2626;">*</span></label>
+            <textarea name="descripcion" id="textareaDescripcionRepo" rows="2" placeholder="Descripción breve del documento" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;" maxlength="500"></textarea>
+            <small id="hintDescripcionRepo" style="display:block;color:#6b7280;margin-top:0.25rem;font-size:0.875rem;">Obligatoria para Academia. Máximo 500 caracteres.</small>
+          </div>
+          <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" id="btnCancelarSubirRepo">Cancelar</button>
+            <button type="submit" class="btn-primary">Subir</button>
+          </div>
+        </form>
+      </div>`;
+    document.body.appendChild(m);
+    // Actualizar extensiones permitidas según la sección seleccionada
+    const selectSeccion = m.querySelector('select[name="seccion"]');
+    const inputArchivo = m.querySelector('#inputArchivoRepo');
+    const hintArchivo = m.querySelector('#hintArchivoRepo');
+    const textareaDescripcion = m.querySelector('#textareaDescripcionRepo');
+    const hintDescripcion = m.querySelector('#hintDescripcionRepo');
+    const descripcionReqLabel = m.querySelector('#descripcionReqLabel');
+    
+    if (selectSeccion && inputArchivo) {
+        const actualizarCamposPorSeccion = function() {
+            if (selectSeccion.value === 'academia') {
+                inputArchivo.setAttribute('accept', '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v');
+                if (hintArchivo) hintArchivo.textContent = 'Academia: documentos o videos hasta 500MB';
+                if (textareaDescripcion) {
+                    textareaDescripcion.setAttribute('required', 'required');
+                    textareaDescripcion.setAttribute('placeholder', 'Descripción breve del documento (obligatoria)');
+                }
+                if (hintDescripcion) hintDescripcion.textContent = 'Obligatoria para Academia. Máximo 500 caracteres.';
+                if (descripcionReqLabel) descripcionReqLabel.style.display = 'inline';
+            } else {
+                inputArchivo.setAttribute('accept', '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp');
+                if (hintArchivo) hintArchivo.textContent = 'Biblioteca: documentos hasta 25MB';
+                if (textareaDescripcion) {
+                    textareaDescripcion.removeAttribute('required');
+                    textareaDescripcion.setAttribute('placeholder', 'Descripción (opcional)');
+                }
+                if (hintDescripcion) hintDescripcion.textContent = 'Opcional para Biblioteca. Máximo 500 caracteres.';
+                if (descripcionReqLabel) descripcionReqLabel.style.display = 'none';
+            }
+        };
+        selectSeccion.addEventListener('change', actualizarCamposPorSeccion);
+        actualizarCamposPorSeccion(); // Ejecutar al cargar para establecer el estado inicial
+    }
+    m.querySelector('#btnCancelarSubirRepo').addEventListener('click', () => { m.style.display = 'none'; });
+    m.querySelector('#formSubirDocumentoRepo').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const seccion = form.seccion.value;
+        const fileInput = form.archivo;
+        if (!fileInput.files.length) { alert('Selecciona un archivo'); return; }
+        const descripcion = form.descripcion.value.trim();
+        if (seccion === 'academia' && !descripcion) {
+            alert('La descripción breve es obligatoria para documentos de Academia.');
+            form.descripcion.focus();
             return;
         }
-    }
+        const fd = new FormData();
+        fd.append('archivo', fileInput.files[0]);
+        if (form.nombre_archivo.value.trim()) fd.append('nombre_archivo', form.nombre_archivo.value.trim());
+        if (form.autor.value.trim()) fd.append('autor', form.autor.value.trim());
+        if (descripcion) fd.append('descripcion', descripcion);
+        const url = seccion === 'biblioteca' ? `${API_BASE_URL}/biblioteca/documentos` : `${API_BASE_URL}/academia/documentos`;
+        try {
+            const res = await fetch(url, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (data.success) {
+                showNotification('Documento subido correctamente', 'success');
+                m.style.display = 'none';
+                loadRepositoryData();
+            } else {
+                alert(data.error || 'Error al subir');
+            }
+        } catch (err) {
+            alert('Error de conexión');
+        }
+    });
+    m.style.display = 'flex';
+    document.getElementById('formSubirDocumentoRepo').reset();
 }
 
 // Manejar Acciones Rápidas

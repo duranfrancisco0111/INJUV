@@ -30,7 +30,7 @@ def after_request(response):
     if 'Access-Control-Allow-Headers' not in response.headers:
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
     if 'Access-Control-Allow-Methods' not in response.headers:
-        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE,OPTIONS'
     return response
 
 # Manejar solicitudes OPTIONS para CORS
@@ -40,7 +40,7 @@ def handle_preflight():
         response = jsonify({})
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE,OPTIONS'
         return response
 
 # Configuración de la base de datos
@@ -184,6 +184,7 @@ class Noticia(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
 
+# Repositorio: Biblioteca y Academia
 class BibliotecaTematica(db.Model):
     __tablename__ = 'biblioteca_tematicas'
     id = db.Column(db.Integer, primary_key=True)
@@ -204,6 +205,27 @@ class BibliotecaDocumento(db.Model):
     organizacion_id = db.Column(db.Integer, db.ForeignKey('organizaciones.id', ondelete='SET NULL'), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+
+# Categorías válidas para documentos Academia (slug -> etiqueta en front)
+ACADEMIA_CATEGORIAS = ('guias_manuales', 'plantillas_formatos', 'videos_tutoriales')
+
+
+class AcademiaDocumento(db.Model):
+    __tablename__ = 'academia_documentos'
+    id = db.Column(db.Integer, primary_key=True)
+    organizacion_id = db.Column(db.Integer, db.ForeignKey('organizaciones.id', ondelete='CASCADE'), nullable=True)  # null = documento global (admin)
+    estado = db.Column(db.String(20), default='pendiente', nullable=False)  # pendiente | aprobado | rechazado
+    categoria = db.Column(db.String(80), nullable=True)  # guias_manuales | plantillas_formatos | videos_tutoriales
+    nombre_archivo = db.Column(db.String(255), nullable=False)
+    archivo_filename = db.Column(db.String(255), nullable=False)
+    archivo_mime = db.Column(db.String(120), nullable=True)
+    archivo_tamano_bytes = db.Column(db.BigInteger, nullable=True)
+    autor = db.Column(db.String(150), nullable=True)
+    fecha_edicion = db.Column(db.DateTime, nullable=True)
+    descripcion = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
 
 @app.route("/")
@@ -4406,6 +4428,527 @@ def obtener_reseñas_publicas():
             'error': f'Error al obtener reseñas públicas: {str(e)}'
         }), 500
 
+
+# ----- Repositorio de documentos (Biblioteca y Academia) -----
+
+def _documento_a_json(doc, seccion, include_organizacion_nombre=False):
+    """Convierte BibliotecaDocumento o AcademiaDocumento a dict con sección."""
+    d = {
+        'id': doc.id,
+        'nombre_archivo': doc.nombre_archivo,
+        'archivo_filename': doc.archivo_filename,
+        'archivo_mime': getattr(doc, 'archivo_mime', None) or None,
+        'archivo_tamano_bytes': getattr(doc, 'archivo_tamano_bytes', None),
+        'autor': doc.autor,
+        'fecha_edicion': doc.fecha_edicion.isoformat() if doc.fecha_edicion else None,
+        'descripcion': doc.descripcion,
+        'created_at': doc.created_at.isoformat() if doc.created_at else None,
+        'seccion': seccion,
+    }
+    if seccion == 'biblioteca' and hasattr(doc, 'tematica_id'):
+        d['tematica_id'] = doc.tematica_id
+    if seccion == 'academia':
+        if hasattr(doc, 'organizacion_id'):
+            d['organizacion_id'] = doc.organizacion_id
+        if hasattr(doc, 'estado'):
+            d['estado'] = doc.estado or 'pendiente'
+        if hasattr(doc, 'categoria'):
+            d['categoria'] = doc.categoria
+        if include_organizacion_nombre and getattr(doc, 'organizacion_id', None):
+            org = Organizacion.query.get(doc.organizacion_id)
+            d['organizacion_nombre'] = org.nombre or org.siglas_nombre if org else None
+    return d
+
+
+@app.route("/api/repositorio/documentos", methods=["GET"])
+def listar_repositorio_documentos():
+    """Lista todos los documentos de Biblioteca y Academia (para panel admin)."""
+    try:
+        biblioteca = []
+        academia = []
+        if hasattr(db.session, 'query'):
+            try:
+                for doc in BibliotecaDocumento.query.order_by(BibliotecaDocumento.created_at.desc()).all():
+                    biblioteca.append(_documento_a_json(doc, 'biblioteca'))
+            except Exception as e:
+                err_msg = str(e).lower()
+                is_undefined_col = 'column' in err_msg or 'no existe' in err_msg or 'undefined' in err_msg
+                if is_undefined_col and 'biblioteca_documentos' in err_msg:
+                    db.session.rollback()
+                    try:
+                        # Añadir columnas que puede esperar el modelo (commit por columna para no deshacer las que sí se aplicaron)
+                        for sql in [
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS archivo_tamano_bytes BIGINT",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS descripcion VARCHAR(500)",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS archivo_mime VARCHAR(120)",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS autor VARCHAR(150)",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS fecha_edicion TIMESTAMP",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS tematica_id INTEGER",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()",
+                            "ALTER TABLE biblioteca_documentos ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()",
+                        ]:
+                            try:
+                                db.session.execute(text(sql))
+                                db.session.commit()
+                            except Exception:
+                                db.session.rollback()
+                        for doc in BibliotecaDocumento.query.order_by(BibliotecaDocumento.created_at.desc()).all():
+                            biblioteca.append(_documento_a_json(doc, 'biblioteca'))
+                    except Exception as e2:
+                        db.session.rollback()
+                        return jsonify({
+                            'success': False,
+                            'error': f'Biblioteca: {str(e2)}. Ejecuta en tu BD: ALTER TABLE biblioteca_documentos ADD COLUMN descripcion VARCHAR(500);'
+                        }), 500
+                else:
+                    import traceback
+                    traceback.print_exc()
+                    return jsonify({'success': False, 'error': f'Biblioteca: {str(e)}'}), 500
+            try:
+                for doc in AcademiaDocumento.query.order_by(AcademiaDocumento.created_at.desc()).all():
+                    academia.append(_documento_a_json(doc, 'academia', include_organizacion_nombre=True))
+            except Exception as e:
+                err_msg = str(e).lower()
+                # Si falla por columna 'estado' inexistente, intentar crearla y reintentar
+                if 'estado' in err_msg and ('column' in err_msg or 'no existe' in err_msg or 'undefined' in err_msg):
+                    db.session.rollback()
+                    try:
+                        db.session.execute(text(
+                            "ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS estado VARCHAR(20) NOT NULL DEFAULT 'pendiente'"
+                        ))
+                        db.session.execute(text(
+                            "UPDATE academia_documentos SET estado = 'aprobado' WHERE estado = 'pendiente' OR estado IS NULL"
+                        ))
+                        db.session.commit()
+                        for doc in AcademiaDocumento.query.order_by(AcademiaDocumento.created_at.desc()).all():
+                            academia.append(_documento_a_json(doc, 'academia', include_organizacion_nombre=True))
+                    except Exception as e2:
+                        db.session.rollback()
+                        return jsonify({
+                            'success': False,
+                            'error': f'Academia: {str(e2)}. Ejecuta en tu BD: ALTER TABLE academia_documentos ADD COLUMN estado VARCHAR(20) NOT NULL DEFAULT \'pendiente\';'
+                        }), 500
+                elif 'categoria' in err_msg and ('column' in err_msg or 'no existe' in err_msg or 'undefined' in err_msg):
+                    db.session.rollback()
+                    try:
+                        db.session.execute(text(
+                            "ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS categoria VARCHAR(80)"
+                        ))
+                        db.session.commit()
+                        for doc in AcademiaDocumento.query.order_by(AcademiaDocumento.created_at.desc()).all():
+                            academia.append(_documento_a_json(doc, 'academia', include_organizacion_nombre=True))
+                    except Exception as e2:
+                        db.session.rollback()
+                        return jsonify({
+                            'success': False,
+                            'error': f'Academia categoria: {str(e2)}. Ejecuta: ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS categoria VARCHAR(80);'
+                        }), 500
+                else:
+                    import traceback
+                    traceback.print_exc()
+                    return jsonify({'success': False, 'error': f'Academia: {str(e)}'}), 500
+        return jsonify({
+            'success': True,
+            'biblioteca': biblioteca,
+            'academia': academia,
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/biblioteca/documentos", methods=["GET"])
+def listar_biblioteca_documentos():
+    """Lista documentos de la Biblioteca (público o admin)."""
+    try:
+        docs = BibliotecaDocumento.query.order_by(BibliotecaDocumento.created_at.desc()).all()
+        return jsonify({
+            'success': True,
+            'documentos': [_documento_a_json(d, 'biblioteca') for d in docs]
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/academia/documentos", methods=["GET"])
+def listar_academia_documentos():
+    """Lista documentos de la Academia públicos (solo aprobados), con nombre de organización."""
+    try:
+        docs = AcademiaDocumento.query.filter(
+            AcademiaDocumento.estado == 'aprobado'
+        ).order_by(AcademiaDocumento.created_at.desc()).all()
+        return jsonify({
+            'success': True,
+            'documentos': [_documento_a_json(d, 'academia', include_organizacion_nombre=True) for d in docs]
+        }), 200
+    except Exception as e:
+        err_msg = str(e).lower()
+        if 'categoria' in err_msg and ('column' in err_msg or 'no existe' in err_msg or 'undefined' in err_msg):
+            db.session.rollback()
+            try:
+                db.session.execute(text(
+                    "ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS categoria VARCHAR(80)"
+                ))
+                db.session.commit()
+                docs = AcademiaDocumento.query.filter(
+                    AcademiaDocumento.estado == 'aprobado'
+                ).order_by(AcademiaDocumento.created_at.desc()).all()
+                return jsonify({
+                    'success': True,
+                    'documentos': [_documento_a_json(d, 'academia', include_organizacion_nombre=True) for d in docs]
+                }), 200
+            except Exception as e2:
+                db.session.rollback()
+                return jsonify({
+                    'success': False,
+                    'error': 'Columna categoria no existe. Ejecuta en PostgreSQL: ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS categoria VARCHAR(80);'
+                }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def _allowed_document_extensions():
+    return {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.odt', '.ods', '.odp'}
+
+
+def _allowed_academia_extensions():
+    """Extensiones permitidas para Academia: documentos + videos."""
+    return {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.odt', '.ods', '.odp',
+            '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm', '.mkv', '.m4v'}
+
+
+def _subir_documento_repositorio(seccion, request):
+    """Guarda archivo en disco y devuelve (filename, mime, size_bytes)."""
+    from werkzeug.utils import secure_filename
+    key = 'archivo'
+    if key not in request.files:
+        return None, 'No se proporcionó el archivo'
+    file = request.files[key]
+    if not file or file.filename == '':
+        return None, 'No se seleccionó ningún archivo'
+    ext = os.path.splitext(file.filename)[1].lower()
+    # Academia permite documentos y videos; Biblioteca solo documentos
+    allowed_exts = _allowed_academia_extensions() if seccion == 'academia' else _allowed_document_extensions()
+    if ext not in allowed_exts:
+        return None, f'Tipo no permitido. Permitidos: {", ".join(sorted(allowed_exts))}'
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    # Límite de tamaño: Academia permite hasta 500MB (videos), Biblioteca 25MB
+    max_size = 500 * 1024 * 1024 if seccion == 'academia' else 25 * 1024 * 1024
+    max_size_mb = 500 if seccion == 'academia' else 25
+    if size > max_size:
+        return None, f'Tamaño máximo {max_size_mb}MB'
+    folder = 'repositorio_biblioteca' if seccion == 'biblioteca' else 'repositorio_academia'
+    base_dir = os.path.join(os.getcwd(), folder)
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+    safe_name = secure_filename(f"{seccion}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{os.urandom(4).hex()}{ext}")
+    path = os.path.join(base_dir, safe_name)
+    file.save(path)
+    mime = file.content_type or None
+    return (safe_name, mime, size), None
+
+
+@app.route("/api/biblioteca/documentos", methods=["POST"])
+def subir_biblioteca_documento():
+    """Sube un documento a la Biblioteca (multipart: archivo, nombre_archivo?, descripcion?, autor?, tematica_id?)."""
+    try:
+        payload, err = _subir_documento_repositorio('biblioteca', request)
+        if err:
+            return jsonify({'success': False, 'error': err}), 400
+        filename, mime, size = payload
+        nombre_archivo = request.form.get('nombre_archivo', '').strip() or request.files.get('archivo').filename
+        descripcion = (request.form.get('descripcion') or '')[:500]
+        autor = (request.form.get('autor') or '')[:150]
+        tematica_id = request.form.get('tematica_id', type=int) or None
+        doc = BibliotecaDocumento(
+            nombre_archivo=nombre_archivo[:255],
+            archivo_filename=filename,
+            archivo_mime=mime,
+            archivo_tamano_bytes=size,
+            autor=autor or None,
+            fecha_edicion=datetime.utcnow(),
+            descripcion=descripcion or None,
+            tematica_id=tematica_id,
+        )
+        db.session.add(doc)
+        db.session.commit()
+        return jsonify({'success': True, 'documento': _documento_a_json(doc, 'biblioteca')}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/academia/documentos", methods=["POST"])
+def subir_academia_documento():
+    """Sube un documento a la Academia (multipart: archivo, nombre_archivo?, descripcion obligatoria, autor?)."""
+    try:
+        descripcion = (request.form.get('descripcion') or '').strip()[:500]
+        if not descripcion:
+            return jsonify({'success': False, 'error': 'La descripción breve es obligatoria para documentos de Academia.'}), 400
+        payload, err = _subir_documento_repositorio('academia', request)
+        if err:
+            return jsonify({'success': False, 'error': err}), 400
+        filename, mime, size = payload
+        nombre_archivo = request.form.get('nombre_archivo', '').strip() or request.files.get('archivo').filename
+        autor = (request.form.get('autor') or '')[:150]
+        categoria = (request.form.get('categoria') or '').strip().lower()
+        if categoria and categoria not in ACADEMIA_CATEGORIAS:
+            categoria = None
+        doc = AcademiaDocumento(
+            nombre_archivo=nombre_archivo[:255],
+            archivo_filename=filename,
+            archivo_mime=mime,
+            archivo_tamano_bytes=size,
+            autor=autor or None,
+            fecha_edicion=datetime.utcnow(),
+            descripcion=descripcion,
+            estado='aprobado',  # Admin sube directo como público
+            categoria=categoria or None,
+        )
+        db.session.add(doc)
+        db.session.commit()
+        return jsonify({'success': True, 'documento': _documento_a_json(doc, 'academia')}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/repositorio/documento/<seccion>/<int:doc_id>/descargar", methods=["GET"])
+def descargar_repositorio_documento(seccion, doc_id):
+    """Descarga un documento por sección (biblioteca|academia) e id."""
+    if seccion not in ('biblioteca', 'academia'):
+        return jsonify({'success': False, 'error': 'Sección no válida'}), 400
+    try:
+        if seccion == 'biblioteca':
+            doc = BibliotecaDocumento.query.get(doc_id)
+        else:
+            doc = AcademiaDocumento.query.get(doc_id)
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        folder = 'repositorio_biblioteca' if seccion == 'biblioteca' else 'repositorio_academia'
+        filepath = os.path.join(os.getcwd(), folder, doc.archivo_filename)
+        if not os.path.exists(filepath):
+            return jsonify({'success': False, 'error': 'Archivo no encontrado en disco'}), 404
+        return send_file(filepath, as_attachment=True, download_name=doc.nombre_archivo or doc.archivo_filename)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/biblioteca/documentos/<int:doc_id>", methods=["DELETE"])
+def eliminar_biblioteca_documento(doc_id):
+    """Elimina un documento de la Biblioteca."""
+    try:
+        doc = BibliotecaDocumento.query.get(doc_id)
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        filepath = os.path.join(os.getcwd(), 'repositorio_biblioteca', doc.archivo_filename)
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+        db.session.delete(doc)
+        db.session.commit()
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/academia/documentos/<int:doc_id>", methods=["DELETE"])
+def eliminar_academia_documento(doc_id):
+    """Elimina un documento de la Academia."""
+    try:
+        doc = AcademiaDocumento.query.get(doc_id)
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        filepath = os.path.join(os.getcwd(), 'repositorio_academia', doc.archivo_filename)
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+        db.session.delete(doc)
+        db.session.commit()
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ----- Academia: documentos por organización (panel de organización) -----
+
+@app.route("/api/organizaciones/<int:org_id>/academia/documentos", methods=["GET"])
+def listar_academia_documentos_organizacion(org_id):
+    """Lista documentos educativos de la organización (panel Academia)."""
+    try:
+        Organizacion.query.get_or_404(org_id)
+        docs = AcademiaDocumento.query.filter_by(organizacion_id=org_id).order_by(AcademiaDocumento.created_at.desc()).all()
+        return jsonify({
+            'success': True,
+            'documentos': [_documento_a_json(d, 'academia') for d in docs]
+        }), 200
+    except Exception as e:
+        err_msg = str(e).lower()
+        if 'categoria' in err_msg and ('column' in err_msg or 'no existe' in err_msg or 'undefined' in err_msg):
+            db.session.rollback()
+            try:
+                db.session.execute(text(
+                    "ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS categoria VARCHAR(80)"
+                ))
+                db.session.commit()
+                docs = AcademiaDocumento.query.filter_by(organizacion_id=org_id).order_by(AcademiaDocumento.created_at.desc()).all()
+                return jsonify({
+                    'success': True,
+                    'documentos': [_documento_a_json(d, 'academia') for d in docs]
+                }), 200
+            except Exception as e2:
+                db.session.rollback()
+                return jsonify({
+                    'success': False,
+                    'error': 'Columna categoria no existe. Ejecuta en PostgreSQL: ALTER TABLE academia_documentos ADD COLUMN IF NOT EXISTS categoria VARCHAR(80);'
+                }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/organizaciones/<int:org_id>/academia/documentos", methods=["POST"])
+def subir_academia_documento_organizacion(org_id):
+    """Sube un documento educativo de la organización (multipart: archivo, nombre_archivo, descripcion obligatoria, fecha_creacion?)."""
+    try:
+        Organizacion.query.get_or_404(org_id)
+        descripcion = (request.form.get('descripcion') or '').strip()[:500]
+        if not descripcion:
+            return jsonify({'success': False, 'error': 'La descripción breve es obligatoria.'}), 400
+        categoria = (request.form.get('categoria') or '').strip().lower()
+        if categoria not in ACADEMIA_CATEGORIAS:
+            return jsonify({'success': False, 'error': 'Selecciona una categoría válida: Guías y Manuales, Plantillas y Formatos o Videos Tutoriales.'}), 400
+        payload, err = _subir_documento_repositorio('academia', request)
+        if err:
+            return jsonify({'success': False, 'error': err}), 400
+        filename, mime, size = payload
+        nombre_archivo = (request.form.get('nombre_archivo') or '').strip() or (request.files.get('archivo') and request.files.get('archivo').filename) or 'Documento'
+        fecha_creacion_str = request.form.get('fecha_creacion', '').strip()
+        fecha_edicion = datetime.utcnow()
+        if fecha_creacion_str:
+            try:
+                fecha_edicion = datetime.strptime(fecha_creacion_str[:10], '%Y-%m-%d')
+            except ValueError:
+                pass
+        doc = AcademiaDocumento(
+            organizacion_id=org_id,
+            nombre_archivo=nombre_archivo[:255],
+            archivo_filename=filename,
+            archivo_mime=mime,
+            archivo_tamano_bytes=size,
+            autor=None,
+            fecha_edicion=fecha_edicion,
+            descripcion=descripcion,
+            estado='pendiente',  # Requiere validación del admin para ser público
+            categoria=categoria,
+        )
+        db.session.add(doc)
+        db.session.commit()
+        return jsonify({'success': True, 'documento': _documento_a_json(doc, 'academia')}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>", methods=["PATCH"])
+def actualizar_academia_documento_organizacion(org_id, doc_id):
+    """La organización puede editar un documento solo si está pendiente o rechazado. Aprobado no se puede editar."""
+    try:
+        doc = AcademiaDocumento.query.filter_by(id=doc_id, organizacion_id=org_id).first()
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        estado = (doc.estado or '').lower()
+        if estado == 'aprobado':
+            return jsonify({
+                'success': False,
+                'error': 'No se puede editar un documento aprobado. Solo se pueden editar documentos en estado Pendiente o Rechazado.'
+            }), 403
+        # Actualizar campos del formulario
+        nombre_archivo = (request.form.get('nombre_archivo') or '').strip()[:255]
+        if nombre_archivo:
+            doc.nombre_archivo = nombre_archivo
+        descripcion = (request.form.get('descripcion') or '').strip()[:500]
+        if descripcion:
+            doc.descripcion = descripcion
+        categoria = (request.form.get('categoria') or '').strip().lower()
+        if categoria in ACADEMIA_CATEGORIAS:
+            doc.categoria = categoria
+        fecha_creacion_str = (request.form.get('fecha_creacion') or '').strip()
+        if fecha_creacion_str:
+            try:
+                doc.fecha_edicion = datetime.strptime(fecha_creacion_str[:10], '%Y-%m-%d')
+            except ValueError:
+                pass
+        # Archivo opcional: si envían uno nuevo, reemplazar
+        if request.files and request.files.get('archivo') and request.files.get('archivo').filename:
+            payload, err = _subir_documento_repositorio('academia', request)
+            if err:
+                return jsonify({'success': False, 'error': err}), 400
+            filename_new, mime_new, size_new = payload
+            # Borrar archivo antiguo
+            old_path = os.path.join(os.getcwd(), 'repositorio_academia', doc.archivo_filename)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+            doc.archivo_filename = filename_new
+            doc.archivo_mime = mime_new
+            doc.archivo_tamano_bytes = size_new
+        db.session.commit()
+        return jsonify({'success': True, 'documento': _documento_a_json(doc, 'academia')}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>", methods=["DELETE"])
+def eliminar_academia_documento_organizacion(org_id, doc_id):
+    """Elimina un documento educativo de la organización (solo si pertenece a esa org)."""
+    try:
+        doc = AcademiaDocumento.query.filter_by(id=doc_id, organizacion_id=org_id).first()
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        filepath = os.path.join(os.getcwd(), 'repositorio_academia', doc.archivo_filename)
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+        db.session.delete(doc)
+        db.session.commit()
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/admin/academia/documentos/<int:doc_id>/estado", methods=["PATCH"])
+def actualizar_estado_academia_documento(doc_id):
+    """Admin: cambiar estado de un documento de Academia (pendiente, aprobado, rechazado)."""
+    try:
+        data = request.get_json() or {}
+        nuevo_estado = (data.get('estado') or '').strip().lower()
+        if nuevo_estado not in ('pendiente', 'aprobado', 'rechazado'):
+            return jsonify({'success': False, 'error': 'estado debe ser "pendiente", "aprobado" o "rechazado"'}), 400
+        doc = AcademiaDocumento.query.get(doc_id)
+        if not doc:
+            return jsonify({'success': False, 'error': 'Documento no encontrado'}), 404
+        doc.estado = nuevo_estado
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'documento': _documento_a_json(doc, 'academia', include_organizacion_nombre=True)
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # Obtener todas las reseñas de todas las organizaciones (para admin)
 @app.route("/api/admin/reseñas/todas", methods=["GET"])
 def obtener_todas_reseñas_admin():
@@ -5914,6 +6457,20 @@ def obtener_estadisticas():
             # Si no existe la tabla o hay error, devolver 0
             total_noticias = 0
         
+        # Contar documentos de Academia
+        total_academia = 0
+        try:
+            total_academia = AcademiaDocumento.query.count()
+        except:
+            total_academia = 0
+        
+        # Contar documentos de Biblioteca
+        total_biblioteca = 0
+        try:
+            total_biblioteca = BibliotecaDocumento.query.count()
+        except:
+            total_biblioteca = 0
+        
         return jsonify({
             'success': True,
             'usuarios_registrados': total_usuarios,
@@ -5923,6 +6480,8 @@ def obtener_estadisticas():
             'organizaciones_creadas': total_organizaciones,
             'noticias_activas': total_noticias,
             'postulaciones': total_postulaciones,
+            'documentos_academia': total_academia,
+            'documentos_biblioteca': total_biblioteca,
             'estadisticas': {
                 'usuarios_registrados': total_usuarios,
                 'voluntariados_creados': total_oportunidades,
@@ -5930,7 +6489,9 @@ def obtener_estadisticas():
                 'voluntariados_en_proceso': voluntariados_en_proceso,
                 'organizaciones_creadas': total_organizaciones,
                 'noticias_activas': total_noticias,
-                'postulaciones': total_postulaciones
+                'postulaciones': total_postulaciones,
+                'documentos_academia': total_academia,
+                'documentos_biblioteca': total_biblioteca
             }
         }), 200
         

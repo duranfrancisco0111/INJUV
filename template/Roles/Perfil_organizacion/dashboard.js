@@ -17,6 +17,29 @@ const itemsPerPage = 10;
 window.mostrarModalCrearOportunidad = null;
 window.cerrarModalCrearOportunidad = null;
 
+// Evitar que el botón Academia provoque redirección: mousedown y click en fase captura
+function isClickOnBtnSubirDoc(e) {
+    var btn = document.getElementById('btnSubirDocumentoEducativo');
+    return btn && (e.target === btn || btn.contains(e.target));
+}
+document.addEventListener('mousedown', function(e) {
+    if (isClickOnBtnSubirDoc(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+    }
+}, true);
+document.addEventListener('click', function(e) {
+    if (!isClickOnBtnSubirDoc(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    if (typeof window.mostrarModalSubirDocumentoEducativo === 'function') {
+        window.mostrarModalSubirDocumentoEducativo();
+    }
+    return false;
+}, true);
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado, iniciando dashboard...');
@@ -321,6 +344,9 @@ function switchSection(sectionName) {
             case 'reportes':
                 loadReportesImpacto();
                 break;
+            case 'academia':
+                loadAcademiaDocumentos();
+                break;
             case 'reseñas':
                 loadReseñas();
                 break;
@@ -377,6 +403,7 @@ async function initializeDashboard() {
                 // Configurar event listeners después de que los elementos existan
                 setupHistorialEventListeners();
                 setupPostulacionesEventListeners();
+                setupAcademiaDocumentos();
                 
                 // Cargar datos
                 await loadHistorialOportunidades();
@@ -1091,6 +1118,404 @@ function generarGraficoImpacto(oportunidades) {
         });
     });
 }
+
+// ==================== ACADEMIA (documentos educativos) ====================
+// Guardar última lista de documentos para poder editar por id
+let documentosAcademiaActuales = [];
+
+async function loadAcademiaDocumentos() {
+    const container = document.getElementById('academiaDocumentosContainer');
+    if (!container) return;
+    if (!organizacionId) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">No hay organización cargada.</div>';
+        return;
+    }
+    container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin"></i> Cargando documentos...</div>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/organizaciones/${organizacionId}/academia/documentos`, { mode: 'cors' });
+        const data = await response.json();
+        if (!data.success) {
+            container.innerHTML = '<div class="text-center text-red-600 py-8">Error: ' + (data.error || 'No se pudieron cargar los documentos') + '</div>';
+            return;
+        }
+        const docs = data.documentos || [];
+        documentosAcademiaActuales = docs;
+        if (docs.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-folder-open" style="font-size:2rem;opacity:0.4;"></i><p class="mt-2">No hay documentos educativos.</p><p class="text-sm">Haz clic en "Subir documento educativo" para agregar uno.</p></div>';
+            return;
+        }
+        const formatDate = (iso) => {
+            if (!iso) return '—';
+            try {
+                return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' });
+            } catch (e) { return iso; }
+        };
+        const escapeHtml = (t) => {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        };
+        const estadoLabel = (est) => (est === 'aprobado' ? 'Aprobado (público)' : est === 'rechazado' ? 'Rechazado' : 'Pendiente (en revisión)');
+        const estadoBadge = (est) => {
+            const c = est === 'aprobado' ? 'background:#d1fae5;color:#065f46' : est === 'rechazado' ? 'background:#fee2e2;color:#b91c1c' : 'background:#fef3c7;color:#92400e';
+            return '<span style="font-size:0.8rem;padding:0.2rem 0.5rem;border-radius:4px;' + c + '">' + estadoLabel(est || 'pendiente') + '</span>';
+        };
+        const puedeEditar = (est) => (est || '').toLowerCase() !== 'aprobado';
+        container.innerHTML = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del archivo</th>
+                        <th>Estado</th>
+                        <th>Fecha de creación</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${docs.map(d => `
+                        <tr>
+                            <td>${escapeHtml(d.nombre_archivo || d.archivo_filename)}</td>
+                            <td>${estadoBadge(d.estado)}</td>
+                            <td>${formatDate(d.fecha_edicion || d.created_at)}</td>
+                            <td>${escapeHtml((d.descripcion || '').substring(0, 80))}${(d.descripcion && d.descripcion.length > 80) ? '...' : ''}</td>
+                            <td>
+                                <a href="${API_BASE_URL}/repositorio/documento/academia/${d.id}/descargar" target="_blank" rel="noopener" class="btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.875rem;"><i class="fas fa-download"></i> Descargar</a>
+                                ${puedeEditar(d.estado) ? '<button type="button" class="btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.875rem;margin-left:4px;" data-doc-id="' + d.id + '" data-academia-editar><i class="fas fa-edit"></i> Editar</button>' : ''}
+                                <button type="button" class="btn-danger" style="padding:0.25rem 0.5rem;font-size:0.875rem;" data-doc-id="${d.id}" data-academia-eliminar><i class="fas fa-trash"></i> Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+        container.querySelectorAll('[data-academia-editar]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = btn.getAttribute('data-doc-id');
+                const doc = documentosAcademiaActuales.find(function(d) { return String(d.id) === String(id); });
+                if (doc && typeof window.mostrarModalEditarDocumentoEducativo === 'function') {
+                    window.mostrarModalEditarDocumentoEducativo(doc);
+                }
+            });
+        });
+        container.querySelectorAll('[data-academia-eliminar]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-doc-id');
+                if (!confirm('¿Eliminar este documento?')) return;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/organizaciones/${organizacionId}/academia/documentos/${id}`, { method: 'DELETE', mode: 'cors' });
+                    const r = await res.json();
+                    if (r.success) loadAcademiaDocumentos();
+                    else alert(r.error || 'Error al eliminar');
+                } catch (e) {
+                    alert('Error de conexión');
+                }
+            });
+        });
+    } catch (err) {
+        console.error('Error cargando documentos Academia:', err);
+        container.innerHTML = '<div class="text-center text-red-600 py-8">Error de conexión. Vuelve a intentar.</div>';
+    }
+}
+
+function setupAcademiaDocumentos() {
+    const btnSubir = document.getElementById('btnSubirDocumentoEducativo');
+    if (btnSubir) {
+        btnSubir.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.mostrarModalSubirDocumentoEducativo === 'function') {
+                window.mostrarModalSubirDocumentoEducativo();
+            }
+            return false;
+        });
+    }
+}
+
+// Modal estilo "Editar perfil": sidebar + panel con zona de arrastre + nombre + fecha + Cancelar/Guardar
+window.mostrarModalSubirDocumentoEducativo = function() {
+    const existente = document.getElementById('modalSubirDocumentoEducativo');
+    if (existente) existente.remove();
+    // Cerrar el dropdown del header para que no intercepte clics al cerrar el modal
+    var profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown && profileDropdown.classList) profileDropdown.classList.remove('active');
+    if (!organizacionId) {
+        alert('Error: No se encontró la organización. Por favor, recarga la página.');
+        return;
+    }
+    const modal = document.createElement('div');
+    modal.id = 'modalSubirDocumentoEducativo';
+    modal.className = 'modal-academia-doc';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;min-height:100vh;z-index:99999;margin:0;padding:80px 16px 16px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;box-sizing:border-box;';
+    modal.innerHTML = '<div class="modal-academia-doc-inner" style="max-width:1024px;width:100%;max-height:calc(100vh - 100px);background:#fff;border-radius:12px;box-shadow:0 25px 50px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden;">' +
+        '<div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">' +
+            '<h2 class="text-2xl font-bold text-gray-900">Subir documento educativo</h2>' +
+            '<button type="button" id="closeModalDocEducativo" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>' +
+        '</div>' +
+        '<div class="flex flex-1 overflow-hidden">' +
+            '<div class="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto">' +
+                '<div class="p-4">' +
+                    '<h3 class="text-sm font-semibold text-gray-500 uppercase mb-2 px-3">Documento</h3>' +
+                    '<nav class="space-y-1">' +
+                        '<button type="button" class="w-full text-left px-3 py-2 rounded-lg bg-blue-100 text-blue-800 font-medium flex items-center gap-2">' +
+                            '<span>📄</span> Subir documento' +
+                        '</button>' +
+                    '</nav>' +
+                '</div>' +
+            '</div>' +
+            '<div class="flex-1 overflow-y-auto bg-white">' +
+                '<div class="p-6">' +
+                    '<h3 class="text-xl font-semibold mb-4">Subir documento educativo</h3>' +
+                    '<p class="text-gray-600 mb-6">Sube un documento o video educativo para que los voluntarios puedan descargarlo. Indica el nombre del archivo y la fecha de creación.</p>' +
+                    '<div id="academiaDocDropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">' +
+                        '<div class="flex flex-col items-center gap-3">' +
+                            '<svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>' +
+                            '<p class="text-sm text-gray-600"><span class="font-semibold text-blue-600">Haz clic para seleccionar</span> o arrastra un archivo aquí</p>' +
+                            '<p class="text-xs text-gray-500">Documentos (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT) o Videos (MP4, AVI, MOV, WEBM) hasta 500MB</p>' +
+                            '<p id="academiaDocFileName" class="text-sm text-green-600 font-medium hidden"></p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<input type="file" id="academiaDocArchivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v" class="hidden">' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Nombre del documento *</label>' +
+                        '<input type="text" id="academiaDocNombre" required maxlength="255" placeholder="Ej: Guía de voluntariado 2024" class="w-full border border-gray-300 rounded-lg p-2">' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Descripción breve *</label>' +
+                        '<textarea id="academiaDocDescripcion" required maxlength="500" rows="3" placeholder="Describe brevemente el contenido del documento (máx. 500 caracteres)" class="w-full border border-gray-300 rounded-lg p-2 resize-y"></textarea>' +
+                        '<p class="text-xs text-gray-500 mt-1">Obligatoria. Será visible para los voluntarios en la sección Academia.</p>' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Categoría *</label>' +
+                        '<select id="academiaDocCategoria" required class="w-full border border-gray-300 rounded-lg p-2">' +
+                            '<option value="">Selecciona una categoría</option>' +
+                            '<option value="guias_manuales">Guías y Manuales</option>' +
+                            '<option value="plantillas_formatos">Plantillas y Formatos</option>' +
+                            '<option value="videos_tutoriales">Videos Tutoriales</option>' +
+                        '</select>' +
+                        '<p class="text-xs text-gray-500 mt-1">Clasificación del documento en Academia.</p>' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Fecha de creación</label>' +
+                        '<input type="date" id="academiaDocFecha" class="w-full border border-gray-300 rounded-lg p-2">' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-3">' +
+            '<button type="button" id="cancelDocEducativo" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Cancelar</button>' +
+            '<button type="button" id="btnGuardarDocumentoEducativo" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>' +
+        '</div>' +
+    '</div>';
+    var innerBox = modal.querySelector('.modal-academia-doc-inner');
+    if (innerBox) {
+        innerBox.style.position = 'relative';
+        innerBox.style.zIndex = '1';
+        innerBox.onclick = function(e) { e.stopPropagation(); };
+    }
+    modal.onclick = function(e) {
+        if (e.target === modal) cerrarModalSubirDocumentoEducativo();
+    };
+
+    var appendTarget = document.fullscreenElement || document.body;
+    appendTarget.appendChild(modal);
+
+    const fechaEl = document.getElementById('academiaDocFecha');
+    if (fechaEl) fechaEl.value = new Date().toISOString().slice(0, 10);
+
+    document.getElementById('closeModalDocEducativo').onclick = cerrarModalSubirDocumentoEducativo;
+    document.getElementById('cancelDocEducativo').onclick = cerrarModalSubirDocumentoEducativo;
+
+    const dropZone = document.getElementById('academiaDocDropZone');
+    const fileInput = document.getElementById('academiaDocArchivo');
+    const fileNameEl = document.getElementById('academiaDocFileName');
+    if (dropZone && fileInput) {
+        dropZone.onclick = function() { fileInput.click(); };
+        dropZone.ondragover = function(e) { e.preventDefault(); dropZone.classList.add('border-blue-400', 'bg-blue-50'); };
+        dropZone.ondragleave = function() { dropZone.classList.remove('border-blue-400', 'bg-blue-50'); };
+        dropZone.ondrop = function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                if (fileNameEl) { fileNameEl.textContent = e.dataTransfer.files[0].name; fileNameEl.classList.remove('hidden'); }
+            }
+        };
+        fileInput.onchange = function() {
+            if (fileInput.files.length && fileNameEl) {
+                fileNameEl.textContent = fileInput.files[0].name;
+                fileNameEl.classList.remove('hidden');
+            }
+        };
+    }
+
+    document.getElementById('btnGuardarDocumentoEducativo').onclick = async function() {
+        const nombre = document.getElementById('academiaDocNombre');
+        const descripcionEl = document.getElementById('academiaDocDescripcion');
+        const archivo = document.getElementById('academiaDocArchivo');
+        if (!nombre || !nombre.value.trim()) {
+            alert('Escribe el nombre del documento.');
+            return;
+        }
+        if (!descripcionEl || !descripcionEl.value.trim()) {
+            alert('Escribe una descripción breve del documento. Es obligatoria para publicar.');
+            return;
+        }
+        const categoriaEl = document.getElementById('academiaDocCategoria');
+        if (!categoriaEl || !categoriaEl.value) {
+            alert('Selecciona una categoría: Guías y Manuales, Plantillas y Formatos o Videos Tutoriales.');
+            return;
+        }
+        if (!archivo || !archivo.files.length) {
+            alert('Selecciona un archivo. Haz clic en la zona de arrastre o arrastra un archivo.');
+            return;
+        }
+        const fd = new FormData();
+        fd.append('nombre_archivo', nombre.value.trim());
+        fd.append('descripcion', descripcionEl.value.trim().substring(0, 500));
+        fd.append('categoria', categoriaEl.value);
+        fd.append('fecha_creacion', document.getElementById('academiaDocFecha').value || '');
+        fd.append('archivo', archivo.files[0]);
+        const btnGuardar = document.getElementById('btnGuardarDocumentoEducativo');
+        if (btnGuardar) { btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...'; }
+        try {
+            const res = await fetch(API_BASE_URL + '/organizaciones/' + organizacionId + '/academia/documentos', { method: 'POST', body: fd, mode: 'cors' });
+            const data = await res.json();
+            if (data.success) {
+                cerrarModalSubirDocumentoEducativo();
+                loadAcademiaDocumentos();
+            } else {
+                alert(data.error || 'Error al subir');
+            }
+        } catch (err) {
+            alert('Error de conexión');
+        } finally {
+            if (btnGuardar) { btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar'; }
+        }
+    };
+};
+
+window.cerrarModalSubirDocumentoEducativo = function() {
+    const modal = document.getElementById('modalSubirDocumentoEducativo');
+    if (modal) modal.remove();
+};
+
+window.mostrarModalEditarDocumentoEducativo = function(doc) {
+    var existente = document.getElementById('modalEditarDocumentoEducativo');
+    if (existente) existente.remove();
+    var profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown && profileDropdown.classList) profileDropdown.classList.remove('active');
+    if (!organizacionId || !doc) return;
+    var fechaStr = '';
+    if (doc.fecha_edicion) {
+        try {
+            var d = new Date(doc.fecha_edicion);
+            if (!isNaN(d.getTime())) fechaStr = d.toISOString().slice(0, 10);
+        } catch (e) {}
+    }
+    var modal = document.createElement('div');
+    modal.id = 'modalEditarDocumentoEducativo';
+    modal.className = 'modal-academia-doc';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;min-height:100vh;z-index:99999;margin:0;padding:80px 16px 16px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;box-sizing:border-box;';
+    modal.innerHTML = '<div class="modal-academia-doc-inner" style="max-width:1024px;width:100%;max-height:calc(100vh - 100px);background:#fff;border-radius:12px;box-shadow:0 25px 50px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden;">' +
+        '<div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">' +
+            '<h2 class="text-2xl font-bold text-gray-900">Editar documento educativo</h2>' +
+            '<button type="button" id="closeModalEditarDocEducativo" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>' +
+        '</div>' +
+        '<div class="flex-1 overflow-y-auto p-6">' +
+            '<p class="text-gray-600 mb-4">Solo puedes editar documentos en estado Pendiente o Rechazado. Los campos opcionales se mantienen si no los cambias.</p>' +
+            '<div class="mt-4">' +
+                '<label class="block text-sm font-medium mb-1">Nombre del documento *</label>' +
+                '<input type="text" id="academiaDocEditNombre" required maxlength="255" class="w-full border border-gray-300 rounded-lg p-2" placeholder="Nombre del documento">' +
+            '</div>' +
+            '<div class="mt-4">' +
+                '<label class="block text-sm font-medium mb-1">Descripción breve *</label>' +
+                '<textarea id="academiaDocEditDescripcion" required maxlength="500" rows="3" class="w-full border border-gray-300 rounded-lg p-2 resize-y" placeholder="Descripción"></textarea>' +
+            '</div>' +
+            '<div class="mt-4">' +
+                '<label class="block text-sm font-medium mb-1">Categoría *</label>' +
+                '<select id="academiaDocEditCategoria" required class="w-full border border-gray-300 rounded-lg p-2">' +
+                    '<option value="">Selecciona una categoría</option>' +
+                    '<option value="guias_manuales"' + (doc.categoria === 'guias_manuales' ? ' selected' : '') + '>Guías y Manuales</option>' +
+                    '<option value="plantillas_formatos"' + (doc.categoria === 'plantillas_formatos' ? ' selected' : '') + '>Plantillas y Formatos</option>' +
+                    '<option value="videos_tutoriales"' + (doc.categoria === 'videos_tutoriales' ? ' selected' : '') + '>Videos Tutoriales</option>' +
+                '</select>' +
+            '</div>' +
+            '<div class="mt-4">' +
+                '<label class="block text-sm font-medium mb-1">Fecha de creación</label>' +
+                '<input type="date" id="academiaDocEditFecha" class="w-full border border-gray-300 rounded-lg p-2" value="' + fechaStr + '">' +
+            '</div>' +
+            '<div class="mt-4">' +
+                '<label class="block text-sm font-medium mb-1">Reemplazar archivo (opcional)</label>' +
+                '<p class="text-xs text-gray-500 mb-1">Archivo actual: ' + (doc.archivo_filename || doc.nombre_archivo || '—') + '</p>' +
+                '<input type="file" id="academiaDocEditArchivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp,.mp4,.avi,.mov,.wmv,.flv,.webm,.mkv,.m4v" class="w-full border border-gray-300 rounded-lg p-2">' +
+            '</div>' +
+        '</div>' +
+        '<div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-3">' +
+            '<button type="button" id="cancelEditarDocEducativo" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Cancelar</button>' +
+            '<button type="button" id="btnGuardarEditarDocumentoEducativo" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar cambios</button>' +
+        '</div>' +
+    '</div>';
+    var innerBox = modal.querySelector('.modal-academia-doc-inner');
+    if (innerBox) {
+        innerBox.style.position = 'relative';
+        innerBox.style.zIndex = '1';
+        innerBox.onclick = function(e) { e.stopPropagation(); };
+    }
+    modal.onclick = function(e) {
+        if (e.target === modal) window.cerrarModalEditarDocumentoEducativo();
+    };
+    (document.fullscreenElement || document.body).appendChild(modal);
+
+    document.getElementById('academiaDocEditNombre').value = doc.nombre_archivo || doc.archivo_filename || '';
+    document.getElementById('academiaDocEditDescripcion').value = doc.descripcion || '';
+    if (fechaStr && document.getElementById('academiaDocEditFecha')) document.getElementById('academiaDocEditFecha').value = fechaStr;
+
+    document.getElementById('closeModalEditarDocEducativo').onclick = window.cerrarModalEditarDocumentoEducativo;
+    document.getElementById('cancelEditarDocEducativo').onclick = window.cerrarModalEditarDocumentoEducativo;
+
+    document.getElementById('btnGuardarEditarDocumentoEducativo').onclick = async function() {
+        var nombreEl = document.getElementById('academiaDocEditNombre');
+        var descripcionEl = document.getElementById('academiaDocEditDescripcion');
+        var categoriaEl = document.getElementById('academiaDocEditCategoria');
+        var fechaEl = document.getElementById('academiaDocEditFecha');
+        var archivoEl = document.getElementById('academiaDocEditArchivo');
+        if (!nombreEl || !nombreEl.value.trim()) { alert('El nombre del documento es obligatorio.'); return; }
+        if (!descripcionEl || !descripcionEl.value.trim()) { alert('La descripción breve es obligatoria.'); return; }
+        if (!categoriaEl || !categoriaEl.value) { alert('Selecciona una categoría.'); return; }
+        var fd = new FormData();
+        fd.append('nombre_archivo', nombreEl.value.trim());
+        fd.append('descripcion', descripcionEl.value.trim().substring(0, 500));
+        fd.append('categoria', categoriaEl.value);
+        fd.append('fecha_creacion', fechaEl ? fechaEl.value : '');
+        if (archivoEl && archivoEl.files && archivoEl.files.length > 0) fd.append('archivo', archivoEl.files[0]);
+        var btn = document.getElementById('btnGuardarEditarDocumentoEducativo');
+        if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+        try {
+            var res = await fetch(API_BASE_URL + '/organizaciones/' + organizacionId + '/academia/documentos/' + doc.id, { method: 'PATCH', body: fd, mode: 'cors' });
+            var data = await res.json();
+            if (data.success) {
+                window.cerrarModalEditarDocumentoEducativo();
+                loadAcademiaDocumentos();
+            } else {
+                alert(data.error || 'Error al guardar');
+            }
+        } catch (err) {
+            alert('Error de conexión');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+        }
+    };
+};
+
+window.cerrarModalEditarDocumentoEducativo = function() {
+    var modal = document.getElementById('modalEditarDocumentoEducativo');
+    if (modal) modal.remove();
+};
 
 // Cargar reseñas de usuarios sobre la organización
 async function loadReseñas() {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Organización - INJUV</title>
-  <link rel="stylesheet" href=""
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../../typography.css">
   <link rel="stylesheet" href="../../styles.css">
   <link rel="stylesheet" href="dashboard.css">
@@ -33,6 +33,10 @@
       <a href="#" class="org-nav-link" data-section="reportes">
         <i class="fas fa-chart-line"></i>
         <span>Reportes de Impacto</span>
+      </a>
+      <a href="#" class="org-nav-link" data-section="academia">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Academia</span>
       </a>
       <a href="#" class="org-nav-link" data-section="reseñas">
         <i class="fas fa-star"></i>
@@ -250,6 +254,24 @@
       <!-- Gráfico de impacto -->
       <div class="chart-container">
         <canvas id="graficoImpacto"></canvas>
+      </div>
+    </section>
+
+    <!-- Sección: Academia (documentos educativos) -->
+    <section id="academia" class="org-content-section">
+      <div class="section-header section-header-academia">
+        <div>
+          <h1>Academia</h1>
+          <p>Documentos educativos para voluntarios</p>
+        </div>
+        <div class="academia-btn-wrap">
+          <button type="button" id="btnSubirDocumentoEducativo" class="btn-primary" onclick="event.preventDefault(); event.stopPropagation(); if(typeof window.mostrarModalSubirDocumentoEducativo==='function'){ window.mostrarModalSubirDocumentoEducativo(); } return false;">
+            <i class="fas fa-upload"></i> Subir documento educativo
+          </button>
+        </div>
+      </div>
+      <div id="academiaDocumentosContainer" class="table-container" style="margin-top: 1rem;">
+        <div class="text-center text-gray-500 py-8">Cargando documentos...</div>
       </div>
     </section>
 
