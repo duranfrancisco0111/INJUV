@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from sqlalchemy import func, text
+from sqlalchemy.exc import ProgrammingError
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
@@ -44,7 +45,7 @@ def handle_preflight():
         return response
 
 # Configuración de la base de datos
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:fran0405@localhost/INJUV'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:UTEM2022@localhost/INJUV'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Configuración de Flask-Mail
@@ -80,7 +81,7 @@ class Usuario(db.Model):
     comuna = db.Column(db.String(100), nullable=True)
     sexo = db.Column(db.String(100), nullable=True)
     fecha_nacimiento = db.Column(db.Date, nullable=True)
-    password_hash = db.Column(db.String(100))
+    password_hash = db.Column(db.String(255))
     rol = db.Column(db.String(100), nullable=True)
     hora_voluntariado = db.Column(db.Integer, nullable=True)
     certificado_voluntariado = db.Column(db.JSON, default=list, nullable=True)
@@ -332,9 +333,11 @@ def register():
         
     except Exception as e:
         db.session.rollback()
+        # Registrar el error completo en la consola del servidor para depuración
+        print("Error en /api/auth/register:", repr(e))
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Error interno al registrar usuario. Por favor, inténtalo nuevamente o contacta al administrador.'
         }), 500
 
 # Endpoint de login
@@ -2284,6 +2287,15 @@ def listar_documentos_biblioteca():
                 'created_at': doc.created_at.strftime('%Y-%m-%d %H:%M') if doc.created_at else None,
             })
         return jsonify({'success': True, 'documentos': resultado}), 200
+    except ProgrammingError as e:
+        err_msg = str(e)
+        if 'organizacion_id' in err_msg and 'biblioteca_documentos' in err_msg:
+            return jsonify({
+                'success': False,
+                'error': 'Falta la columna organizacion_id en biblioteca_documentos. Ejecuta la migración: python backend/run_migration_organizacion_id.py',
+                'code': 'RUN_MIGRATION'
+            }), 503
+        raise
     except Exception as e:
         import traceback
         print(traceback.format_exc())
@@ -7456,6 +7468,7 @@ def generar_conclusion(categoria, datos, labels, values, tipo_grafico, total):
         conclusion += "\n\nSe recomienda revisar periódicamente estas estadísticas para identificar tendencias y oportunidades de mejora."
     
     return conclusion
+  
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)

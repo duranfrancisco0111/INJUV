@@ -22,22 +22,36 @@ function isClickOnBtnSubirDoc(e) {
     var btn = document.getElementById('btnSubirDocumentoEducativo');
     return btn && (e.target === btn || btn.contains(e.target));
 }
+function isClickOnBtnSubirDocBiblioteca(e) {
+    var btn = document.getElementById('btnSubirDocumentoBiblioteca');
+    return btn && (e.target === btn || btn.contains(e.target));
+}
 document.addEventListener('mousedown', function(e) {
-    if (isClickOnBtnSubirDoc(e)) {
+    if (isClickOnBtnSubirDoc(e) || isClickOnBtnSubirDocBiblioteca(e)) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
     }
 }, true);
 document.addEventListener('click', function(e) {
-    if (!isClickOnBtnSubirDoc(e)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    if (typeof window.mostrarModalSubirDocumentoEducativo === 'function') {
-        window.mostrarModalSubirDocumentoEducativo();
+    if (isClickOnBtnSubirDoc(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        if (typeof window.mostrarModalSubirDocumentoEducativo === 'function') {
+            window.mostrarModalSubirDocumentoEducativo();
+        }
+        return false;
     }
-    return false;
+    if (isClickOnBtnSubirDocBiblioteca(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        if (typeof window.mostrarModalSubirDocumentoBiblioteca === 'function') {
+            window.mostrarModalSubirDocumentoBiblioteca();
+        }
+        return false;
+    }
 }, true);
 
 // Inicialización
@@ -347,6 +361,9 @@ function switchSection(sectionName) {
             case 'academia':
                 loadAcademiaDocumentos();
                 break;
+            case 'biblioteca':
+                loadBibliotecaDocumentos();
+                break;
             case 'reseñas':
                 loadReseñas();
                 break;
@@ -404,6 +421,7 @@ async function initializeDashboard() {
                 setupHistorialEventListeners();
                 setupPostulacionesEventListeners();
                 setupAcademiaDocumentos();
+                setupBibliotecaDocumentos();
                 
                 // Cargar datos
                 await loadHistorialOportunidades();
@@ -1514,6 +1532,277 @@ window.mostrarModalEditarDocumentoEducativo = function(doc) {
 
 window.cerrarModalEditarDocumentoEducativo = function() {
     var modal = document.getElementById('modalEditarDocumentoEducativo');
+    if (modal) modal.remove();
+};
+
+// ==================== BIBLIOTECA (mismo formato que Academia) ====================
+let documentosBibliotecaActuales = [];
+
+async function loadBibliotecaDocumentos() {
+    const container = document.getElementById('bibliotecaDocumentosContainer');
+    if (!container) return;
+    if (!organizacionId) {
+        container.innerHTML = '<div class="text-center text-gray-500 py-8">No hay organización cargada.</div>';
+        return;
+    }
+    container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-spinner fa-spin"></i> Cargando documentos...</div>';
+    try {
+        const response = await fetch(`${API_BASE_URL}/biblioteca/documentos?organizacion_id=${organizacionId}`, { mode: 'cors' });
+        const data = await response.json();
+        if (!data.success) {
+            container.innerHTML = '<div class="text-center text-red-600 py-8">Error: ' + (data.error || 'No se pudieron cargar los documentos') + '</div>';
+            return;
+        }
+        const docs = data.documentos || [];
+        documentosBibliotecaActuales = docs;
+        if (docs.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-book" style="font-size:2rem;opacity:0.4;"></i><p class="mt-2">No hay documentos en la biblioteca.</p><p class="text-sm">Haz clic en "Subir documento" para agregar uno.</p></div>';
+            return;
+        }
+        const formatDate = (iso) => {
+            if (!iso) return '—';
+            try {
+                return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' });
+            } catch (e) { return iso; }
+        };
+        const escapeHtml = (t) => {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        };
+        container.innerHTML = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del archivo</th>
+                        <th>Temática</th>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${docs.map(d => `
+                        <tr>
+                            <td>${escapeHtml(d.nombre_archivo || d.archivo_filename)}</td>
+                            <td>${escapeHtml(d.tematica_nombre || '—')}</td>
+                            <td>${formatDate(d.fecha_edicion || d.created_at)}</td>
+                            <td>${escapeHtml((d.descripcion || '').substring(0, 80))}${(d.descripcion && d.descripcion.length > 80) ? '...' : ''}</td>
+                            <td>
+                                <a href="${API_BASE_URL}/biblioteca/documentos/${d.id}/descargar" target="_blank" rel="noopener" class="btn-secondary" style="padding:0.25rem 0.5rem;font-size:0.875rem;"><i class="fas fa-download"></i> Descargar</a>
+                                <button type="button" class="btn-danger" style="padding:0.25rem 0.5rem;font-size:0.875rem;" data-doc-id="${d.id}" data-biblioteca-eliminar><i class="fas fa-trash"></i> Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+        container.querySelectorAll('[data-biblioteca-eliminar]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-doc-id');
+                if (!confirm('¿Eliminar este documento?')) return;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/biblioteca/documentos/${id}`, { method: 'DELETE', mode: 'cors' });
+                    const r = await res.json();
+                    if (r.success) loadBibliotecaDocumentos();
+                    else alert(r.error || 'Error al eliminar');
+                } catch (e) {
+                    alert('Error de conexión');
+                }
+            });
+        });
+    } catch (err) {
+        console.error('Error cargando documentos Biblioteca:', err);
+        container.innerHTML = '<div class="text-center text-red-600 py-8">Error de conexión. Vuelve a intentar.</div>';
+    }
+}
+
+function setupBibliotecaDocumentos() {
+    const btnSubir = document.getElementById('btnSubirDocumentoBiblioteca');
+    if (btnSubir) {
+        btnSubir.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.mostrarModalSubirDocumentoBiblioteca === 'function') {
+                window.mostrarModalSubirDocumentoBiblioteca();
+            }
+            return false;
+        });
+    }
+}
+
+window.mostrarModalSubirDocumentoBiblioteca = function() {
+    const existente = document.getElementById('modalSubirDocumentoBiblioteca');
+    if (existente) existente.remove();
+    var profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown && profileDropdown.classList) profileDropdown.classList.remove('active');
+    if (!organizacionId) {
+        alert('Error: No se encontró la organización. Por favor, recarga la página.');
+        return;
+    }
+    const modal = document.createElement('div');
+    modal.id = 'modalSubirDocumentoBiblioteca';
+    modal.className = 'modal-biblioteca-doc';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;min-height:100vh;z-index:99999;margin:0;padding:80px 16px 16px;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;box-sizing:border-box;';
+    modal.innerHTML = '<div class="modal-biblioteca-doc-inner" style="max-width:1024px;width:100%;max-height:calc(100vh - 100px);background:#fff;border-radius:12px;box-shadow:0 25px 50px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden;">' +
+        '<div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">' +
+            '<h2 class="text-2xl font-bold text-gray-900">Subir documento a Biblioteca</h2>' +
+            '<button type="button" id="closeModalDocBiblioteca" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</button>' +
+        '</div>' +
+        '<div class="flex flex-1 overflow-hidden">' +
+            '<div class="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto">' +
+                '<div class="p-4">' +
+                    '<h3 class="text-sm font-semibold text-gray-500 uppercase mb-2 px-3">Documento</h3>' +
+                    '<nav class="space-y-1">' +
+                        '<button type="button" class="w-full text-left px-3 py-2 rounded-lg bg-blue-100 text-blue-800 font-medium flex items-center gap-2">' +
+                            '<span>📄</span> Subir documento' +
+                        '</button>' +
+                    '</nav>' +
+                '</div>' +
+            '</div>' +
+            '<div class="flex-1 overflow-y-auto bg-white">' +
+                '<div class="p-6">' +
+                    '<h3 class="text-xl font-semibold mb-4">Subir documento a Biblioteca</h3>' +
+                    '<p class="text-gray-600 mb-6">Sube un documento para que los voluntarios puedan consultarlo en la Biblioteca. Indica nombre, descripción y temática.</p>' +
+                    '<div id="bibliotecaDocDropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">' +
+                        '<div class="flex flex-col items-center gap-3">' +
+                            '<svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>' +
+                            '<p class="text-sm text-gray-600"><span class="font-semibold text-blue-600">Haz clic para seleccionar</span> o arrastra un archivo aquí</p>' +
+                            '<p class="text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX, etc.</p>' +
+                            '<p id="bibliotecaDocFileName" class="text-sm text-green-600 font-medium hidden"></p>' +
+                        '</div>' +
+                    '</div>' +
+                    '<input type="file" id="bibliotecaDocArchivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp" class="hidden">' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Nombre del documento *</label>' +
+                        '<input type="text" id="bibliotecaDocNombre" required maxlength="255" placeholder="Ej: Manual de voluntariado 2024" class="w-full border border-gray-300 rounded-lg p-2">' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Descripción breve</label>' +
+                        '<textarea id="bibliotecaDocDescripcion" maxlength="500" rows="3" placeholder="Describe el contenido (máx. 500 caracteres)" class="w-full border border-gray-300 rounded-lg p-2 resize-y"></textarea>' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Temática</label>' +
+                        '<select id="bibliotecaDocTematica" class="w-full border border-gray-300 rounded-lg p-2">' +
+                            '<option value="">Sin temática</option>' +
+                        '</select>' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Autor</label>' +
+                        '<input type="text" id="bibliotecaDocAutor" maxlength="150" placeholder="Nombre del autor" class="w-full border border-gray-300 rounded-lg p-2">' +
+                    '</div>' +
+                    '<div class="mt-4">' +
+                        '<label class="block text-sm font-medium mb-1">Fecha de edición</label>' +
+                        '<input type="date" id="bibliotecaDocFecha" class="w-full border border-gray-300 rounded-lg p-2">' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-3">' +
+            '<button type="button" id="cancelDocBiblioteca" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Cancelar</button>' +
+            '<button type="button" id="btnGuardarDocumentoBiblioteca" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Guardar</button>' +
+        '</div>' +
+    '</div>';
+    var innerBox = modal.querySelector('.modal-biblioteca-doc-inner');
+    if (innerBox) {
+        innerBox.style.position = 'relative';
+        innerBox.style.zIndex = '1';
+        innerBox.onclick = function(e) { e.stopPropagation(); };
+    }
+    modal.onclick = function(e) {
+        if (e.target === modal) window.cerrarModalSubirDocumentoBiblioteca();
+    };
+    (document.fullscreenElement || document.body).appendChild(modal);
+
+    const fechaEl = document.getElementById('bibliotecaDocFecha');
+    if (fechaEl) fechaEl.value = new Date().toISOString().slice(0, 10);
+
+    document.getElementById('closeModalDocBiblioteca').onclick = window.cerrarModalSubirDocumentoBiblioteca;
+    document.getElementById('cancelDocBiblioteca').onclick = window.cerrarModalSubirDocumentoBiblioteca;
+
+    // Cargar temáticas
+    (async function() {
+        try {
+            const res = await fetch(API_BASE_URL + '/biblioteca/tematicas', { mode: 'cors' });
+            const data = await res.json();
+            const sel = document.getElementById('bibliotecaDocTematica');
+            if (sel && data.success && data.tematicas && data.tematicas.length) {
+                data.tematicas.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.nombre;
+                    sel.appendChild(opt);
+                });
+            }
+        } catch (e) { console.warn('No se pudieron cargar temáticas:', e); }
+    })();
+
+    const dropZone = document.getElementById('bibliotecaDocDropZone');
+    const fileInput = document.getElementById('bibliotecaDocArchivo');
+    const fileNameEl = document.getElementById('bibliotecaDocFileName');
+    if (dropZone && fileInput) {
+        dropZone.onclick = function() { fileInput.click(); };
+        dropZone.ondragover = function(e) { e.preventDefault(); dropZone.classList.add('border-blue-400', 'bg-blue-50'); };
+        dropZone.ondragleave = function() { dropZone.classList.remove('border-blue-400', 'bg-blue-50'); };
+        dropZone.ondrop = function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                if (fileNameEl) { fileNameEl.textContent = e.dataTransfer.files[0].name; fileNameEl.classList.remove('hidden'); }
+            }
+        };
+        fileInput.onchange = function() {
+            if (fileInput.files.length && fileNameEl) {
+                fileNameEl.textContent = fileInput.files[0].name;
+                fileNameEl.classList.remove('hidden');
+            }
+        };
+    }
+
+    document.getElementById('btnGuardarDocumentoBiblioteca').onclick = async function() {
+        const nombre = document.getElementById('bibliotecaDocNombre');
+        const archivo = document.getElementById('bibliotecaDocArchivo');
+        if (!nombre || !nombre.value.trim()) {
+            alert('Escribe el nombre del documento.');
+            return;
+        }
+        if (!archivo || !archivo.files.length) {
+            alert('Selecciona un archivo. Haz clic en la zona de arrastre o arrastra un archivo.');
+            return;
+        }
+        const fd = new FormData();
+        fd.append('nombre_archivo', nombre.value.trim());
+        fd.append('descripcion', (document.getElementById('bibliotecaDocDescripcion') && document.getElementById('bibliotecaDocDescripcion').value) ? document.getElementById('bibliotecaDocDescripcion').value.trim().substring(0, 500) : '');
+        fd.append('autor', (document.getElementById('bibliotecaDocAutor') && document.getElementById('bibliotecaDocAutor').value) ? document.getElementById('bibliotecaDocAutor').value.trim().substring(0, 150) : '');
+        const tematicaId = document.getElementById('bibliotecaDocTematica');
+        if (tematicaId && tematicaId.value) fd.append('tematica_id', tematicaId.value);
+        fd.append('organizacion_id', organizacionId);
+        fd.append('fecha_edicion', document.getElementById('bibliotecaDocFecha').value || '');
+        fd.append('archivo', archivo.files[0]);
+        const btnGuardar = document.getElementById('btnGuardarDocumentoBiblioteca');
+        if (btnGuardar) { btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...'; }
+        try {
+            const res = await fetch(API_BASE_URL + '/biblioteca/documentos', { method: 'POST', body: fd, mode: 'cors' });
+            const data = await res.json();
+            if (data.success) {
+                window.cerrarModalSubirDocumentoBiblioteca();
+                loadBibliotecaDocumentos();
+            } else {
+                alert(data.error || 'Error al subir');
+            }
+        } catch (err) {
+            alert('Error de conexión');
+        } finally {
+            if (btnGuardar) { btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar'; }
+        }
+    };
+};
+
+window.cerrarModalSubirDocumentoBiblioteca = function() {
+    const modal = document.getElementById('modalSubirDocumentoBiblioteca');
     if (modal) modal.remove();
 };
 

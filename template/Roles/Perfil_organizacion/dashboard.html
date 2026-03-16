@@ -38,6 +38,10 @@
         <i class="fas fa-graduation-cap"></i>
         <span>Academia</span>
       </a>
+      <a href="#" class="org-nav-link" data-section="biblioteca">
+        <i class="fas fa-book"></i>
+        <span>Biblioteca</span>
+      </a>
       <a href="#" class="org-nav-link" data-section="reseñas">
         <i class="fas fa-star"></i>
         <span>Reseñas</span>
@@ -271,6 +275,24 @@
         </div>
       </div>
       <div id="academiaDocumentosContainer" class="table-container" style="margin-top: 1rem;">
+        <div class="text-center text-gray-500 py-8">Cargando documentos...</div>
+      </div>
+    </section>
+
+    <!-- Sección: Biblioteca (documentos de biblioteca) -->
+    <section id="biblioteca" class="org-content-section">
+      <div class="section-header section-header-biblioteca">
+        <div>
+          <h1>Biblioteca</h1>
+          <p>Documentos de la biblioteca para voluntarios</p>
+        </div>
+        <div class="biblioteca-btn-wrap">
+          <button type="button" id="btnSubirDocumentoBiblioteca" class="btn-primary" onclick="event.preventDefault(); event.stopPropagation(); if(typeof window.mostrarModalSubirDocumentoBiblioteca==='function'){ window.mostrarModalSubirDocumentoBiblioteca(); } return false;">
+            <i class="fas fa-upload"></i> Subir documento
+          </button>
+        </div>
+      </div>
+      <div id="bibliotecaDocumentosContainer" class="table-container" style="margin-top: 1rem;">
         <div class="text-center text-gray-500 py-8">Cargando documentos...</div>
       </div>
     </section>

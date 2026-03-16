@@ -376,7 +376,7 @@
             // Validar edad mínima (15 años)
             const fechaNac = new Date(fechaNacimiento);
             const hoy = new Date();
-            const edad = hoy.getFullYear() - fechaNac.getFullYear();
+            let edad = hoy.getFullYear() - fechaNac.getFullYear();
             const mes = hoy.getMonth() - fechaNac.getMonth();
             if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
                 edad--;

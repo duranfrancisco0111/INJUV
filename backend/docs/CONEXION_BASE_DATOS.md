@@ -149,28 +149,34 @@ Esto instala las mismas versiones que en el proyecto (Flask, flask-sqlalchemy, p
 - Verifica que la base de datos `INJUV` exista (paso 3).
 - Edita `src/app.py` y configura `SQLALCHEMY_DATABASE_URI` con tu usuario y contraseña (paso 5).
 
+### Paso 4.1: Crear tablas automáticamente (recomendado)
+Si borraste la base de datos o estás partiendo de cero, puedes crear las tablas desde los modelos del backend ejecutando:
+
+```bash
+cd backend/src
+python init_db.py
+```
+
+Esto ejecuta `db.create_all()` y crea las tablas definidas en `app.py`.
+
 ### Paso 5: Aplicar migraciones en la base de datos
 
 Las migraciones son scripts SQL que crean o modifican tablas y columnas. Deben ejecutarse en la base `INJUV` cuando el equipo lo indique o cuando falte alguna tabla/columna.
 
 **Dónde ejecutarlas:** en **pgAdmin** (Query Tool sobre la base `INJUV`) o con `psql` conectado a `INJUV`.
 
-**Orden sugerido** (si partes de una base vacía o con pocas tablas, ejecuta en este orden cuando sea necesario):
+**Migración única (recomendado):**
 
-1. `add_academia_documentos.sql` – Tabla Academia.
-2. `add_organizacion_id_academia_documentos.sql` – Vincula Academia con organizaciones.
-3. `add_estado_academia_documentos.sql` – Estado (pendiente/aprobado/rechazado) en Academia.
-4. `add_categoria_academia_documentos.sql` – Categoría en documentos Academia.
-5. `add_archivo_tamano_biblioteca_documentos.sql` – Tamaño de archivo en Biblioteca.
-6. `add_columnas_faltantes_biblioteca_documentos.sql` – Otras columnas de Biblioteca.
-7. `add_organizacion_id_to_oportunidades.sql` – Organización en oportunidades.
-8. `add_horas_voluntariado_oportunidades.sql` – Horas en oportunidades.
-9. `add_horas_voluntariado_postulacion.sql` – Horas en postulaciones.
-10. `add_resena_org_column.sql` / `add_resena_organizacion_column.sql` – Columnas de reseña.
-11. `add_resena_usuario_columns.sql` / `add_resena_usuario_publica.sql` – Reseñas de usuario.
-12. `add_missing_columns_organizaciones.sql` – Columnas faltantes en organizaciones.
-13. `allow_null_id_usuario_org.sql` – Permitir nulos en usuario de organización.
-14. `fix_fecha_creacion_type.sql` – Ajuste de tipo de fecha.
+1. Crea las tablas base desde los modelos:
+
+```bash
+cd backend/src
+python init_db.py
+```
+
+2. Ejecuta el script consolidado en pgAdmin (Query Tool) conectado a `INJUV`:
+
+- `backend/migrations/migracion_completa.sql`
 
 **Nota:** Si la app ya crea tablas con Flask/SQLAlchemy o tienes un backup de la BD, puede que solo necesites ejecutar algunas migraciones. Si aparece un error del tipo "column does not exist", revisa el mensaje y ejecuta la migración que añada esa columna o tabla.
 
