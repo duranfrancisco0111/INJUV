@@ -25,6 +25,10 @@
         <i class="fas fa-users"></i>
         <span>Usuarios</span>
       </a>
+      <a href="#" class="admin-nav-link" data-section="organization-requests">
+        <i class="fas fa-file-signature"></i>
+        <span>Solicitudes Org.</span>
+      </a>
       <a href="#" class="admin-nav-link" data-section="reports">
         <i class="fas fa-file-alt"></i>
         <span>Reportes</span>
@@ -160,6 +164,26 @@
             <div class="user-actions">Acciones</div>
           </div>
           <!-- Los usuarios se cargarán dinámicamente desde el backend -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Organization Requests Section -->
+    <section id="organization-requests" class="content-section">
+      <div class="section-header">
+        <h1>Solicitudes de Creación de Organización</h1>
+        <button class="btn-primary" id="btnRefreshOrgRequests">
+          <i class="fas fa-sync-alt"></i>
+          Actualizar
+        </button>
+      </div>
+
+      <div class="content-card">
+        <p class="section-description" style="margin-bottom: 1rem; color: #6b7280;">
+          Revisa los formularios enviados por usuarios y aprueba o rechaza la creación de su organización.
+        </p>
+        <div id="organizationRequestsContainer">
+          <div class="text-center text-gray-500 py-8">Cargando solicitudes...</div>
         </div>
       </div>
     </section>

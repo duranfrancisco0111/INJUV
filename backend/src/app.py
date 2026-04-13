@@ -115,6 +115,27 @@ class Organizacion(db.Model):
     # reseña_organizacion = db.Column(db.String(500), nullable=True)  # Comentado: columna no existe en BD
     created_at = db.Column(db.DateTime, nullable=True)
 
+class SolicitudOrganizacion(db.Model):
+    __tablename__ = 'solicitudes_organizacion'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(150), nullable=False)
+    rut = db.Column(db.String(20), nullable=True)
+    email_contacto = db.Column(db.String(150), nullable=True)
+    fecha_creacion = db.Column(db.Date, nullable=True)
+    region = db.Column(db.String(100), nullable=False)
+    ciudad = db.Column(db.String(100), nullable=False)
+    comuna = db.Column(db.String(100), nullable=False)
+    descripcion = db.Column(db.Text, nullable=False)
+    sitio_web = db.Column(db.Text, nullable=True)
+    redes_sociales = db.Column(db.JSON, default=list, nullable=True)
+    id_usuario_org = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    estado = db.Column(db.String(20), nullable=False, default='pendiente')  # pendiente | aprobada | rechazada
+    comentario_revision = db.Column(db.Text, nullable=True)
+    revisado_por_admin_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
 class Postulacion(db.Model):
     __tablename__ = 'postulaciones'
     id = db.Column(db.Integer, primary_key=True)
@@ -919,6 +940,24 @@ def registrar_organizacion():
         # Usar el email del usuario como email_contacto si no se proporciona
         email_contacto = usuario.email
         
+        # Evitar que un usuario envíe múltiples formularios pendientes o tenga ya una organización activa
+        organizacion_usuario_existente = Organizacion.query.filter_by(id_usuario_org=id_usuario_org).first()
+        if organizacion_usuario_existente:
+            return jsonify({
+                'success': False,
+                'error': 'Este usuario ya administra una organización.'
+            }), 400
+
+        solicitud_pendiente = SolicitudOrganizacion.query.filter_by(
+            id_usuario_org=id_usuario_org,
+            estado='pendiente'
+        ).first()
+        if solicitud_pendiente:
+            return jsonify({
+                'success': False,
+                'error': 'Ya tienes un formulario pendiente de revisión.'
+            }), 400
+
         # Verificar si el RUT ya está registrado (si se proporciona)
         if rut:
             organizacion_existente = Organizacion.query.filter_by(rut=rut).first()
@@ -926,6 +965,15 @@ def registrar_organizacion():
                 return jsonify({
                     'success': False,
                     'error': 'El RUT ya está registrado'
+                }), 400
+            solicitud_rut_existente = SolicitudOrganizacion.query.filter(
+                SolicitudOrganizacion.rut == rut,
+                SolicitudOrganizacion.estado.in_(['pendiente', 'aprobada'])
+            ).first()
+            if solicitud_rut_existente:
+                return jsonify({
+                    'success': False,
+                    'error': 'Ya existe una solicitud activa con ese RUT'
                 }), 400
         
         # Procesar redes sociales: mantener como lista o convertir a lista
@@ -939,12 +987,11 @@ def registrar_organizacion():
             else:
                 redes_sociales_data = [str(redes_sociales)]
         
-        # Crear nueva organización
-        nueva_organizacion = Organizacion(
+        # Crear solicitud en estado pendiente para revisión del administrador
+        nueva_solicitud = SolicitudOrganizacion(
             nombre=nombre,
             rut=rut if rut else None,
             email_contacto=email_contacto,
-            telefono_contacto=None,  # Ya no es obligatorio
             fecha_creacion=fecha_creacion,
             region=region,
             ciudad=ciudad,
@@ -956,27 +1003,23 @@ def registrar_organizacion():
             created_at=datetime.now()
         )
         
-        db.session.add(nueva_organizacion)
-        
-        # Actualizar el rol del usuario a 'organizacion' si no es admin
-        if usuario.rol != 'admin':
-            usuario.rol = 'organizacion'
+        db.session.add(nueva_solicitud)
         
         db.session.commit()
         
         return jsonify({
             'success': True,
-            'message': 'Organización registrada exitosamente',
-            'organizacion': {
-                'id': nueva_organizacion.id,
-                'nombre': nueva_organizacion.nombre,
-                'email_contacto': nueva_organizacion.email_contacto,
-                'region': nueva_organizacion.region,
-                'ciudad': nueva_organizacion.ciudad,
-                'comuna': nueva_organizacion.comuna,
-                'sitio_web': nueva_organizacion.sitio_web
+            'message': 'Formulario enviado correctamente. Un administrador revisará tu solicitud.',
+            'solicitud': {
+                'id': nueva_solicitud.id,
+                'nombre': nueva_solicitud.nombre,
+                'email_contacto': nueva_solicitud.email_contacto,
+                'region': nueva_solicitud.region,
+                'ciudad': nueva_solicitud.ciudad,
+                'comuna': nueva_solicitud.comuna,
+                'estado': nueva_solicitud.estado
             }
-        }), 201
+        }), 200
         
     except Exception as e:
         db.session.rollback()
@@ -5783,6 +5826,118 @@ def generar_reporte_usuarios():
             'success': False,
             'error': f"Error al generar el reporte: {str(e)}"
         }), 500
+
+# Endpoint para obtener formularios de creación de organización (admin)
+@app.route("/api/admin/solicitudes-organizacion", methods=["GET"])
+def obtener_solicitudes_organizacion_admin():
+    try:
+        estado = request.args.get('estado')
+        query = SolicitudOrganizacion.query
+        if estado:
+            query = query.filter_by(estado=estado)
+
+        solicitudes = query.order_by(SolicitudOrganizacion.created_at.desc()).all()
+        data = []
+        for solicitud in solicitudes:
+            usuario = Usuario.query.get(solicitud.id_usuario_org)
+            revisor = Usuario.query.get(solicitud.revisado_por_admin_id) if solicitud.revisado_por_admin_id else None
+            data.append({
+                'id': solicitud.id,
+                'nombre': solicitud.nombre,
+                'rut': solicitud.rut or '',
+                'email_contacto': solicitud.email_contacto or '',
+                'fecha_creacion': solicitud.fecha_creacion.isoformat() if solicitud.fecha_creacion else None,
+                'region': solicitud.region,
+                'ciudad': solicitud.ciudad,
+                'comuna': solicitud.comuna,
+                'descripcion': solicitud.descripcion,
+                'sitio_web': solicitud.sitio_web or '',
+                'redes_sociales': solicitud.redes_sociales or [],
+                'estado': solicitud.estado,
+                'comentario_revision': solicitud.comentario_revision or '',
+                'id_usuario_org': solicitud.id_usuario_org,
+                'usuario_nombre': f"{usuario.nombre} {usuario.apellido}".strip() if usuario else '',
+                'usuario_email': usuario.email if usuario else '',
+                'revisado_por': f"{revisor.nombre} {revisor.apellido}".strip() if revisor else '',
+                'created_at': solicitud.created_at.isoformat() if solicitud.created_at else None,
+                'reviewed_at': solicitud.reviewed_at.isoformat() if solicitud.reviewed_at else None
+            })
+
+        return jsonify({'success': True, 'solicitudes': data, 'total': len(data)}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/admin/solicitudes-organizacion/<int:solicitud_id>/estado", methods=["PATCH"])
+def actualizar_estado_solicitud_organizacion(solicitud_id):
+    try:
+        data = request.json or {}
+        nuevo_estado = data.get('estado')
+        comentario = data.get('comentario', '')
+        admin_id = data.get('admin_id')
+
+        if nuevo_estado not in ['aprobada', 'rechazada']:
+            return jsonify({'success': False, 'error': 'Estado inválido. Debe ser aprobada o rechazada.'}), 400
+
+        solicitud = SolicitudOrganizacion.query.get(solicitud_id)
+        if not solicitud:
+            return jsonify({'success': False, 'error': 'Solicitud no encontrada'}), 404
+
+        if solicitud.estado != 'pendiente':
+            return jsonify({'success': False, 'error': f'La solicitud ya fue {solicitud.estado}.'}), 400
+
+        usuario = Usuario.query.get(solicitud.id_usuario_org)
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario asociado no encontrado'}), 404
+
+        solicitud.estado = nuevo_estado
+        solicitud.comentario_revision = comentario if comentario else None
+        solicitud.revisado_por_admin_id = admin_id if admin_id else None
+        solicitud.reviewed_at = datetime.now()
+
+        organizacion_creada = None
+        if nuevo_estado == 'aprobada':
+            if solicitud.rut:
+                rut_existente = Organizacion.query.filter_by(rut=solicitud.rut).first()
+                if rut_existente:
+                    return jsonify({'success': False, 'error': 'No se puede aprobar: el RUT ya existe en otra organización.'}), 400
+
+            org_existente_usuario = Organizacion.query.filter_by(id_usuario_org=solicitud.id_usuario_org).first()
+            if org_existente_usuario:
+                return jsonify({'success': False, 'error': 'No se puede aprobar: el usuario ya administra una organización.'}), 400
+
+            organizacion_creada = Organizacion(
+                nombre=solicitud.nombre,
+                rut=solicitud.rut if solicitud.rut else None,
+                email_contacto=solicitud.email_contacto if solicitud.email_contacto else usuario.email,
+                telefono_contacto=None,
+                fecha_creacion=solicitud.fecha_creacion,
+                region=solicitud.region,
+                ciudad=solicitud.ciudad,
+                comuna=solicitud.comuna,
+                descripcion=solicitud.descripcion,
+                sitio_web=solicitud.sitio_web if solicitud.sitio_web else None,
+                redes_sociales=solicitud.redes_sociales if solicitud.redes_sociales else [],
+                id_usuario_org=solicitud.id_usuario_org,
+                created_at=datetime.now()
+            )
+            db.session.add(organizacion_creada)
+
+            if usuario.rol != 'admin':
+                usuario.rol = 'organizacion'
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Solicitud {nuevo_estado} exitosamente',
+            'solicitud_id': solicitud.id,
+            'estado': solicitud.estado,
+            'organizacion_id': organizacion_creada.id if organizacion_creada else None
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # Endpoint para obtener todas las organizaciones con sus administradores
 @app.route("/api/admin/organizaciones", methods=["GET"])
