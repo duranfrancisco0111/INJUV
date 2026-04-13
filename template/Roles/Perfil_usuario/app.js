@@ -703,25 +703,25 @@ function showEditOptions() {
   const totalPagesSpan = document.getElementById('totalReviewsPages');
   const reviewsPagination = nextBtn?.parentElement;
 
-  // Función para renderizar estrellas según la calificación
+  // Estrellas 0–5 con medias (SVG); una sola función — no usar String.repeat(notaDecimal) que trunca mal.
   function renderStars(rating) {
-    if (!rating || rating === 0) return '';
-    
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const r = Number(rating);
+    if (!Number.isFinite(r) || r <= 0) return '';
+
+    const fullStars = Math.floor(r);
+    const hasHalfStar = r % 1 >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
+
     let starsHTML = '';
-    
-    // Estrellas llenas
+    const starClass = 'h-5 w-5 flex-shrink-0 inline-block align-middle';
+
     for (let i = 0; i < fullStars; i++) {
-      starsHTML += '<svg viewBox="0 0 20 20" class="h-5 w-5 text-yellow-400 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>';
+      starsHTML += `<svg viewBox="0 0 20 20" class="${starClass} text-yellow-400 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>`;
     }
-    
-    // Media estrella (usando un gradiente)
+
     if (hasHalfStar) {
-      const uniqueId = `half-${Date.now()}-${Math.random()}`;
-      starsHTML += `<svg viewBox="0 0 20 20" class="h-5 w-5 text-yellow-400" aria-hidden="true">
+      const uniqueId = `half-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      starsHTML += `<svg viewBox="0 0 20 20" class="${starClass} text-yellow-400" aria-hidden="true">
         <defs>
           <linearGradient id="${uniqueId}">
             <stop offset="50%" stop-color="currentColor"/>
@@ -732,20 +732,12 @@ function showEditOptions() {
         <path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z" fill="none" stroke="currentColor" stroke-width="0.5"/>
       </svg>`;
     }
-    
-    // Estrellas vacías
+
     for (let i = 0; i < emptyStars; i++) {
-      starsHTML += '<svg viewBox="0 0 20 20" class="h-5 w-5 text-gray-300 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>';
+      starsHTML += `<svg viewBox="0 0 20 20" class="${starClass} text-gray-300 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>`;
     }
-    
+
     return starsHTML;
-  }
-
-  const STAR_FILLED = `<svg viewBox="0 0 20 20" class="h-5 w-5 text-yellow-400 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>`;
-  const STAR_EMPTY  = `<svg viewBox="0 0 20 20" class="h-5 w-5 text-gray-300 fill-current" aria-hidden="true"><path d="M10 1.5l2.7 5.46 6.03.88-4.36 4.25 1.03 6.02L10 15.9l-5.4 2.84 1.03-6.02L1.27 7.84l6.03-.88L10 1.5z"/></svg>`;
-
-  function renderStars(rating) {
-    return STAR_FILLED.repeat(rating) + STAR_EMPTY.repeat(5 - rating);
   }
 
   function renderReviews() {
@@ -774,20 +766,19 @@ function showEditOptions() {
         day: 'numeric'
       }) : review.date || 'Fecha no disponible';
       
-      // Renderizar estrellas según la calificación
-      const calificacion = review.calificacion_org || review.rating || 0;
+      const calificacion = Number(review.calificacion_org ?? review.rating ?? 0) || 0;
       const estrellasHTML = renderStars(calificacion);
       
       article.innerHTML = `
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
             <p class="font-semibold text-gray-900">${review.organizacion_nombre || review.organization || 'Organización'}</p>
             <p class="text-sm text-gray-600">${review.oportunidad_titulo || review.volunteerTitle || 'Voluntariado'}</p>
           </div>
           ${calificacion > 0 ? `
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-0.5 flex-nowrap flex-shrink-0">
               ${estrellasHTML}
-              <span class="text-sm text-gray-600 ml-1">${calificacion.toFixed(1)}</span>
+              <span class="text-sm text-gray-600 whitespace-nowrap tabular-nums">${calificacion.toFixed(1)}</span>
             </div>
           ` : ''}
         </div>
@@ -2298,33 +2289,22 @@ async function loadUserPostulations(userId) {
   }
 }
 
-// Función helper para generar estrellas con medias estrellas
+// Estrellas 0–5 con medias (Font Awesome; evita emojis + overflow que rompen el layout)
 function generarEstrellas(calificacion) {
-  const cal = Math.max(0, Math.min(5, parseFloat(calificacion))); // Asegurar que esté entre 0 y 5
-  const estrellasCompletas = Math.floor(cal);
-  const decimal = cal % 1;
-  const tieneMediaEstrella = decimal >= 0.25 && decimal < 0.75;
-  const tieneCuartoEstrella = decimal >= 0.75;
-  
-  let estrellasVacias;
-  let estrellasHtml = '⭐'.repeat(estrellasCompletas);
-  
-  // Agregar media estrella usando un span con overflow para mostrar solo la mitad izquierda
-  if (tieneMediaEstrella) {
-    // Media estrella: mostrar solo la mitad izquierda de la estrella usando CSS con clip-path
-    estrellasHtml += '<span style="display: inline-block; width: 0.5em; overflow: hidden; position: relative; vertical-align: baseline;"><span style="position: absolute; left: 0;">⭐</span></span>';
-    estrellasVacias = 5 - estrellasCompletas - 1;
-  } else if (tieneCuartoEstrella) {
-    // Si está cerca de la siguiente estrella completa (0.75+), mostrar casi completa
-    estrellasHtml += '⭐';
-    estrellasVacias = 5 - estrellasCompletas - 1;
-  } else {
-    estrellasVacias = 5 - estrellasCompletas;
+  if (calificacion === undefined || calificacion === null || calificacion === '') return '';
+  const cal = Math.max(0, Math.min(5, Number(calificacion)));
+  if (Number.isNaN(cal)) return '';
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    if (cal >= i) {
+      html += '<i class="fas fa-star text-amber-400 flex-shrink-0" aria-hidden="true"></i>';
+    } else if (cal >= i - 0.5) {
+      html += '<i class="fas fa-star-half-stroke text-amber-400 flex-shrink-0" aria-hidden="true"></i>';
+    } else {
+      html += '<i class="far fa-star text-gray-300 flex-shrink-0" aria-hidden="true"></i>';
+    }
   }
-  
-  estrellasHtml += '☆'.repeat(estrellasVacias);
-  
-  return estrellasHtml;
+  return html;
 }
 
 // Función para cargar reseñas públicas de las organizaciones
@@ -2398,9 +2378,9 @@ function mostrarResenasEnPerfil(reseñas) {
       const calificacion = parseFloat(reseña.calificacion_org);
       const estrellasHtml = generarEstrellas(calificacion);
       calificacionHtml = `
-        <div class="flex items-center gap-2 mb-3">
-          <span class="text-lg">${estrellasHtml}</span>
-          <span class="text-sm text-gray-600 font-medium">${calificacion.toFixed(1)}/5.0</span>
+        <div class="flex items-center gap-2 mb-3 flex-nowrap">
+          <span class="inline-flex items-center gap-0.5 text-lg leading-none">${estrellasHtml}</span>
+          <span class="text-sm text-gray-600 font-medium whitespace-nowrap tabular-nums">${calificacion.toFixed(1)}/5.0</span>
         </div>
       `;
     }
@@ -2574,10 +2554,10 @@ function displayPostulationsAsExperiences(postulaciones) {
         const estrellasHtml = generarEstrellas(calificacion);
         valoracionHtml = `
           <div class="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div class="flex items-center gap-2 mb-2">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
               <span class="text-sm font-semibold text-blue-900">Valoración de la organización:</span>
-              <span class="text-lg">${estrellasHtml}</span>
-              <span class="text-sm text-blue-700 font-medium">${calificacion.toFixed(1)}/5.0</span>
+              <span class="inline-flex items-center gap-0.5 text-lg leading-none">${estrellasHtml}</span>
+              <span class="text-sm text-blue-700 font-medium whitespace-nowrap">${calificacion.toFixed(1)}/5.0</span>
             </div>
             <p class="text-sm text-gray-700 italic mt-2">"${post.resena_org_sobre_voluntario}"</p>
           </div>
@@ -2793,9 +2773,9 @@ window.abrirModalDetallesVoluntariado = function(post) {
         const estrellasHtml = generarEstrellas(calificacion);
         resenaHtml += `
           <div class="mb-3 p-3 bg-blue-50 rounded-lg">
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-lg">${estrellasHtml}</span>
-              <span class="text-sm text-gray-700 font-medium">${calificacion.toFixed(1)}/5.0</span>
+            <div class="flex items-center gap-2 mb-2 flex-nowrap">
+              <span class="inline-flex items-center gap-0.5 text-lg leading-none">${estrellasHtml}</span>
+              <span class="text-sm text-gray-700 font-medium whitespace-nowrap">${calificacion.toFixed(1)}/5.0</span>
             </div>
             <p class="text-gray-800 italic leading-relaxed">"${post.resena_org_sobre_voluntario}"</p>
           </div>
@@ -2842,9 +2822,9 @@ window.abrirModalDetallesVoluntariado = function(post) {
         resenaHtml += `
           <div class="mb-3 p-3 bg-green-50 rounded-lg border border-green-200">
             <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-2">
-                <span class="text-lg">${estrellasHtml}</span>
-                <span class="text-sm text-gray-700 font-medium">${calificacion.toFixed(1)}/5.0</span>
+              <div class="flex items-center gap-2 flex-nowrap min-w-0">
+                <span class="inline-flex items-center gap-0.5 text-lg leading-none">${estrellasHtml}</span>
+                <span class="text-sm text-gray-700 font-medium whitespace-nowrap">${calificacion.toFixed(1)}/5.0</span>
               </div>
               <span class="text-xs px-2 py-1 rounded-full ${esPublica ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
                 ${esPublica ? '🌐 Pública' : '🔒 Privada'}
@@ -3007,7 +2987,7 @@ window.editarResenaUsuario = function(postulacionId) {
                              class="flex-1" oninput="actualizarEstrellasUsuario(this.value)">
                       <span id="valorCalificacionUsuario" class="text-lg font-semibold text-blue-700 w-12">${calificacion.toFixed(1)}</span>
                     </div>
-                    <div id="estrellasUsuarioPreview" class="text-2xl text-yellow-400">${generarEstrellas(calificacion)}</div>
+                    <div id="estrellasUsuarioPreview" class="text-2xl inline-flex items-center gap-0.5 flex-nowrap">${generarEstrellas(calificacion)}</div>
                   </div>
                   <div class="mb-4">
                     <label for="resenaUsuario" class="block text-sm font-medium text-gray-700 mb-2">Tu reseña *</label>

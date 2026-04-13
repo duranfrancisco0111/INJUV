@@ -2883,36 +2883,21 @@ async function cargarEstadisticas() {
   const totalPagesSpan = document.getElementById('totalReviewsPages');
   const reviewsPagination = nextBtn?.parentElement;
 
-  // Función para generar estrellas con medias estrellas
+  // Font Awesome 6: una fila estable (sin emojis ni recortes con overflow)
   function generarEstrellasReseñas(calificacion) {
-    const cal = Math.max(0, Math.min(5, parseFloat(calificacion)));
-    const estrellasCompletas = Math.floor(cal);
-    const decimal = cal % 1;
-    const tieneMediaEstrella = decimal >= 0.25 && decimal < 0.75;
-    const tieneCuartoEstrella = decimal >= 0.75;
-    
-    let estrellasHtml = '⭐'.repeat(estrellasCompletas);
-    
-    if (tieneMediaEstrella) {
-      estrellasHtml += '<span style="display: inline-block; width: 0.5em; overflow: hidden; position: relative; vertical-align: baseline;"><span style="position: absolute; left: 0;">⭐</span></span>';
-      const estrellasVacias = 5 - estrellasCompletas - 1;
-      if (estrellasVacias > 0) {
-        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
-      }
-    } else if (tieneCuartoEstrella) {
-      estrellasHtml += '⭐';
-      const estrellasVacias = 5 - estrellasCompletas - 1;
-      if (estrellasVacias > 0) {
-        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
-      }
-    } else {
-      const estrellasVacias = 5 - estrellasCompletas;
-      if (estrellasVacias > 0) {
-        estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+    const cal = Math.max(0, Math.min(5, Number(calificacion)));
+    if (Number.isNaN(cal) || cal <= 0) return '';
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      if (cal >= i) {
+        html += '<i class="fas fa-star text-amber-400 flex-shrink-0" aria-hidden="true"></i>';
+      } else if (cal >= i - 0.5) {
+        html += '<i class="fas fa-star-half-stroke text-amber-400 flex-shrink-0" aria-hidden="true"></i>';
+      } else {
+        html += '<i class="far fa-star text-gray-300 flex-shrink-0" aria-hidden="true"></i>';
       }
     }
-    
-    return estrellasHtml;
+    return html;
   }
 
   function actualizarResumenCalificacionPerfil() {
@@ -3035,14 +3020,14 @@ async function cargarEstadisticas() {
       const estrellasHtml = generarEstrellasReseñas(review.rating);
       
       article.innerHTML = `
-        <div class="flex items-start justify-between">
-          <div>
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
             <p class="font-semibold text-gray-900">${review.userName}</p>
             <p class="text-sm text-gray-600">${review.volunteerTitle}</p>
           </div>
-          <div class="flex items-center gap-1">
-            <span style="font-size: 18px;">${estrellasHtml}</span>
-            ${review.rating > 0 ? `<span class="text-sm text-gray-600 ml-1">${review.rating.toFixed(1)}</span>` : ''}
+          <div class="flex items-center gap-0.5 flex-nowrap flex-shrink-0 text-lg leading-none">
+            ${estrellasHtml}
+            ${review.rating > 0 ? `<span class="text-sm text-gray-600 whitespace-nowrap tabular-nums pl-1">${Number(review.rating).toFixed(1)}</span>` : ''}
           </div>
         </div>
         ${review.comment ? `<p class="mt-3 italic text-gray-800">"${review.comment}"</p>` : ''}

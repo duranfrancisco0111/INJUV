@@ -4530,8 +4530,10 @@ def obtener_reseñas_publicas():
                     resena_col_name = name
                     break
             
-            has_calif_col = 'calificacion_usuario_org' in existing_col_names or 'calificacion_org' in existing_col_names
-            calif_col_name = 'calificacion_usuario_org' if 'calificacion_usuario_org' in existing_col_names else ('calificacion_org' if 'calificacion_org' in existing_col_names else None)
+            # Solo calificacion_usuario_org: nota del voluntario hacia la organización.
+            # calificacion_org es la nota de la organización hacia el voluntario; no usarla aquí.
+            has_calif_col = 'calificacion_usuario_org' in existing_col_names
+            calif_col_name = 'calificacion_usuario_org' if has_calif_col else None
             has_publica_col = 'resena_usuario_publica' in existing_col_names
         except:
             has_resena_col = False
@@ -5209,8 +5211,8 @@ def obtener_todas_reseñas_admin():
                     resena_col_name = name
                     break
             
-            has_calif_col = 'calificacion_usuario_org' in existing_col_names or 'calificacion_org' in existing_col_names
-            calif_col_name = 'calificacion_usuario_org' if 'calificacion_usuario_org' in existing_col_names else ('calificacion_org' if 'calificacion_org' in existing_col_names else None)
+            has_calif_col = 'calificacion_usuario_org' in existing_col_names
+            calif_col_name = 'calificacion_usuario_org' if has_calif_col else None
             has_publica_col = 'resena_usuario_publica' in existing_col_names
         except:
             has_resena_col = False

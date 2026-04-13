@@ -1869,36 +1869,21 @@ async function loadReseñas() {
     }
 }
 
-// Función para generar estrellas
+// Estrellas con Font Awesome (evita emojis + recorte 0.5em que desalinea medias)
 function generarEstrellasReseñas(calificacion) {
-    const cal = Math.max(0, Math.min(5, parseFloat(calificacion)));
-    const estrellasCompletas = Math.floor(cal);
-    const decimal = cal % 1;
-    const tieneMediaEstrella = decimal >= 0.25 && decimal < 0.75;
-    const tieneCuartoEstrella = decimal >= 0.75;
-    
-    let estrellasHtml = '⭐'.repeat(estrellasCompletas);
-    
-    if (tieneMediaEstrella) {
-        estrellasHtml += '<span style="display: inline-block; width: 0.5em; overflow: hidden; position: relative; vertical-align: baseline;"><span style="position: absolute; left: 0;">⭐</span></span>';
-        const estrellasVacias = 5 - estrellasCompletas - 1;
-        if (estrellasVacias > 0) {
-            estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
-        }
-    } else if (tieneCuartoEstrella) {
-        estrellasHtml += '⭐';
-        const estrellasVacias = 5 - estrellasCompletas - 1;
-        if (estrellasVacias > 0) {
-            estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
-        }
-    } else {
-        const estrellasVacias = 5 - estrellasCompletas;
-        if (estrellasVacias > 0) {
-            estrellasHtml += '<span style="opacity: 0.3;">⭐</span>'.repeat(estrellasVacias);
+    const cal = Math.max(0, Math.min(5, Number(calificacion)));
+    if (Number.isNaN(cal) || cal <= 0) return '';
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+        if (cal >= i) {
+            html += '<i class="fas fa-star" style="color:#fbbf24;flex-shrink:0" aria-hidden="true"></i>';
+        } else if (cal >= i - 0.5) {
+            html += '<i class="fas fa-star-half-stroke" style="color:#fbbf24;flex-shrink:0" aria-hidden="true"></i>';
+        } else {
+            html += '<i class="far fa-star" style="color:#d1d5db;flex-shrink:0" aria-hidden="true"></i>';
         }
     }
-    
-    return estrellasHtml;
+    return html;
 }
 
 // Mostrar reseñas organizadas por voluntariado
@@ -1968,8 +1953,8 @@ function mostrarReseñas(reseñasPorVoluntariado) {
                             <p style="font-size: 12px; color: #6b7280; margin: 0;">${fechaReseña}</p>
                         </div>
                         ${estrellasHtml ? `
-                            <div style="text-align: right; margin-left: 16px;">
-                                <div style="font-size: 18px; line-height: 1;">${estrellasHtml}</div>
+                            <div style="text-align: right; margin-left: 16px; flex-shrink: 0;">
+                                <div style="font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: flex-end; gap: 2px; flex-wrap: nowrap;">${estrellasHtml}</div>
                                 <span style="font-size: 14px; color: #6b7280; font-weight: 500;">${reseña.calificacion.toFixed(1)}/5.0</span>
                             </div>
                         ` : ''}

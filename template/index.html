@@ -14,6 +14,14 @@
         .academia-doc-card-home .doc-download { color: #0066CC; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; }
         .academia-doc-card-home .doc-download:hover { text-decoration: underline; }
         .academia-doc-card-home .doc-meta-text { font-size: 0.875rem; color: #6b7280; }
+        /* Reseñas: una sola fila; estrella vacía (gris) vs llena/medio (amarillo) */
+        .testimonial-content .stars {
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+        .testimonial-content .stars i { flex-shrink: 0; }
+        .testimonial-content .stars i.far.fa-star { color: #d1d5db; }
+        .testimonial-content .stars i.fas.fa-star-half-stroke { color: #fbbf24; }
     </style>
 </head>
 <body>
@@ -667,13 +675,18 @@
             const card = document.createElement('div');
             card.className = 'testimonial-card';
             
-            // Generar estrellas según la calificación (5 estrellas llenas como en la imagen)
-            const calificacion = reseña.calificacion || 5; // Por defecto 5 estrellas
+            const rawCal = reseña.calificacion;
+            const calificacion = (rawCal !== undefined && rawCal !== null && rawCal !== '')
+                ? Number(rawCal)
+                : null;
             const estrellasHTML = generarEstrellas(calificacion);
+            const tituloEstrellas = (calificacion != null && !Number.isNaN(calificacion))
+                ? `Calificación: ${calificacion} de 5`
+                : 'Sin calificación';
             
             card.innerHTML = `
                 <div class="testimonial-content">
-                    <div class="stars">
+                    <div class="stars" role="img" aria-label="${tituloEstrellas.replace(/"/g, '&quot;')}">
                         ${estrellasHTML}
                     </div>
                     <p>"${reseña.reseña || 'Sin comentario'}"</p>
@@ -693,12 +706,25 @@
         }
         
         function generarEstrellas(calificacion) {
-            // Según la imagen, siempre mostrar 5 estrellas amarillas llenas
-            let estrellasHTML = '';
-            for (let i = 1; i <= 5; i++) {
-                estrellasHTML += '<i class="fas fa-star"></i>';
+            if (calificacion == null || Number.isNaN(Number(calificacion))) {
+                let html = '';
+                for (let i = 1; i <= 5; i++) {
+                    html += '<i class="far fa-star" aria-hidden="true"></i>';
+                }
+                return html;
             }
-            return estrellasHTML;
+            const cal = Math.max(0, Math.min(5, Number(calificacion)));
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                if (cal >= i) {
+                    html += '<i class="fas fa-star" aria-hidden="true"></i>';
+                } else if (cal >= i - 0.5) {
+                    html += '<i class="fas fa-star-half-stroke" aria-hidden="true"></i>';
+                } else {
+                    html += '<i class="far fa-star" aria-hidden="true"></i>';
+                }
+            }
+            return html;
         }
         
         function mostrarMensajeSinReseñas() {
