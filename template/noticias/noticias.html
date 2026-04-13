@@ -40,12 +40,19 @@
                 } else if (container) {
                     container.innerHTML = doc.body.innerHTML;
                 }
-                
-                // Configurar enlaces después de un breve delay
-                setTimeout(() => {
-                    if (typeof window.initHeaderAuth === 'function') {
-                        window.initHeaderAuth();
+
+                scripts.forEach(function(oldScript) {
+                    var newScript = document.createElement('script');
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        newScript.textContent = oldScript.textContent;
                     }
+                    document.body.appendChild(newScript);
+                });
+                
+                // Configurar enlaces después de un breve delay (tras ejecutar los scripts del header)
+                setTimeout(function() {
                     const logo = document.getElementById('logo-link');
                     if (logo) logo.href = '../index.html';
                     
@@ -144,7 +151,10 @@
                     if (typeof window.initHeaderAuth === 'function') {
                         window.initHeaderAuth();
                     }
-                }, 50);
+                    if (typeof window.updateHeaderAuth === 'function') {
+                        window.updateHeaderAuth();
+                    }
+                }, 100);
             })
             .catch(error => {
                 console.error('Error cargando header:', error);
