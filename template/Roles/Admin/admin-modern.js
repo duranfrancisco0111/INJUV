@@ -84,6 +84,14 @@ function initializeModernAdmin() {
     setupModal();
     setupAddUserForm();
     loadDashboardData();
+    setupOrganizationRequestsSection();
+}
+
+function setupOrganizationRequestsSection() {
+    const refreshBtn = document.getElementById('btnRefreshOrgRequests');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => loadOrganizationRequestsData());
+    }
 }
 
 // Configurar el formulario de agregar usuario
@@ -91,7 +99,8 @@ function setupAddUserForm() {
     // Esperar a que el DOM esté completamente cargado
     setTimeout(() => {
         const addUserForm = document.getElementById('addUserForm');
-        if (addUserForm) {
+        if (addUserForm && addUserForm.dataset.bound !== 'true') {
+            addUserForm.dataset.bound = 'true';
             addUserForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleFormSubmission(this);
@@ -669,6 +678,9 @@ function loadSectionData(section) {
         case 'users':
             loadUsersData();
             break;
+        case 'organization-requests':
+            loadOrganizationRequestsData();
+            break;
         case 'reports':
             // Los reportes se generan bajo demanda
             break;
@@ -691,6 +703,136 @@ function loadSectionData(section) {
         case 'repository':
             loadRepositoryData();
             break;
+    }
+}
+
+async function loadOrganizationRequestsData() {
+    const container = document.getElementById('organizationRequestsContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="text-center text-gray-500 py-8">Cargando solicitudes...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/solicitudes-organizacion`);
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'No se pudieron cargar las solicitudes');
+        }
+
+        const solicitudes = data.solicitudes || [];
+        if (solicitudes.length === 0) {
+            container.innerHTML = '<div class="text-center text-gray-500 py-8">No hay formularios enviados.</div>';
+            return;
+        }
+
+        const rows = solicitudes.map(s => {
+            const redes = Array.isArray(s.redes_sociales) ? s.redes_sociales.join(' | ') : '';
+            const estadoClass = s.estado === 'aprobada' ? 'approved' : s.estado === 'rechazada' ? 'rejected' : 'pending';
+            return `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>
+                        <strong>${escapeHtml(s.nombre || '')}</strong><br>
+                        <small>${escapeHtml(s.rut || 'Sin RUT')}</small>
+                    </td>
+                    <td>
+                        ${escapeHtml(s.usuario_nombre || 'Usuario sin nombre')}<br>
+                        <small>${escapeHtml(s.usuario_email || '')}</small>
+                    </td>
+                    <td>${escapeHtml(s.region || '')} / ${escapeHtml(s.comuna || '')}</td>
+                    <td>${escapeHtml(s.email_contacto || '')}</td>
+                    <td><span class="org-request-status ${estadoClass}">${escapeHtml(s.estado || 'pendiente')}</span></td>
+                    <td>
+                        <button class="btn-secondary btn-view-org-request" data-id="${s.id}">
+                            Ver
+                        </button>
+                        ${s.estado === 'pendiente' ? `
+                            <button class="btn-success btn-approve-org-request" data-id="${s.id}">Aprobar</button>
+                            <button class="btn-danger btn-reject-org-request" data-id="${s.id}">Rechazar</button>
+                        ` : ''}
+                    </td>
+                    <td style="display:none;">${escapeHtml(s.descripcion || '')}</td>
+                    <td style="display:none;">${escapeHtml(s.sitio_web || '')}</td>
+                    <td style="display:none;">${escapeHtml(redes || '')}</td>
+                    <td style="display:none;">${escapeHtml(s.comentario_revision || '')}</td>
+                </tr>
+            `;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="org-requests-table-wrapper">
+                <table class="org-requests-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Organización</th>
+                            <th>Solicitante</th>
+                            <th>Ubicación</th>
+                            <th>Email contacto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+
+        container.querySelectorAll('.btn-view-org-request').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tr = btn.closest('tr');
+                const descripcion = tr.children[7].textContent || '';
+                const sitioWeb = tr.children[8].textContent || 'No informado';
+                const redes = tr.children[9].textContent || 'No informadas';
+                const comentario = tr.children[10].textContent || 'Sin comentario';
+                alert(`Detalle de solicitud\n\nDescripcion:\n${descripcion}\n\nSitio web: ${sitioWeb}\n\nRedes sociales: ${redes}\n\nComentario de revision: ${comentario}`);
+            });
+        });
+
+        container.querySelectorAll('.btn-approve-org-request').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const ok = confirm('¿Aprobar esta solicitud y crear la organización?');
+                if (!ok) return;
+                await updateOrganizationRequestStatus(btn.dataset.id, 'aprobada');
+            });
+        });
+
+        container.querySelectorAll('.btn-reject-org-request').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const comentario = prompt('Motivo de rechazo (opcional):', '') || '';
+                await updateOrganizationRequestStatus(btn.dataset.id, 'rechazada', comentario);
+            });
+        });
+    } catch (error) {
+        console.error('Error al cargar solicitudes:', error);
+        container.innerHTML = `<div class="text-center text-red-500 py-8">${error.message}</div>`;
+    }
+}
+
+async function updateOrganizationRequestStatus(solicitudId, estado, comentario = '') {
+    try {
+        const adminId = parseInt(localStorage.getItem('userId') || sessionStorage.getItem('userId') || '0', 10) || null;
+        const response = await fetch(`${API_BASE_URL}/admin/solicitudes-organizacion/${solicitudId}/estado`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                estado,
+                comentario,
+                admin_id: adminId
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'No se pudo actualizar la solicitud');
+        }
+
+        showNotification(`Solicitud ${estado} correctamente`, 'success');
+        await loadOrganizationRequestsData();
+        await loadDashboardData();
+    } catch (error) {
+        console.error('Error al actualizar solicitud:', error);
+        showNotification(error.message || 'Error al actualizar solicitud', 'error');
     }
 }
 
@@ -2828,22 +2970,10 @@ window.closeModal = function(modalId) {
     }
 };
 
-// Configurar el formulario de agregar usuario cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Esperar a que el modal se cargue
-    setTimeout(() => {
-        const addUserForm = document.getElementById('addUserForm');
-        if (addUserForm) {
-            addUserForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleFormSubmission(this);
-            });
-        }
-    }, 500);
-});
-
 // Manejo de Formularios (igual que register.html)
-function handleFormSubmission(form) {
+async function handleFormSubmission(form) {
+    if (form.dataset.submitting === 'true') return;
+
     // Obtener campos del formulario (IDs iguales a register.html)
     const nombre = document.getElementById('nombre').value.trim();
     const apellido = document.getElementById('apellido').value.trim();
@@ -2917,8 +3047,17 @@ function handleFormSubmission(form) {
         rol: 'user' // Siempre crear como 'user', luego se puede cambiar el rol desde el panel
     };
     
-    // Guardar usuario
-    saveUser(userData).then(success => {
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton ? submitButton.textContent : '';
+    form.dataset.submitting = 'true';
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Guardando...';
+    }
+
+    try {
+        // Guardar usuario
+        const success = await saveUser(userData);
         if (success) {
             // Cerrar modal
             closeModal('addUserModal');
@@ -2931,7 +3070,13 @@ function handleFormSubmission(form) {
             // Limpiar formulario
             form.reset();
         }
-    });
+    } finally {
+        form.dataset.submitting = 'false';
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText || 'Guardar Usuario';
+        }
+    }
 }
 
 // Función de validación de email (helper)

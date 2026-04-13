@@ -349,78 +349,11 @@
       </section>
     </div>
 
-    <!-- Sección Repositorio -->
-    <section id="repositorio" class="mt-12 mb-12">
-      <div class="bg-white rounded-2xl ring-1 ring-slate-200 p-8 shadow-card">
-        <div class="flex items-center gap-3 mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-          </svg>
-          <h2 class="text-3xl font-bold text-slate-900">Repositorio</h2>
-        </div>
-
-        <p class="text-slate-600 text-lg mb-8 leading-relaxed">
-          Accede a recursos, guías y materiales de apoyo para organizaciones y voluntarios.
-          Encuentra herramientas útiles para planificar, ejecutar y evaluar tus proyectos de voluntariado.
-        </p>
-
-        <div class="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="p-6 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow card-hover">
-            <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="12" y1="18" x2="12" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">Guías y Manuales</h3>
-            <p class="text-sm text-slate-600 mb-4">Documentación completa para organizar actividades de voluntariado exitosas.</p>
-            <a href="#" class="text-sm font-semibold text-brand-blue hover:text-blue-700" onclick="abrirRecurso('guias')">Ver recursos →</a>
-          </div>
-
-          <div class="p-6 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow card-hover">
-            <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">Plantillas y Formatos</h3>
-            <p class="text-sm text-slate-600 mb-4">Descarga plantillas editables para reportes, inscripciones y evaluaciones.</p>
-            <a href="#" class="text-sm font-semibold text-brand-blue hover:text-blue-700" onclick="abrirRecurso('plantillas')">Descargar →</a>
-          </div>
-
-          <div class="p-6 rounded-xl border border-slate-200 hover:shadow-lg transition-shadow card-hover">
-            <div class="h-12 w-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polygon points="10 8 16 12 10 16 10 8"></polygon>
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold mb-2">Videos Tutoriales</h3>
-            <p class="text-sm text-slate-600 mb-4">Aprende paso a paso cómo gestionar y participar en voluntariados.</p>
-            <a href="#" class="text-sm font-semibold text-brand-blue hover:text-blue-700" onclick="abrirRecurso('videos')">Ver videos →</a>
-          </div>
-
-          <a href="../academia/index.html" class="p-6 rounded-xl border-2 border-brand-blue bg-blue-50/50 hover:shadow-lg transition-shadow card-hover flex flex-col items-center justify-center text-center min-h-[200px]">
-            <div class="h-12 w-12 rounded-xl bg-brand-blue flex items-center justify-center mb-4">
-              <i class="fas fa-graduation-cap text-white text-xl"></i>
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-slate-900">Academia</h3>
-            <p class="text-sm text-slate-600 mb-4">Materiales de formación y documentos educativos para voluntarios.</p>
-            <span class="text-sm font-semibold text-brand-blue hover:text-blue-700">Ir a Academia →</span>
-          </a>
-        </div>
-      </div>
-    </section>
   </main>
 
   <!-- Modal para detalles -->
-  <div id="modalDetalles" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+  <div id="modalDetalles" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-start justify-center p-4 pt-28 pb-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[calc(100vh-8.5rem)] overflow-y-auto">
       <div class="p-6">
         <div class="flex justify-between items-start mb-4">
           <h3 id="modalTitulo" class="text-2xl font-bold text-slate-900"></h3>
@@ -432,7 +365,7 @@
         </div>
         <div id="modalContenido" class="text-slate-600"></div>
         <div class="mt-6 flex gap-3">
-          <button onclick="postularDesdeModal()" class="px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition">
+          <button id="btnPostularModal" onclick="postularDesdeModal()" class="px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition">
             Postular ahora
           </button>
           <button onclick="cerrarModal()" class="px-6 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition">
@@ -906,7 +839,7 @@
               <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
             </svg>
             <span class="text-green-700 font-medium">
-              ${op.fecha_inicio_voluntariado ? new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL') : 'TBD'} - ${op.fecha_fin_voluntariado ? new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
+              Inicio: ${op.fecha_inicio_voluntariado ? new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL') : 'TBD'} | Término: ${op.fecha_fin_voluntariado ? new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
             </span>
           </li>
           ` : ''}
@@ -1098,9 +1031,8 @@
               <div>
                 <h4 class="font-semibold text-slate-900 mb-2">Fechas del voluntariado</h4>
                 <p class="text-slate-600">
-                  ${op.fecha_inicio_voluntariado ? new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
-                  -
-                  ${op.fecha_fin_voluntariado ? new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
+                  Inicio: ${op.fecha_inicio_voluntariado ? new Date(op.fecha_inicio_voluntariado).toLocaleDateString('es-CL') : 'TBD'}<br>
+                  Término: ${op.fecha_fin_voluntariado ? new Date(op.fecha_fin_voluntariado).toLocaleDateString('es-CL') : 'TBD'}
                 </p>
               </div>
               ` : ''}
@@ -1112,6 +1044,20 @@
               ` : ''}
             </div>
           `;
+
+          const btnPostularModal = document.getElementById('btnPostularModal');
+          if (btnPostularModal) {
+            if (yaPostulo(op.id)) {
+              btnPostularModal.textContent = '✓ Ya postulaste';
+              btnPostularModal.disabled = true;
+              btnPostularModal.className = 'px-6 py-2 bg-gray-400 text-white rounded-xl font-semibold cursor-not-allowed opacity-70';
+            } else {
+              btnPostularModal.textContent = 'Postular ahora';
+              btnPostularModal.disabled = false;
+              btnPostularModal.className = 'px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition';
+            }
+          }
+
           document.getElementById('modalDetalles').classList.remove('hidden');
         } else {
           alert('Error al cargar los detalles de la oportunidad');
@@ -1124,6 +1070,10 @@
 
     function postularDesdeModal() {
       if (oportunidadSeleccionada) {
+        if (yaPostulo(oportunidadSeleccionada.id)) {
+          alert('Ya has postulado a esta oportunidad');
+          return;
+        }
         const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
         if (userId) {
           confirmarPostulacion(oportunidadSeleccionada.id, userId);
