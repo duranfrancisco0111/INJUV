@@ -2210,9 +2210,6 @@ function renderOpportunitiesTable(oportunidades) {
                     </div>
                 </div>
                 <div class="opportunity-actions">
-                    <button class="btn-secondary" onclick="editarOportunidad(${op.id})">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
                     <button class="btn-danger" onclick="eliminarOportunidad(${op.id}, '${tituloEscapado}')">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
@@ -2230,15 +2227,10 @@ function renderOpportunitiesTable(oportunidades) {
     }, 100);
 }
 
-// Editar oportunidad
-window.editarOportunidad = function(opportunidadId) {
-    // Redirigir a la página de edición de oportunidades o abrir modal
-    console.log('Editar oportunidad:', oportunidadId);
-    showNotification('Función de edición de oportunidades en desarrollo', 'info');
-};
+window.cerrarModalCrearOportunidad = window.closeModalCrearOportunidad;
 
 // Eliminar oportunidad
-window.eliminarOportunidad = async function(opportunidadId, titulo) {
+window.eliminarOportunidad = async function(oportunidadId, titulo) {
     if (!confirm(`¿Estás seguro de que deseas eliminar la oportunidad "${titulo}"?`)) {
         return;
     }

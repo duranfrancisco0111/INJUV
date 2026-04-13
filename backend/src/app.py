@@ -1424,7 +1424,12 @@ def obtener_oportunidad(oportunidad_id):
                 'ciudad_opor': oportunidad.ciudad_opor if oportunidad.ciudad_opor else '',
                 'comuna_opor': oportunidad.comuna_opor if oportunidad.comuna_opor else '',
                 'tipo_de_voluntariado': getattr(oportunidad, 'tipo_de_voluntariado', None) or getattr(oportunidad, 'area_voluntariado', None) or '',
-                'area_voluntariado': getattr(oportunidad, 'tipo_de_voluntariado', None) or getattr(oportunidad, 'area_voluntariado', None) or ''
+                'area_voluntariado': getattr(oportunidad, 'tipo_de_voluntariado', None) or getattr(oportunidad, 'area_voluntariado', None) or '',
+                'responsable_nombre': oportunidad.responsable_nombre if getattr(oportunidad, 'responsable_nombre', None) else '',
+                'responsable_apellido': oportunidad.responsable_apellido if getattr(oportunidad, 'responsable_apellido', None) else '',
+                'responsable_email': oportunidad.responsable_email if getattr(oportunidad, 'responsable_email', None) else '',
+                'responsable_email_institucional': oportunidad.responsable_email_institucional if getattr(oportunidad, 'responsable_email_institucional', None) else '',
+                'responsable_telefono': oportunidad.responsable_telefono if getattr(oportunidad, 'responsable_telefono', None) else ''
             }
         }), 200
         
