@@ -169,7 +169,7 @@ function createBasicHeader() {
                 <nav style="flex: 1; display: flex; justify-content: center; gap: 1rem;">
                     <a href="../../index.html" style="padding: 0.5rem 1rem; color: #333; text-decoration: none; font-weight: 500;">Inicio</a>
                     <a href="../../index.html#how-it-works" style="padding: 0.5rem 1rem; color: #333; text-decoration: none; font-weight: 500;">Cómo funciona</a>
-                    <a href="../../noticias/index.html" style="padding: 0.5rem 1rem; color: #333; text-decoration: none; font-weight: 500;">Noticias</a>
+                    <a href="../../index.html#news" style="padding: 0.5rem 1rem; color: #333; text-decoration: none; font-weight: 500;">Noticias</a>
                 </nav>
                 <div style="position: relative;">
                     <button id="profileBtn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #f8f9fa; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
@@ -248,6 +248,9 @@ async function insertHeader(htmlContent) {
         
         // Esperar a que los scripts se carguen
         setTimeout(() => {
+            if (typeof window.initHeaderAuth === 'function') {
+                window.initHeaderAuth();
+            }
             if (typeof setupHeaderAuth === 'function') {
                 setupHeaderAuth();
             }
@@ -955,7 +958,8 @@ function renderSeguimiento() {
     
     let filtered = seguimientoData.filter(seg => {
         if (filtroOportunidad !== 'todas' && seg.oportunidad_id != filtroOportunidad) return false;
-        if (filtroEstado !== 'todas' && seg.estado !== filtroEstado) return false;
+        const estadoConfirmacion = seg.estado_confirmacion || 'Pendiente';
+        if (filtroEstado !== 'todas' && estadoConfirmacion !== filtroEstado) return false;
         return true;
     });
     
@@ -2429,8 +2433,15 @@ async function abrirModalSeguimiento(postulacionId, usuarioIdParam = null) {
 }
 
 async function actualizarEstadoPostulacion(postulacionId, nuevoEstado) {
-    if (!confirm(`¿Estás seguro de que deseas ${nuevoEstado === 'Seleccionado' ? 'aprobar' : 'rechazar'} esta postulación?`)) {
-        return;
+    const estado = (nuevoEstado || '').trim();
+    const esAprobar = estado === 'Seleccionado';
+    const esRechazar = estado === 'Rechazado' || estado === 'No seleccionado';
+
+    // Solo confirmar en acciones críticas (aprobar / rechazar)
+    if (esAprobar) {
+        if (!confirm('¿Estás seguro de que deseas aprobar esta postulación?')) return;
+    } else if (esRechazar) {
+        if (!confirm('¿Estás seguro de que deseas rechazar esta postulación?')) return;
     }
     
     try {
@@ -2472,7 +2483,13 @@ async function actualizarEstadoPostulacion(postulacionId, nuevoEstado) {
                 }
             }
             
-            alert(`Postulación ${nuevoEstado === 'Seleccionado' ? 'aprobada' : 'rechazada'} exitosamente`);
+            if (esAprobar) {
+                alert('Postulación aprobada exitosamente');
+            } else if (esRechazar) {
+                alert('Postulación rechazada exitosamente');
+            } else {
+                alert(`Estado actualizado a "${estado}"`);
+            }
             cerrarModal('modalPostulacion');
             
             // Recargar las secciones afectadas
@@ -2724,8 +2741,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // Hacer funciones globales para que funcionen desde onclick en HTML
 // Función rápida para cambiar estado desde la tabla de postulaciones
 async function cambiarEstadoPostulacionRapido(postulacionId, nuevoEstado) {
-    if (!confirm(`¿Estás seguro de que deseas ${nuevoEstado === 'Seleccionado' ? 'aprobar' : 'rechazar'} esta postulación?`)) {
-        return;
+    const estado = (nuevoEstado || '').trim();
+    const esAprobar = estado === 'Seleccionado';
+    const esRechazar = estado === 'Rechazado' || estado === 'No seleccionado';
+
+    // Solo confirmar en acciones críticas (aprobar / rechazar)
+    if (esAprobar) {
+        if (!confirm('¿Estás seguro de que deseas aprobar esta postulación?')) return;
+    } else if (esRechazar) {
+        if (!confirm('¿Estás seguro de que deseas rechazar esta postulación?')) return;
     }
     
     try {
@@ -2767,7 +2791,13 @@ async function cambiarEstadoPostulacionRapido(postulacionId, nuevoEstado) {
                 }
             }
             
-            alert(`Postulación ${nuevoEstado === 'Seleccionado' ? 'aprobada' : 'rechazada'} exitosamente`);
+            if (esAprobar) {
+                alert('Postulación aprobada exitosamente');
+            } else if (esRechazar) {
+                alert('Postulación rechazada exitosamente');
+            } else {
+                alert(`Estado actualizado a "${estado}"`);
+            }
             
             // Recargar las secciones afectadas
             if (typeof renderPostulaciones === 'function') {
@@ -3582,8 +3612,15 @@ function gestionarPostulanteDesdeOportunidad(postulacionId, usuarioId) {
 
 // Función para cambiar el estado de una postulación desde el modal de oportunidad
 async function cambiarEstadoPostulacionDesdeOportunidad(postulacionId, oportunidadId, nuevoEstado) {
-    if (!confirm(`¿Estás seguro de que deseas ${nuevoEstado === 'Seleccionado' ? 'aprobar' : 'rechazar'} esta postulación?`)) {
-        return;
+    const estado = (nuevoEstado || '').trim();
+    const esAprobar = estado === 'Seleccionado';
+    const esRechazar = estado === 'Rechazado' || estado === 'No seleccionado';
+
+    // Solo confirmar en acciones críticas (aprobar / rechazar)
+    if (esAprobar) {
+        if (!confirm('¿Estás seguro de que deseas aprobar esta postulación?')) return;
+    } else if (esRechazar) {
+        if (!confirm('¿Estás seguro de que deseas rechazar esta postulación?')) return;
     }
     
     try {
@@ -3641,7 +3678,13 @@ async function cambiarEstadoPostulacionDesdeOportunidad(postulacionId, oportunid
             // Recargar el modal de oportunidad para reflejar los cambios
             await verDetallesOportunidad(oportunidadId);
             
-            alert(`Postulación ${nuevoEstado === 'Seleccionado' ? 'aprobada' : 'rechazada'} exitosamente`);
+            if (esAprobar) {
+                alert('Postulación aprobada exitosamente');
+            } else if (esRechazar) {
+                alert('Postulación rechazada exitosamente');
+            } else {
+                alert(`Estado actualizado a "${estado}"`);
+            }
             
             // Recargar las secciones afectadas
             if (typeof loadSeguimiento === 'function') {
