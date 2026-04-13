@@ -272,7 +272,7 @@
                 </div>
             </div>
             <div class="section-footer">
-                <a class="btn-outline" href="visualizacion-vd/index.html">Ver todas las oportunidades</a>
+                <a class="btn-outline" href="visualizacion-vd/index.html" onclick="goToAllOpportunities(event); return false;">Ver todas las oportunidades</a>
             </div>
         </div>
     </section>
@@ -810,7 +810,7 @@
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">No hay oportunidades destacadas disponibles en este momento.</p>
-                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;">
+                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;" onclick="goToAllOpportunities(event); return false;">
                             Ver todas las oportunidades
                         </a>
                     </div>
@@ -824,7 +824,7 @@
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">Error al cargar las oportunidades. Por favor, intenta más tarde.</p>
-                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;">
+                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;" onclick="goToAllOpportunities(event); return false;">
                             Ver todas las oportunidades
                         </a>
                     </div>
@@ -886,14 +886,16 @@
         }
         
         function animarNumero(elemento, valorFinal) {
+            // Normalizar por si el backend/envía texto tipo "7+".
+            const valorNumerico = Number(String(valorFinal).replace(/[^\d.-]/g, '')) || 0;
             const duracion = 2000; // 2 segundos
-            const incremento = valorFinal / (duracion / 16); // 60 FPS
+            const incremento = valorNumerico / (duracion / 16); // 60 FPS
             let valorActual = 0;
             
             const animacion = setInterval(() => {
                 valorActual += incremento;
-                if (valorActual >= valorFinal) {
-                    elemento.textContent = valorFinal.toLocaleString('es-CL');
+                if (valorActual >= valorNumerico) {
+                    elemento.textContent = valorNumerico.toLocaleString('es-CL');
                     clearInterval(animacion);
                 } else {
                     elemento.textContent = Math.floor(valorActual).toLocaleString('es-CL');

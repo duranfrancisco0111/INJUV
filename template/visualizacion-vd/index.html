@@ -454,9 +454,6 @@
         </div>
         <h3 class="text-xl font-bold text-slate-900 mb-2">¡Postulación exitosa!</h3>
         <p id="mensajePostulacion" class="text-slate-600 mb-6"></p>
-        <button onclick="cerrarModalPostulacion()" class="px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition">
-          Entendido
-        </button>
       </div>
     </div>
   </div>
@@ -1041,15 +1038,6 @@
           document.getElementById('mensajePostulacion').textContent = 
             `¡Postulación exitosa! Te has postulado a "${oportunidadSeleccionada.titulo}". Recibirás un correo de confirmación pronto.`;
           
-          // Actualizar botones
-          const botonesContainer = document.querySelector('#modalPostulacion .flex.gap-3');
-          if (botonesContainer) {
-            botonesContainer.innerHTML = `
-              <button onclick="cerrarModalPostulacion()" class="px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition">
-                Entendido
-              </button>
-            `;
-          }
         } else {
           // Mostrar el mensaje de error del backend de forma más clara
           const errorMsg = data.error || 'Error al postular. Por favor, intenta nuevamente.';
@@ -1060,16 +1048,6 @@
           if (mensajeEl) {
             mensajeEl.textContent = `❌ ${errorMsg}`;
             mensajeEl.style.color = '#dc2626'; // Rojo para errores
-          }
-          
-          // Actualizar botones para permitir cerrar o intentar de nuevo
-          const botonesContainer = document.querySelector('#modalPostulacion .flex.gap-3');
-          if (botonesContainer) {
-            botonesContainer.innerHTML = `
-              <button onclick="cerrarModalPostulacion()" class="px-6 py-2 bg-brand-blue text-white rounded-xl font-semibold hover:bg-blue-700 transition">
-                Entendido
-              </button>
-            `;
           }
           
           // También mostrar alert para asegurar que el usuario vea el mensaje
