@@ -26,6 +26,7 @@
                 const doc = parser.parseFromString(data, 'text/html');
                 const headerContent = doc.querySelector('header');
                 const styles = doc.querySelector('style');
+                const scripts = doc.querySelectorAll('script');
                 
                 if (styles) {
                     const styleElement = document.createElement('style');
@@ -39,9 +40,19 @@
                 } else if (container) {
                     container.innerHTML = doc.body.innerHTML;
                 }
+
+                scripts.forEach(function(oldScript) {
+                    var newScript = document.createElement('script');
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        newScript.textContent = oldScript.textContent;
+                    }
+                    document.body.appendChild(newScript);
+                });
                 
-                // Configurar enlaces después de un breve delay
-                setTimeout(() => {
+                // Configurar enlaces después de un breve delay (tras ejecutar los scripts del header)
+                setTimeout(function() {
                     const logo = document.getElementById('logo-link');
                     if (logo) logo.href = '../index.html';
                     
@@ -59,18 +70,39 @@
                                 window.goToNoticias(e);
                             } else {
                                 e.preventDefault();
-                                if (typeof window.redirectTo === 'function') {
-                                  window.redirectTo('../index.html#news');
-                                } else {
-                                  window.location.href = '../index.html#news';
-                                }
+                                window.location.href = '../index.html#news';
                             }
                             return false;
                         };
                     }
-                    
-                    const login = document.getElementById('login-link');
-                    if (login) login.href = '../inicio de sesion/login.html';
+
+                    const academiaNav = document.getElementById('academia-link');
+                    if (academiaNav) {
+                        academiaNav.href = '../index.html#academia-voluntariado';
+                        academiaNav.onclick = function(e) {
+                            if (window.goToAcademia) {
+                                window.goToAcademia(e);
+                            } else {
+                                e.preventDefault();
+                                window.location.href = '../index.html#academia-voluntariado';
+                            }
+                            return false;
+                        };
+                    }
+
+                    const bibliotecaNav = document.getElementById('biblioteca-link');
+                    if (bibliotecaNav) {
+                        bibliotecaNav.href = '../index.html#biblioteca-estudios';
+                        bibliotecaNav.onclick = function(e) {
+                            if (window.goToBiblioteca) {
+                                window.goToBiblioteca(e);
+                            } else {
+                                e.preventDefault();
+                                window.location.href = '../index.html#biblioteca-estudios';
+                            }
+                            return false;
+                        };
+                    }
                     
                     const menuToggle = document.getElementById('menuToggle');
                     const mainNav = document.querySelector('.main-nav');
@@ -95,6 +127,7 @@
                     
                     const dropdownItems = document.querySelectorAll('.nav-item.dropdown');
                     dropdownItems.forEach(item => {
+                        if (item.querySelector('.volunteer-filter')) return;
                         const link = item.querySelector('.nav-link');
                         if (link && window.innerWidth <= 1024) {
                             link.addEventListener('click', (e) => {
@@ -114,7 +147,14 @@
                             }
                         });
                     }
-                }, 50);
+
+                    if (typeof window.initHeaderAuth === 'function') {
+                        window.initHeaderAuth();
+                    }
+                    if (typeof window.updateHeaderAuth === 'function') {
+                        window.updateHeaderAuth();
+                    }
+                }, 100);
             })
             .catch(error => {
                 console.error('Error cargando header:', error);

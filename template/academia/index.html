@@ -7,6 +7,7 @@
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../typography.css">
+  <link rel="stylesheet" href="../styles.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../visualizacion-vd/styles.css">
   <script>
@@ -33,7 +34,7 @@
 
   <div id="header-container"></div>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 mt-6" style="padding-top: 120px;">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 mt-6" style="padding-top: 120px; padding-bottom: 80px; margin-bottom: 40px;">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
       <!-- Sidebar búsqueda (mismo formato que Voluntariados) -->
@@ -121,6 +122,57 @@
       </div>
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="footer-wrapper">
+      <div class="footer-top-bar">
+        <div class="footer-bar-blue"></div>
+        <div class="footer-bar-red"></div>
+      </div>
+      <div class="footer-content">
+        <div class="footer-section footer-col1">
+          <div class="footer-logos-container">
+            <div class="footer-logo-claveunica">
+              <img src="../Fotos_injuv/ClaveUnica.png" alt="ClaveÚnica" class="footer-logo-img claveunica-logo">
+            </div>
+            <p class="footer-admin-text">Servicio de autenticación administrado por:</p>
+            <div class="footer-logo-secretaria">
+              <img src="../Fotos_injuv/SecretariaGobiernoDigital.png" alt="Secretaría de Gobierno Digital" class="footer-logo-img secretaria-logo">
+            </div>
+            <p class="footer-collab-text">Con la colaboración de:</p>
+            <div class="footer-logo-ministerio-small">
+              <img src="../Fotos_injuv/color_MinDesarrolloSocialYFamilia.jpg" alt="Ministerio de Desarrollo Social y Familia" class="footer-logo-img ministerio-small-logo">
+            </div>
+            <p class="footer-trademark">INJUV®</p>
+          </div>
+        </div>
+        <div class="footer-section footer-col2">
+          <h4>Secciones</h4>
+          <ul>
+            <li><a href="../noticias/noticias.html">Noticias</a></li>
+            <li><a href="../inicio de sesion/login.html">Postular</a></li>
+            <li><a href="../index.html#organizaciones">Instituciones públicas</a></li>
+            <li><a href="#">Términos y condiciones</a></li>
+          </ul>
+        </div>
+        <div class="footer-section footer-col3">
+          <h4>Ayuda a Ciudadanos</h4>
+          <a href="#" class="contact-link" id="faq-link">Preguntas frecuentes</a>
+          <p class="contact-info">Horario: Lu - Vi / 9:00hrs - 18:00hrs</p>
+          <a href="tel:+56226204700" class="contact-phone">+56 2 26204700</a>
+        </div>
+        <div class="footer-section footer-col4">
+          <h4>Ayuda a Instituciones</h4>
+          <p class="contact-info">Horario: Lu - Vi / 9:00hrs - 18:00hrs</p>
+          <a href="tel:+56226204700" class="contact-phone">+56 2 26204700</a>
+        </div>
+      </div>
+      <div class="footer-bottom-bar">
+        <div class="footer-bar-blue"></div>
+        <div class="footer-bar-red"></div>
+      </div>
+    </div>
+  </footer>
 
   <script>
     const API_BASE_URL = 'http://127.0.0.1:5000/api';

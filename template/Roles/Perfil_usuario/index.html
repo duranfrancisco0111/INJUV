@@ -668,11 +668,35 @@
                 window.goToNoticias(e);
               } else {
                 e.preventDefault();
-                if (typeof window.redirectTo === 'function') {
-                  window.redirectTo('../../index.html#news');
-                } else {
-                  window.location.href = '../../index.html#news';
-                }
+                window.location.href = '../../index.html#news';
+              }
+              return false;
+            };
+          }
+
+          const academiaNav = document.getElementById('academia-link');
+          if (academiaNav) {
+            academiaNav.href = '../../index.html#academia-voluntariado';
+            academiaNav.onclick = function(e) {
+              if (window.goToAcademia) {
+                window.goToAcademia(e);
+              } else {
+                e.preventDefault();
+                window.location.href = '../../index.html#academia-voluntariado';
+              }
+              return false;
+            };
+          }
+
+          const bibliotecaNav = document.getElementById('biblioteca-link');
+          if (bibliotecaNav) {
+            bibliotecaNav.href = '../../index.html#biblioteca-estudios';
+            bibliotecaNav.onclick = function(e) {
+              if (window.goToBiblioteca) {
+                window.goToBiblioteca(e);
+              } else {
+                e.preventDefault();
+                window.location.href = '../../index.html#biblioteca-estudios';
               }
               return false;
             };

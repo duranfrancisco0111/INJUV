@@ -4189,9 +4189,33 @@ def cambiar_visibilidad_resena(postulacion_id):
     try:
         from sqlalchemy import text
         
-        data = request.json
-        es_publica = data.get('es_publica', True)
+        data = request.json or {}
+        raw_pub = data.get('es_publica', True)
+
+        def _normalizar_es_publica(val):
+            if isinstance(val, bool):
+                return val
+            if isinstance(val, (int, float)):
+                return val != 0
+            if isinstance(val, str):
+                s = val.strip().lower()
+                if s in ('false', 'f', '0', 'no', 'n'):
+                    return False
+                if s in ('true', 't', '1', 'si', 'sí', 'yes', 'y'):
+                    return True
+            return bool(val)
+
+        es_publica = _normalizar_es_publica(raw_pub)
         organizacion_id = data.get('organizacion_id')
+        organizacion_id_int = None
+        if organizacion_id is not None and organizacion_id != '':
+            try:
+                organizacion_id_int = int(organizacion_id)
+            except (TypeError, ValueError):
+                return jsonify({
+                    'success': False,
+                    'error': 'organizacion_id inválido'
+                }), 400
         
         # Verificar que la postulación existe
         db.session.rollback()
@@ -4210,7 +4234,7 @@ def cambiar_visibilidad_resena(postulacion_id):
             }), 404
         
         # Verificar que la organización que solicita el cambio es la dueña de la oportunidad
-        if organizacion_id and post_info[2] != organizacion_id:
+        if organizacion_id_int is not None and int(post_info[2]) != organizacion_id_int:
             return jsonify({
                 'success': False,
                 'error': 'No tienes permisos para cambiar la visibilidad de esta reseña'
@@ -4234,7 +4258,7 @@ def cambiar_visibilidad_resena(postulacion_id):
         # Actualizar solo el campo de visibilidad
         db.session.execute(
             text("UPDATE postulaciones SET resena_usuario_publica = :es_publica, updated_at = :updated_at WHERE id = :id"),
-            {'es_publica': bool(es_publica), 'updated_at': datetime.now(), 'id': postulacion_id}
+            {'es_publica': es_publica, 'updated_at': datetime.now(), 'id': postulacion_id}
         )
         
         db.session.commit()
@@ -4242,7 +4266,7 @@ def cambiar_visibilidad_resena(postulacion_id):
         return jsonify({
             'success': True,
             'message': 'Visibilidad de la reseña actualizada exitosamente',
-            'es_publica': bool(es_publica)
+            'es_publica': es_publica
         }), 200
         
     except Exception as e:
@@ -4260,6 +4284,21 @@ def cambiar_visibilidad_resena(postulacion_id):
 def obtener_reseñas_organizacion(organizacion_id):
     try:
         from sqlalchemy import text
+        
+        def normalizar_bool_api(valor, default=True):
+            if valor is None:
+                return default
+            if isinstance(valor, bool):
+                return valor
+            if isinstance(valor, (int, float)):
+                return valor != 0
+            if isinstance(valor, str):
+                v = valor.strip().lower()
+                if v in ['true', 't', '1', 'si', 'sí', 'yes', 'y']:
+                    return True
+                if v in ['false', 'f', '0', 'no', 'n']:
+                    return False
+            return bool(valor)
         
         # Verificar si se solicitan solo reseñas públicas (desde el perfil público)
         solo_publicas = request.args.get('solo_publicas', 'false').lower() == 'true'
@@ -4283,20 +4322,24 @@ def obtener_reseñas_organizacion(organizacion_id):
                 WHERE table_name = 'postulaciones' 
                 AND (column_name = 'reseña_org' 
                      OR column_name = 'resena_org'
+                     OR column_name = 'reseña_organizacion'
+                     OR column_name = 'resena_organizacion'
+                     OR column_name = 'resena_usuario_sobre_org'
                      OR column_name = 'calificacion_usuario_org'
                      OR column_name = 'resena_usuario_publica')
             """)
             existing_cols = db.session.execute(check_col_query).fetchall()
             existing_col_names = [row[0] for row in existing_cols]
             
-            has_resena_col = any(name in existing_col_names for name in [
-                'reseña_org', 'resena_org'
-            ])
-            resena_col_name = None
-            for name in ['reseña_org', 'resena_org']:
-                if name in existing_col_names:
-                    resena_col_name = name
-                    break
+            resena_col_candidates = [
+                'reseña_org',
+                'resena_org',
+                'reseña_organizacion',
+                'resena_organizacion',
+                'resena_usuario_sobre_org'
+            ]
+            resena_cols_present = [n for n in resena_col_candidates if n in existing_col_names]
+            has_resena_col = len(resena_cols_present) > 0
             
             has_calif_col = 'calificacion_usuario_org' in existing_col_names
             has_publica_col = 'resena_usuario_publica' in existing_col_names
@@ -4304,7 +4347,7 @@ def obtener_reseñas_organizacion(organizacion_id):
             has_resena_col = False
             has_calif_col = False
             has_publica_col = False
-            resena_col_name = None
+            resena_cols_present = []
         
         # Construir consulta SQL para obtener postulaciones con reseñas
         # Primero obtener todas las oportunidades de la organización
@@ -4328,58 +4371,38 @@ def obtener_reseñas_organizacion(organizacion_id):
                 'reseñas_por_voluntariado': []
             }), 200
         
-        # Construir consulta para obtener postulaciones con reseñas
-        # Usar IN en lugar de ANY para mejor compatibilidad
-        base_query = f"""
-            SELECT 
-                p.id, p.oportunidad_id, p.usuario_id,
-                p.created_at
-        """
-        
-        if has_resena_col and resena_col_name:
-            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
-                base_query += f', p."{resena_col_name}"'
-            else:
-                base_query += f', p.{resena_col_name}'
-        else:
-            base_query += ', NULL'
-        
-        if has_calif_col:
-            base_query += ', p.calificacion_usuario_org'
-        else:
-            base_query += ', NULL'
-        
-        if has_publica_col:
-            base_query += ', p.resena_usuario_publica'
-        else:
-            base_query += ', NULL'
-        
-        base_query += f"""
-            FROM postulaciones p
-            WHERE p.oportunidad_id IN ({','.join(map(str, oportunidad_ids))})
-            AND (
-        """
-        
-        if has_resena_col and resena_col_name:
-            if 'ñ' in resena_col_name or 'ó' in resena_col_name:
-                base_query += f'p."{resena_col_name}" IS NOT NULL AND p."{resena_col_name}" != \'\''
-            else:
-                base_query += f'p.{resena_col_name} IS NOT NULL AND p.{resena_col_name} != \'\''
-        
-        if has_calif_col:
-            if has_resena_col:
-                base_query += ' OR '
-            base_query += 'p.calificacion_usuario_org IS NOT NULL'
-        
         if not has_resena_col and not has_calif_col:
-            # Si no existen las columnas, retornar vacío
             return jsonify({
                 'success': True,
                 'reseñas_por_voluntariado': []
             }), 200
-        
-        base_query += """
-            )
+
+        def quote_col(name: str) -> str:
+            return f'p."{name}"' if ('ñ' in name or 'ó' in name) else f'p.{name}'
+
+        if has_resena_col:
+            null_trim_parts = [f"NULLIF(TRIM({quote_col(n)}), '')" for n in resena_cols_present]
+            resena_sql = 'COALESCE(' + ', '.join(null_trim_parts) + ')'
+        else:
+            resena_sql = 'NULL'
+
+        calif_sql = 'p.calificacion_usuario_org' if has_calif_col else 'NULL'
+        public_sql = 'COALESCE(p.resena_usuario_publica, true)' if has_publica_col else 'true'
+
+        text_cond = f'({resena_sql}) IS NOT NULL' if has_resena_col else 'FALSE'
+        calif_cond = 'p.calificacion_usuario_org IS NOT NULL' if has_calif_col else 'FALSE'
+        where_review = f'({text_cond} OR ({calif_cond}))'
+
+        base_query = f"""
+            SELECT 
+                p.id, p.oportunidad_id, p.usuario_id,
+                p.created_at,
+                ({resena_sql}) AS texto_resena,
+                {calif_sql} AS calificacion_usuario,
+                {public_sql} AS es_publica_db
+            FROM postulaciones p
+            WHERE p.oportunidad_id IN ({','.join(map(str, oportunidad_ids))})
+            AND {where_review}
             ORDER BY p.created_at DESC
         """
         
@@ -4389,7 +4412,7 @@ def obtener_reseñas_organizacion(organizacion_id):
         
         # Organizar por oportunidad
         reseñas_por_voluntariado = {}
-        
+
         for row in results:
             post_id = row[0]
             oportunidad_id = row[1]
@@ -4397,9 +4420,8 @@ def obtener_reseñas_organizacion(organizacion_id):
             fecha_postulacion = row[3]
             resena_text = row[4] if len(row) > 4 else None
             calificacion = float(row[5]) if len(row) > 5 and row[5] is not None else None
-            # Por defecto es pública si el campo es None/null (comportamiento por defecto)
             es_publica_val = row[6] if len(row) > 6 else None
-            es_publica = es_publica_val if es_publica_val is not None else True  # Por defecto es pública
+            es_publica = normalizar_bool_api(es_publica_val, True)
             
             # Si se solicitan solo públicas y esta no lo es, saltarla
             if solo_publicas and not es_publica:

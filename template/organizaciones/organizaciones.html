@@ -613,6 +613,7 @@
           const doc = parser.parseFromString(data, 'text/html');
           const headerContent = doc.querySelector('header');
           const styles = doc.querySelector('style');
+          const scripts = doc.querySelectorAll('script');
           
           if (styles) {
             const styleElement = document.createElement('style');
@@ -627,26 +628,62 @@
             document.getElementById('header-container').innerHTML = bodyContent;
           }
 
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+              newScript.src = oldScript.src;
+            } else {
+              newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+          });
+
           // Configurar enlaces del header
           setTimeout(() => {
+            if (typeof window.initHeaderAuth === 'function') {
+              window.initHeaderAuth();
+            }
+
             const logo = document.getElementById('logo-link');
             if (logo) logo.href = '../index.html';
             
             const noticias = document.getElementById('news-link');
             if (noticias) {
               noticias.href = '../index.html#news';
-              // Asegurar que use la función goToNoticias del header
               noticias.onclick = function(e) {
                 if (window.goToNoticias) {
                   window.goToNoticias(e);
                 } else {
                   e.preventDefault();
-                  e.stopPropagation();
-                  if (typeof window.redirectTo === 'function') {
-                    window.redirectTo('../index.html#news');
-                  } else {
-                    window.location.href = '../index.html#news';
-                  }
+                  window.location.href = '../index.html#news';
+                }
+                return false;
+              };
+            }
+
+            const academiaNav = document.getElementById('academia-link');
+            if (academiaNav) {
+              academiaNav.href = '../index.html#academia-voluntariado';
+              academiaNav.onclick = function(e) {
+                if (window.goToAcademia) {
+                  window.goToAcademia(e);
+                } else {
+                  e.preventDefault();
+                  window.location.href = '../index.html#academia-voluntariado';
+                }
+                return false;
+              };
+            }
+
+            const bibliotecaNav = document.getElementById('biblioteca-link');
+            if (bibliotecaNav) {
+              bibliotecaNav.href = '../index.html#biblioteca-estudios';
+              bibliotecaNav.onclick = function(e) {
+                if (window.goToBiblioteca) {
+                  window.goToBiblioteca(e);
+                } else {
+                  e.preventDefault();
+                  window.location.href = '../index.html#biblioteca-estudios';
                 }
                 return false;
               };
@@ -654,6 +691,49 @@
             
             const login = document.getElementById('login-link');
             if (login) login.href = '../inicio de sesion/login.html';
+
+            const menuToggle = document.getElementById('menuToggle');
+            const mainNav = document.querySelector('.main-nav');
+            if (menuToggle && mainNav) {
+              menuToggle.addEventListener('click', () => {
+                menuToggle.classList.toggle('active');
+                mainNav.classList.toggle('active');
+                menuToggle.setAttribute('aria-expanded', menuToggle.classList.contains('active'));
+              });
+              const navLinks = mainNav.querySelectorAll('.nav-link');
+              navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                  if (window.innerWidth <= 1024) {
+                    menuToggle.classList.remove('active');
+                    mainNav.classList.remove('active');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                  }
+                });
+              });
+            }
+
+            const dropdownItems = document.querySelectorAll('.nav-item.dropdown');
+            dropdownItems.forEach(item => {
+              if (item.querySelector('.volunteer-filter')) return;
+              const link = item.querySelector('.nav-link');
+              if (link && window.innerWidth <= 1024) {
+                link.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  item.classList.toggle('open');
+                });
+              }
+            });
+
+            const header = document.getElementById('header');
+            if (header) {
+              window.addEventListener('scroll', () => {
+                if (window.scrollY > 20) {
+                  header.classList.add('scrolled');
+                } else {
+                  header.classList.remove('scrolled');
+                }
+              });
+            }
           }, 100);
         })
         .catch(error => console.error('Error:', error));
@@ -715,7 +795,7 @@
               <div class="footer-section footer-col2">
                   <h4>Secciones</h4>
                   <ul>
-                      <li><a href="../noticias/index.html">Noticias</a></li>
+                      <li><a href="../noticias/noticias.html">Noticias</a></li>
                       <li><a href="../inicio de sesion/login.html">Postular</a></li>
                       <li><a href="../index.html#organizaciones">Instituciones públicas</a></li>
                       <li><a href="#">Términos y condiciones</a></li>

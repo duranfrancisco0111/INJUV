@@ -272,7 +272,7 @@
                 </div>
             </div>
             <div class="section-footer">
-                <a class="btn-outline" href="visualizacion-vd/index.html">Ver todas las oportunidades</a>
+                <a class="btn-outline" href="visualizacion-vd/index.html" onclick="goToAllOpportunities(event); return false;">Ver todas las oportunidades</a>
             </div>
         </div>
     </section>
@@ -513,21 +513,24 @@
                         };
                     }
                     
-                    // Noticias - usar función del header
+                    // Noticias — scroll a la sección del mismo index
                     const noticias = document.getElementById('news-link');
                     if (noticias) {
                         noticias.href = '#news';
-                        noticias.onclick = function(e) {
-                            if (window.goToNoticias) {
-                                window.goToNoticias(e);
-                            } else {
-                                e.preventDefault();
-                                const section = document.getElementById('news');
-                                if (section) {
-                                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                }
-                            }
-                            return false;
+                        noticias.onclick = (e) => {
+                            e.preventDefault();
+                            const section = document.getElementById('news');
+                            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        };
+                    }
+
+                    const bibliotecaNav = document.getElementById('biblioteca-link');
+                    if (bibliotecaNav) {
+                        bibliotecaNav.href = '#biblioteca-estudios';
+                        bibliotecaNav.onclick = (e) => {
+                            e.preventDefault();
+                            const section = document.getElementById('biblioteca-estudios');
+                            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         };
                     }
                     
@@ -561,6 +564,7 @@
                     // Dropdowns móviles
                     const dropdownItems = document.querySelectorAll('.nav-item.dropdown');
                     dropdownItems.forEach(item => {
+                        if (item.querySelector('.volunteer-filter')) return;
                         const link = item.querySelector('.nav-link');
                         if (link && window.innerWidth <= 1024) {
                             link.addEventListener('click', (e) => {
@@ -598,6 +602,32 @@
     <!-- Script para cargar oportunidades destacadas -->
     <script>
         const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        let postulacionesUsuarioHome = [];
+
+        async function cargarPostulacionesUsuarioHome() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            if (!userId) {
+                postulacionesUsuarioHome = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/postulaciones`);
+                const data = await response.json();
+                if (data.success && Array.isArray(data.postulaciones)) {
+                    postulacionesUsuarioHome = data.postulaciones.map(post => post.oportunidad_id);
+                } else {
+                    postulacionesUsuarioHome = [];
+                }
+            } catch (error) {
+                console.error('Error al cargar postulaciones del usuario (home):', error);
+                postulacionesUsuarioHome = [];
+            }
+        }
+
+        function yaPostuloEnHome(oportunidadId) {
+            return postulacionesUsuarioHome.includes(oportunidadId);
+        }
         
         // Cargar reseñas públicas desde el backend
         async function cargarReseñasPublicas() {
@@ -690,7 +720,10 @@
                 
                 if (data.success && data.oportunidades) {
                     // Filtrar oportunidades cerradas
-                    const oportunidadesActivas = data.oportunidades.filter(op => op.estado !== 'cerrada');
+                    const oportunidadesActivas = data.oportunidades.filter(op => {
+                        const e = (op.estado || '').toString().toLowerCase();
+                        return e !== 'cerrada' && e !== 'cerrado';
+                    });
                     // Tomar las primeras 3 oportunidades como destacadas
                     const destacadas = oportunidadesActivas.slice(0, 3);
                     mostrarOportunidadesDestacadas(destacadas);
@@ -777,7 +810,10 @@
                         </div>
                     </div>
                     <div class="card-buttons">
-                        <button class="btn-postular" onclick="postularDesdeDestacadas(${op.id})">Postular</button>
+                        ${yaPostuloEnHome(op.id)
+                            ? `<button class="btn-postular" disabled style="background:#9ca3af; cursor:not-allowed; opacity:.85;">✓ Ya postulaste</button>`
+                            : `<button class="btn-postular" onclick="postularDesdeDestacadas(${op.id})">Postular</button>`
+                        }
                         <button class="btn-detalles" onclick="verDetallesDesdeDestacadas(${op.id})">Ver detalles</button>
                     </div>
                 </div>
@@ -810,7 +846,7 @@
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">No hay oportunidades destacadas disponibles en este momento.</p>
-                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;">
+                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;" onclick="goToAllOpportunities(event); return false;">
                             Ver todas las oportunidades
                         </a>
                     </div>
@@ -824,7 +860,7 @@
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
                         <p style="font-size: 1.1rem; margin-bottom: 1rem;">Error al cargar las oportunidades. Por favor, intenta más tarde.</p>
-                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;">
+                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;" onclick="goToAllOpportunities(event); return false;">
                             Ver todas las oportunidades
                         </a>
                     </div>
@@ -844,23 +880,19 @@
                 }
                 return;
             }
-            // Redirigir a la página de visualización con el ID
-            const redirectPath = `visualizacion-vd/index.html?postular=${oportunidadId}`;
-            if (typeof window.redirectTo === 'function') {
-                window.redirectTo(redirectPath);
-            } else {
-                window.location.href = redirectPath;
+            if (yaPostuloEnHome(oportunidadId)) {
+                alert('Ya has postulado a esta oportunidad');
+                return;
             }
+            // Redirigir con URL robusta para evitar rutas mal construidas
+            const redirectUrl = new URL(`visualizacion-vd/index.html?postular=${oportunidadId}`, window.location.href).href;
+            window.location.href = redirectUrl;
         };
         
         window.verDetallesDesdeDestacadas = function(oportunidadId) {
-            // Redirigir a la página de visualización
-            const redirectPath = `visualizacion-vd/index.html?ver=${oportunidadId}`;
-            if (typeof window.redirectTo === 'function') {
-                window.redirectTo(redirectPath);
-            } else {
-                window.location.href = redirectPath;
-            }
+            // Redirigir con URL robusta para evitar rutas mal construidas
+            const redirectUrl = new URL(`visualizacion-vd/index.html?ver=${oportunidadId}`, window.location.href).href;
+            window.location.href = redirectUrl;
         };
         
         // Cargar estadísticas del hero
@@ -886,14 +918,16 @@
         }
         
         function animarNumero(elemento, valorFinal) {
+            // Normalizar por si el backend/envía texto tipo "7+".
+            const valorNumerico = Number(String(valorFinal).replace(/[^\d.-]/g, '')) || 0;
             const duracion = 2000; // 2 segundos
-            const incremento = valorFinal / (duracion / 16); // 60 FPS
+            const incremento = valorNumerico / (duracion / 16); // 60 FPS
             let valorActual = 0;
             
             const animacion = setInterval(() => {
                 valorActual += incremento;
-                if (valorActual >= valorFinal) {
-                    elemento.textContent = valorFinal.toLocaleString('es-CL');
+                if (valorActual >= valorNumerico) {
+                    elemento.textContent = valorNumerico.toLocaleString('es-CL');
                     clearInterval(animacion);
                 } else {
                     elemento.textContent = Math.floor(valorActual).toLocaleString('es-CL');

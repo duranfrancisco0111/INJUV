@@ -533,6 +533,7 @@
           const doc = parser.parseFromString(data, 'text/html');
           const headerContent = doc.querySelector('header');
           const styles = doc.querySelector('style');
+          const scripts = doc.querySelectorAll('script');
           if (styles) {
             const styleElement = document.createElement('style');
             styleElement.textContent = styles.textContent;
@@ -541,14 +542,47 @@
           const hc = document.getElementById('header-container');
           if (hc) hc.innerHTML = headerContent ? headerContent.outerHTML : doc.body.innerHTML;
           setTimeout(() => {
+            if (typeof window.initHeaderAuth === 'function') {
+              window.initHeaderAuth();
+            }
             const logo = document.getElementById('logo-link');
             if (logo) logo.href = '../index.html';
             const noticias = document.getElementById('news-link');
             if (noticias) {
               noticias.href = '../index.html#news';
               noticias.onclick = function(e) {
-                e.preventDefault();
-                (window.redirectTo || (u => { window.location.href = u; }))('../index.html#news');
+                if (window.goToNoticias) {
+                  window.goToNoticias(e);
+                } else {
+                  e.preventDefault();
+                  window.location.href = '../index.html#news';
+                }
+                return false;
+              };
+            }
+            const academiaNav = document.getElementById('academia-link');
+            if (academiaNav) {
+              academiaNav.href = '../index.html#academia-voluntariado';
+              academiaNav.onclick = function(e) {
+                if (window.goToAcademia) {
+                  window.goToAcademia(e);
+                } else {
+                  e.preventDefault();
+                  window.location.href = '../index.html#academia-voluntariado';
+                }
+                return false;
+              };
+            }
+            const bibliotecaNav = document.getElementById('biblioteca-link');
+            if (bibliotecaNav) {
+              bibliotecaNav.href = '../index.html#biblioteca-estudios';
+              bibliotecaNav.onclick = function(e) {
+                if (window.goToBiblioteca) {
+                  window.goToBiblioteca(e);
+                } else {
+                  e.preventDefault();
+                  window.location.href = '../index.html#biblioteca-estudios';
+                }
                 return false;
               };
             }

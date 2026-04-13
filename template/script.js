@@ -373,10 +373,10 @@ function animateCounter(element, target, duration = 2000) {
     const timer = setInterval(() => {
         start += increment;
         if (start >= target) {
-            element.textContent = target + '+';
+            element.textContent = String(target);
             clearInterval(timer);
         } else {
-            element.textContent = Math.floor(start) + '+';
+            element.textContent = String(Math.floor(start));
         }
     }, 16);
 }
