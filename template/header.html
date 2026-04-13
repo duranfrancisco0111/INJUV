@@ -20,17 +20,51 @@
     }
     .header.scrolled{box-shadow:0 4px 12px rgba(0,0,0,.08)}
 
-    .header-content{
-      display:flex;align-items:center;justify-content:space-between;
-      max-width:1400px;margin:0 auto;padding:.85rem 2rem;gap:2rem;
+    /* #header sube la especificidad por encima de template/styles.css */
+    /* Tres franjas: espacio + banda central 1400px (como el header antes) + espacio; logo alineado al inicio de esa banda, perfil al borde derecho del viewport */
+    #header .header-content{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1400px) minmax(0,1fr);
+      align-items:center;
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:.35rem max(1rem, env(safe-area-inset-right, 0px)) .35rem max(1rem, env(safe-area-inset-left, 0px));
+      column-gap:0;
+      row-gap:0.5rem;
       min-height:72px;
+      box-sizing:border-box;
     }
 
-    .logo{flex-shrink:0}
-    .logo img{height:52px;width:auto;border-radius:6px;object-fit:contain;transition:.3s;cursor:pointer}
-    .logo a:hover img{transform:scale(1.03);opacity:.92}
+    /* Banda central: logo + menú como en el header max-width 1400px centrado */
+    #header .header-center-band{
+      grid-column:2;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      min-width:0;
+      padding:0 2rem;
+      box-sizing:border-box;
+    }
+    #header .header-center-band .logo{
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      flex-shrink:0;
+    }
+    #header .logo img{height:68px;width:auto;max-height:68px;border-radius:6px;object-fit:contain;transition:.3s;cursor:pointer}
+    #header .logo a:hover img{transform:scale(1.03);opacity:.92}
 
-    .main-nav{flex:1;white-space:nowrap;display:flex;justify-content:center;min-width:0;margin-right:1rem}
+    #header .header-center-band .main-nav{
+      flex:1 1 auto;
+      align-self:center;
+      white-space:nowrap;
+      display:flex;
+      justify-content:center;
+      min-width:0;
+      max-width:100%;
+      margin:0;
+    }
     .nav-menu{display:flex;list-style:none;gap:.25rem;flex-wrap:nowrap;justify-content:center;align-items:center;margin:0;padding:0}
     .nav-item{position:relative;white-space:nowrap;flex-shrink:0}
     .nav-link{display:flex;align-items:center;gap:.4rem;padding:.5rem .85rem;color:#374151;text-decoration:none;font-weight:600;font-size:.875rem;transition:.2s;border-radius:8px;white-space:nowrap;letter-spacing:.01em}
@@ -55,7 +89,20 @@
     .view-all-link a{color:#0066CC;font-weight:500;text-decoration:none;font-size:.9rem;transition:color .2s}
     .view-all-link a:hover{color:#0052CC;text-decoration:underline}
 
-    .header-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;justify-content:flex-end;position:relative;z-index:1001;margin-left:1rem}
+    #header .header-actions{
+      grid-column:3;
+      justify-self:end;
+      align-self:center;
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      flex-shrink:0;
+      justify-content:flex-end;
+      position:relative;
+      z-index:1001;
+      margin:0;
+      padding-left:1rem;
+    }
     .btn-login{display:inline-flex;justify-content:center;align-items:center;min-width:120px;padding:.6rem 1.2rem;border-radius:8px;font-weight:600;font-size:.875rem;text-decoration:none;transition:.2s;white-space:nowrap;cursor:pointer;position:relative;z-index:1002;pointer-events:auto;background:linear-gradient(135deg,#0052CC,#0066CC);color:#fff;border:none;box-shadow:0 2px 8px rgba(0,102,204,.25)}
     .btn-login:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,102,204,.35)}
     
@@ -76,7 +123,7 @@
     .profile-dropdown-item.logout:hover{background:#fee2e2;color:#b91c1c}
     .profile-dropdown-item i{margin-right:.75rem;width:18px;text-align:center}
 
-    .menu-toggle{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.5rem;margin-left:auto}
+    #header .menu-toggle{grid-column:2;justify-self:end;display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:.5rem}
     .menu-toggle span{width:26px;height:2px;background:#1f2937;border-radius:2px;transition:transform .3s ease,opacity .3s ease}
     .menu-toggle.active span:nth-child(1){transform:translateY(7px) rotate(45deg)}
     .menu-toggle.active span:nth-child(2){opacity:0}
@@ -90,46 +137,43 @@
 
     .nav-item.dropdown:last-child .dropdown-menu{right:0;left:auto}
     @media (max-width:1200px){
-      .header-content{padding:.75rem 1.25rem}
+      #header .header-content{padding-block:.35rem;padding-inline:max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px))}
     }
 
     @media (max-width:1024px){
-      .header-content{flex-wrap:wrap;gap:1rem}
-      .menu-toggle{display:flex}
-      .main-nav{order:3;width:100%;display:none;justify-content:flex-start;flex-direction:column;gap:.75rem;background:#fff;border-radius:12px;box-shadow:0 20px 40px rgba(15,23,42,.12);padding:1rem 1.25rem;max-height:calc(100vh - 120px);overflow-y:auto}
-      .main-nav.active{display:flex}
-      .nav-menu{flex-direction:column;align-items:stretch;gap:.5rem}
-      .nav-item{width:100%}
-      .nav-link{width:100%;justify-content:space-between}
-      .header-actions{order:2;width:100%;justify-content:flex-start;margin-left:0;gap:.75rem}
-      .dropdown-menu{position:static;transform:none;box-shadow:none;padding:.5rem 0;display:none;opacity:1;visibility:visible;border-radius:0;border-top:1px solid #e5e7eb;margin-top:.5rem}
-      .nav-item.open>.dropdown-menu{display:block}
-      .nav-item.dropdown i{transition:transform .3s ease}
-      .nav-item.open>.nav-link i{transform:rotate(180deg)}
+      #header .header-content{display:flex;flex-wrap:wrap;gap:1rem;width:100%;max-width:none}
+      #header .header-center-band{display:contents}
+      #header .logo{grid-column:auto;justify-self:auto}
+      #header .menu-toggle{display:flex;margin-left:auto;grid-column:auto;justify-self:auto}
+      #header .main-nav{grid-column:auto;justify-self:auto;order:3;width:100%;display:none;justify-content:flex-start;flex-direction:column;gap:.75rem;background:#fff;border-radius:12px;box-shadow:0 20px 40px rgba(15,23,42,.12);padding:1rem 1.25rem;max-height:calc(100vh - 120px);overflow-y:auto}
+      #header .main-nav.active{display:flex}
+      #header .nav-menu{flex-direction:column;align-items:stretch;gap:.5rem}
+      #header .nav-item{width:100%}
+      #header .nav-link{width:100%;justify-content:space-between}
+      #header .header-actions{grid-column:auto;justify-self:auto;order:2;width:auto;margin-left:auto;justify-content:flex-end;gap:.75rem}
+      #header .dropdown-menu{position:static;transform:none;box-shadow:none;padding:.5rem 0;display:none;opacity:1;visibility:visible;border-radius:0;border-top:1px solid #e5e7eb;margin-top:.5rem}
+      #header .nav-item.open>.dropdown-menu{display:block}
+      #header .nav-item.dropdown i{transition:transform .3s ease}
+      #header .nav-item.open>.nav-link i{transform:rotate(180deg)}
     }
 
     @media (max-width:640px){
-      .header-actions{flex-direction:column;align-items:stretch}
-      .btn-login{width:100%}
+      #header .header-actions{flex-direction:column;align-items:stretch}
+      #header .btn-login{width:100%}
     }
   </style>
 </head>
 <body>
   <header class="header" id="header">
     <div class="header-content">
-      <div class="logo">
-        <a href="#" id="logo-link" onclick="goToHome(event); return false;" style="display:block;text-decoration:none">
-          <img src="https://www.injuv.gob.cl/sites/default/files/logo_injuv_2021_portal.png?v=3" alt="INJUV Logo" />
-        </a>
-      </div>
+      <div class="header-center-band">
+        <div class="logo">
+          <a href="#" id="logo-link" onclick="goToHome(event); return false;" style="display:block;text-decoration:none">
+            <img src="https://www.injuv.gob.cl/sites/default/files/logo_injuv_2021_portal.png?v=3" alt="INJUV Logo" />
+          </a>
+        </div>
 
-      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-
-      <nav class="main-nav" aria-label="Navegación principal">
+        <nav class="main-nav" aria-label="Navegación principal">
         <ul class="nav-menu">
           <li class="nav-item">
             <a href="#" id="how-it-works-link" class="nav-link" onclick="goToHowItWorks(event); return false;">¿Cómo funciona?</a>
@@ -189,17 +233,16 @@
           <li class="nav-item">
             <a href="#" id="biblioteca-link" class="nav-link" onclick="goToBiblioteca(event); return false;">Biblioteca</a>
           </li>
-
-          <li class="nav-item dropdown">
-            <a href="#" class="nav-link">Atención Ciudadana <i class="fas fa-chevron-down" aria-hidden="true"></i></a>
-            <ul class="dropdown-menu">
-              <li><a href="#">Trámites INJUV</a></li>
-              <li><a href="#">Gobierno Transparente</a></li>
-              <li><a href="#">OIRS</a></li>
-            </ul>
-          </li>
         </ul>
-      </nav>
+        </nav>
+      </div>
+
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
       <div class="header-actions">
         <a href="inicio de sesion/login.html" id="login-link" class="btn-login">Iniciar Sesión</a>
         <div class="user-profile-menu" id="userProfileMenu">

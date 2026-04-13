@@ -348,7 +348,7 @@ const ubicacionesChile = {
     }
   });
 
-  // Guardar recorte
+  // Guardar recorte (sube al servidor para que persista tras cerrar sesión)
   cropSave?.addEventListener('click', () => {
     const size = 256;
     const canvas = document.createElement('canvas');
@@ -376,19 +376,46 @@ const ubicacionesChile = {
     );
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    const b64 = canvas.toDataURL('image/png');
-    if (avatarCard) avatarCard.src = b64;
-    if (avatarContainer) avatarContainer.classList.remove('avatar-default');
-    try { localStorage.setItem('org_avatar_b64', b64); } catch {}
-    hide(cropper);
-    avatarInput.value = '';
-    
-    // Reabrir el modal de editar perfil si estaba abierto
-    const editProfileModal = $('#editProfileModal');
-    if (cropper.dataset.wasEditModalOpen === 'true' && editProfileModal) {
-      editProfileModal.classList.remove('hidden');
-      cropper.dataset.wasEditModalOpen = 'false';
-    }
+    const oid = typeof organizacionId !== 'undefined' && organizacionId ? organizacionId : null;
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        alert('No se pudo generar la imagen.');
+        return;
+      }
+      if (!oid) {
+        alert('No se pudo identificar la organización. Recarga la página e intenta de nuevo.');
+        hide(cropper);
+        avatarInput.value = '';
+        return;
+      }
+      const fd = new FormData();
+      fd.append('imagen', blob, 'logo.png');
+      try {
+        const res = await fetch(`${API_BASE_URL}/organizaciones/${oid}/logo`, { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          alert(data.error || 'No se pudo guardar el logo en el servidor.');
+          return;
+        }
+        try { localStorage.removeItem('org_avatar_b64'); } catch (_) {}
+        if (organizacionData) organizacionData.logo_filename = data.filename || true;
+        if (avatarCard) {
+          avatarCard.src = `${API_BASE_URL}/organizaciones/${oid}/logo?v=${Date.now()}`;
+        }
+        if (avatarContainer) avatarContainer.classList.remove('avatar-default');
+      } catch (e) {
+        console.error(e);
+        alert('Error de conexión al guardar el logo.');
+      } finally {
+        hide(cropper);
+        avatarInput.value = '';
+        const editProfileModal = $('#editProfileModal');
+        if (cropper.dataset.wasEditModalOpen === 'true' && editProfileModal) {
+          editProfileModal.classList.remove('hidden');
+          cropper.dataset.wasEditModalOpen = 'false';
+        }
+      }
+    }, 'image/png', 0.92);
   });
 
   // Funcionalidad de arrastrar y soltar para el logo
@@ -742,6 +769,24 @@ function actualizarUIOrganizacion(org) {
   localStorage.setItem('org_contact_phone', sanitizePhone(org.telefono_contacto || ''));
   localStorage.setItem('org_contact_location', [org.comuna, org.region].filter(Boolean).join(', '));
   localStorage.setItem('org_about', org.descripcion || '');
+
+  // Logo desde servidor (persiste tras cerrar sesión)
+  const avatarCardEl = $('#avatarCard');
+  const avatarContEl = $('#avatarContainer');
+  const orgIdForLogo = org.id || organizacionId;
+  if (avatarCardEl && org.logo_filename && orgIdForLogo) {
+    avatarCardEl.src = `${API_BASE_URL}/organizaciones/${orgIdForLogo}/logo?v=${Date.now()}`;
+    if (avatarContEl) avatarContEl.classList.remove('avatar-default');
+  } else if (avatarCardEl) {
+    const b64 = localStorage.getItem('org_avatar_b64');
+    if (b64) {
+      avatarCardEl.src = b64;
+      if (avatarContEl) avatarContEl.classList.remove('avatar-default');
+    } else {
+      avatarCardEl.src = 'avatar-default-org.png';
+      if (avatarContEl) avatarContEl.classList.add('avatar-default');
+    }
+  }
   
   // Renderizar certificaciones (asegurar que se muestren los nombres)
   const certificaciones = org.certificacion || [];

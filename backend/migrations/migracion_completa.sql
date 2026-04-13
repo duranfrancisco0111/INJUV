@@ -365,6 +365,25 @@ BEGIN
     END IF;
 END $$;
 
+-- Foto de perfil (usuario) y logo (organización): archivos en disco, nombre guardado en BD
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'usuarios' AND column_name = 'foto_perfil'
+    ) THEN
+        ALTER TABLE usuarios ADD COLUMN foto_perfil VARCHAR(255);
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'organizaciones' AND column_name = 'logo_filename'
+    ) THEN
+        ALTER TABLE organizaciones ADD COLUMN logo_filename VARCHAR(255);
+    END IF;
+END $$;
+
 COMMIT;
 
 CREATE TABLE IF NOT EXISTS solicitudes_organizacion (
