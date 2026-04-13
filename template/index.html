@@ -945,28 +945,12 @@
                 card.addEventListener('click', function() {
                     const orgId = this.getAttribute('data-org-id');
                     if (orgId) {
-                        // Determinar la ruta según la ubicación actual
-                        const currentPath = window.location.pathname;
-                        let profileUrl = '';
-                        
-                        if (currentPath.includes('template/index.html') || 
-                            currentPath.endsWith('template/') || 
-                            currentPath.endsWith('template')) {
-                            // Estamos en template/index.html
-                            profileUrl = `Roles/Perfil_organizacion/index.html?organizacion_id=${orgId}`;
-                        } else if (currentPath.includes('/template/')) {
-                            // Estamos en alguna página dentro de template
-                            profileUrl = `Roles/Perfil_organizacion/index.html?organizacion_id=${orgId}`;
-                        } else {
-                            // Estamos en la raíz
-                            profileUrl = `template/Roles/Perfil_organizacion/index.html?organizacion_id=${orgId}`;
-                        }
-                        
-                        if (typeof window.redirectTo === 'function') {
-                            window.redirectTo(profileUrl);
-                        } else {
-                            window.location.href = profileUrl;
-                        }
+                        // Construir URL relativa de forma robusta para evitar errores de ruta
+                        const profileUrl = new URL(
+                            `Roles/Perfil_organizacion/index.html?organizacion_id=${orgId}`,
+                            window.location.href
+                        ).href;
+                        window.location.href = profileUrl;
                     }
                 });
                 

@@ -299,15 +299,16 @@ async function enviarFormulario() {
         if (response.ok && resultado.success) {
             mostrarMensaje('✅ ' + resultado.message, 'success');
             
-            // Mostrar información de la organización creada
+            // Mostrar resumen de la solicitud enviada
             setTimeout(() => {
-                alert(`¡Organización registrada exitosamente!\n\nNombre: ${resultado.organizacion.nombre}\nEmail: ${resultado.organizacion.email_contacto}\nRegión: ${resultado.organizacion.region}\nCiudad: ${resultado.organizacion.ciudad || 'N/A'}\nComuna: ${resultado.organizacion.comuna}\n\nSerás redirigido a tu perfil de organización.`);
+                const solicitud = resultado.solicitud || {};
+                alert(`Formulario enviado exitosamente.\n\nID Solicitud: ${solicitud.id || 'N/A'}\nOrganización: ${solicitud.nombre || 'N/A'}\nEstado: ${solicitud.estado || 'pendiente'}\n\nUn administrador revisará tu solicitud antes de activar el perfil de organización.`);
                 
-                // Redirigir al perfil de organización o página principal
+                // Redirigir al inicio
                 if (typeof window.redirectTo === 'function') {
-                    window.redirectTo('../Perfil_organizacion/index.html');
+                    window.redirectTo('../../index.html');
                 } else {
-                    window.location.href = '../Perfil_organizacion/index.html';
+                    window.location.href = '../../index.html';
                 }
             }, 1000);
         } else {

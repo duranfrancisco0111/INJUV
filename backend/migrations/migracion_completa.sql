@@ -1,4 +1,4 @@
--- INJUV - Migración completa (un solo archivo)
+g-- INJUV - Migración completa (un solo archivo)
 --
 -- IMPORTANTE (para que funcione desde 0):
 -- 1) Crea la BD "INJUV" (UTF8).
@@ -11,6 +11,33 @@
 -- Este archivo consolida el contenido de los antiguos scripts en backend/migrations/.
 
 BEGIN;
+
+-- ============================================================
+-- -1) Tabla de solicitudes de creación de organización
+-- ============================================================
+CREATE TABLE IF NOT EXISTS solicitudes_organizacion (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    rut VARCHAR(20),
+    email_contacto VARCHAR(150),
+    fecha_creacion DATE,
+    region VARCHAR(100) NOT NULL,
+    ciudad VARCHAR(100) NOT NULL,
+    comuna VARCHAR(100) NOT NULL,
+    descripcion TEXT NOT NULL,
+    sitio_web TEXT,
+    redes_sociales JSONB DEFAULT '[]'::jsonb,
+    id_usuario_org INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+    comentario_revision TEXT,
+    revisado_por_admin_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_solicitudes_organizacion_estado ON solicitudes_organizacion(estado);
+CREATE INDEX IF NOT EXISTS idx_solicitudes_organizacion_usuario ON solicitudes_organizacion(id_usuario_org);
 
 -- ============================================================
 -- 0) Fix: largo de password_hash (Werkzeug suele ser > 100)
@@ -340,3 +367,26 @@ END $$;
 
 COMMIT;
 
+CREATE TABLE IF NOT EXISTS solicitudes_organizacion (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    rut VARCHAR(20),
+    email_contacto VARCHAR(150),
+    fecha_creacion DATE,
+    region VARCHAR(100) NOT NULL,
+    ciudad VARCHAR(100) NOT NULL,
+    comuna VARCHAR(100) NOT NULL,
+    descripcion TEXT NOT NULL,
+    sitio_web TEXT,
+    redes_sociales JSONB DEFAULT '[]'::jsonb,
+    id_usuario_org INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+    comentario_revision TEXT,
+    revisado_por_admin_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    reviewed_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_solicitudes_organizacion_estado ON solicitudes_organizacion(estado);
+CREATE INDEX IF NOT EXISTS idx_solicitudes_organizacion_usuario ON solicitudes_organizacion(id_usuario_org);
