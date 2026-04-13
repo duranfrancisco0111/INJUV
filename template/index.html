@@ -602,6 +602,32 @@
     <!-- Script para cargar oportunidades destacadas -->
     <script>
         const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        let postulacionesUsuarioHome = [];
+
+        async function cargarPostulacionesUsuarioHome() {
+            const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+            if (!userId) {
+                postulacionesUsuarioHome = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios/${userId}/postulaciones`);
+                const data = await response.json();
+                if (data.success && Array.isArray(data.postulaciones)) {
+                    postulacionesUsuarioHome = data.postulaciones.map(post => post.oportunidad_id);
+                } else {
+                    postulacionesUsuarioHome = [];
+                }
+            } catch (error) {
+                console.error('Error al cargar postulaciones del usuario (home):', error);
+                postulacionesUsuarioHome = [];
+            }
+        }
+
+        function yaPostuloEnHome(oportunidadId) {
+            return postulacionesUsuarioHome.includes(oportunidadId);
+        }
         
         // Cargar reseñas públicas desde el backend
         async function cargarReseñasPublicas() {
@@ -689,8 +715,7 @@
         // Cargar oportunidades destacadas desde el backend
         async function cargarOportunidadesDestacadas() {
             try {
-                // Sin ?estado=activa: el backend devuelve activas y abiertas por defecto
-                const response = await fetch(`${API_BASE_URL}/oportunidades`);
+                const response = await fetch(`${API_BASE_URL}/oportunidades?estado=activa`);
                 const data = await response.json();
                 
                 if (data.success && data.oportunidades) {
@@ -785,7 +810,10 @@
                         </div>
                     </div>
                     <div class="card-buttons">
-                        <button class="btn-postular" onclick="postularDesdeDestacadas(${op.id})">Postular</button>
+                        ${yaPostuloEnHome(op.id)
+                            ? `<button class="btn-postular" disabled style="background:#9ca3af; cursor:not-allowed; opacity:.85;">✓ Ya postulaste</button>`
+                            : `<button class="btn-postular" onclick="postularDesdeDestacadas(${op.id})">Postular</button>`
+                        }
                         <button class="btn-detalles" onclick="verDetallesDesdeDestacadas(${op.id})">Ver detalles</button>
                     </div>
                 </div>
@@ -852,23 +880,19 @@
                 }
                 return;
             }
-            // Redirigir a la página de visualización con el ID
-            const redirectPath = `visualizacion-vd/index.html?postular=${oportunidadId}`;
-            if (typeof window.redirectTo === 'function') {
-                window.redirectTo(redirectPath);
-            } else {
-                window.location.href = redirectPath;
+            if (yaPostuloEnHome(oportunidadId)) {
+                alert('Ya has postulado a esta oportunidad');
+                return;
             }
+            // Redirigir con URL robusta para evitar rutas mal construidas
+            const redirectUrl = new URL(`visualizacion-vd/index.html?postular=${oportunidadId}`, window.location.href).href;
+            window.location.href = redirectUrl;
         };
         
         window.verDetallesDesdeDestacadas = function(oportunidadId) {
-            // Redirigir a la página de visualización
-            const redirectPath = `visualizacion-vd/index.html?ver=${oportunidadId}`;
-            if (typeof window.redirectTo === 'function') {
-                window.redirectTo(redirectPath);
-            } else {
-                window.location.href = redirectPath;
-            }
+            // Redirigir con URL robusta para evitar rutas mal construidas
+            const redirectUrl = new URL(`visualizacion-vd/index.html?ver=${oportunidadId}`, window.location.href).href;
+            window.location.href = redirectUrl;
         };
         
         // Cargar estadísticas del hero

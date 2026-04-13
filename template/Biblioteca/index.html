@@ -541,15 +541,6 @@
           }
           const hc = document.getElementById('header-container');
           if (hc) hc.innerHTML = headerContent ? headerContent.outerHTML : doc.body.innerHTML;
-          scripts.forEach(oldScript => {
-            const newScript = document.createElement('script');
-            if (oldScript.src) {
-              newScript.src = oldScript.src;
-            } else {
-              newScript.textContent = oldScript.textContent;
-            }
-            document.body.appendChild(newScript);
-          });
           setTimeout(() => {
             if (typeof window.initHeaderAuth === 'function') {
               window.initHeaderAuth();
@@ -597,44 +588,6 @@
             }
             const login = document.getElementById('login-link');
             if (login) login.href = '../inicio de sesion/login.html';
-            const menuToggle = document.getElementById('menuToggle');
-            const mainNav = document.querySelector('.main-nav');
-            if (menuToggle && mainNav) {
-              menuToggle.addEventListener('click', () => {
-                menuToggle.classList.toggle('active');
-                mainNav.classList.toggle('active');
-                menuToggle.setAttribute('aria-expanded', menuToggle.classList.contains('active'));
-              });
-              mainNav.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', () => {
-                  if (window.innerWidth <= 1024) {
-                    menuToggle.classList.remove('active');
-                    mainNav.classList.remove('active');
-                    menuToggle.setAttribute('aria-expanded', 'false');
-                  }
-                });
-              });
-            }
-            document.querySelectorAll('.nav-item.dropdown').forEach(item => {
-              if (item.querySelector('.volunteer-filter')) return;
-              const link = item.querySelector('.nav-link');
-              if (link && window.innerWidth <= 1024) {
-                link.addEventListener('click', (e) => {
-                  e.preventDefault();
-                  item.classList.toggle('open');
-                });
-              }
-            });
-            const headerEl = document.getElementById('header');
-            if (headerEl) {
-              window.addEventListener('scroll', () => {
-                if (window.scrollY > 20) {
-                  headerEl.classList.add('scrolled');
-                } else {
-                  headerEl.classList.remove('scrolled');
-                }
-              });
-            }
           }, 100);
         })
         .catch(e => console.error('Error header:', e));

@@ -708,20 +708,47 @@
     
     // Función para verificar si el usuario está logueado
     function isUserLoggedIn() {
-      return localStorage.getItem('isLoggedIn') === 'true' || 
-             sessionStorage.getItem('isLoggedIn') === 'true';
+      if (localStorage.getItem('isLoggedIn') === 'true' ||
+          sessionStorage.getItem('isLoggedIn') === 'true') {
+        return true;
+      }
+      const uid = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+      if (uid != null && String(uid).trim() !== '' && String(uid) !== '0') {
+        return true;
+      }
+      if (localStorage.getItem('loggedUser') || sessionStorage.getItem('loggedUser')) {
+        return true;
+      }
+      return false;
     }
     
     // Función para obtener información del usuario
     function getUserInfo() {
       if (!isUserLoggedIn()) return null;
       
+      let nombre = localStorage.getItem('userNombre') || '';
+      let apellido = localStorage.getItem('userApellido') || '';
+      let email = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail');
+      let rol = localStorage.getItem('userRol') || localStorage.getItem('userRole') ||
+                sessionStorage.getItem('userRol') || sessionStorage.getItem('userRole');
+      const raw = localStorage.getItem('loggedUser') || sessionStorage.getItem('loggedUser');
+      if (raw) {
+        try {
+          const u = JSON.parse(raw);
+          if (u && typeof u === 'object') {
+            if (!email && u.email) email = u.email;
+            if (!nombre && u.nombre) nombre = u.nombre;
+            if (!apellido && u.apellido) apellido = u.apellido;
+            if (!rol && u.rol) rol = u.rol;
+          }
+        } catch (e) { /* ignore */ }
+      }
       return {
         id: localStorage.getItem('userId') || sessionStorage.getItem('userId'),
-        email: localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail'),
-        nombre: localStorage.getItem('userNombre') || '',
-        apellido: localStorage.getItem('userApellido') || '',
-        rol: localStorage.getItem('userRol') || localStorage.getItem('userRole') || sessionStorage.getItem('userRol') || sessionStorage.getItem('userRole')
+        email: email || '',
+        nombre: nombre || '',
+        apellido: apellido || '',
+        rol: rol || 'user'
       };
     }
     
@@ -839,6 +866,7 @@
         }
       }
     }
+    window.updateHeaderAuth = updateHeaderAuth;
     
     // Función para cerrar sesión
     function logout() {

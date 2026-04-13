@@ -40,16 +40,6 @@
                 } else if (container) {
                     container.innerHTML = doc.body.innerHTML;
                 }
-
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    if (oldScript.src) {
-                        newScript.src = oldScript.src;
-                    } else {
-                        newScript.textContent = oldScript.textContent;
-                    }
-                    document.body.appendChild(newScript);
-                });
                 
                 // Configurar enlaces después de un breve delay
                 setTimeout(() => {
@@ -107,9 +97,6 @@
                         };
                     }
                     
-                    const login = document.getElementById('login-link');
-                    if (login) login.href = '../inicio de sesion/login.html';
-                    
                     const menuToggle = document.getElementById('menuToggle');
                     const mainNav = document.querySelector('.main-nav');
                     if (menuToggle && mainNav) {
@@ -152,6 +139,10 @@
                                 header.classList.remove('scrolled');
                             }
                         });
+                    }
+
+                    if (typeof window.initHeaderAuth === 'function') {
+                        window.initHeaderAuth();
                     }
                 }, 50);
             })

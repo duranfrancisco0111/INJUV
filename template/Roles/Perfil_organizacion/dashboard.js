@@ -2,6 +2,14 @@
 
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
+/** Coincide con backend: null/undefined = pública por defecto */
+function reseñaEsPublicaParaMostrar(val) {
+    if (val === false || val === 0 || val === '0' || val === 'false' || val === 'FALSE') return false;
+    if (val === true || val === 1 || val === '1' || val === 'true' || val === 'TRUE') return true;
+    if (val === null || val === undefined) return true;
+    return Boolean(val);
+}
+
 // Variables globales
 let organizacionId = null;
 let userId = null;
@@ -1946,7 +1954,7 @@ function mostrarReseñas(reseñasPorVoluntariado) {
                 ? generarEstrellasReseñas(reseña.calificacion) 
                 : '';
             
-            const esPublica = reseña.es_publica !== false && reseña.es_publica !== null && reseña.es_publica !== undefined;
+            const esPublica = reseñaEsPublicaParaMostrar(reseña.es_publica);
             return `
                 <div class="reseña-item" style="border-left: 3px solid #3b82f6; padding: 16px; margin-bottom: 16px; background: #f9fafb; border-radius: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">

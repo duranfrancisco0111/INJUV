@@ -7,6 +7,14 @@ const show = (el) => el?.classList.remove('hidden');
 const hide = (el) => el?.classList.add('hidden');
 const sanitizePhone = (value = '') => value.replace(/[^\d+\s()-]/g, '').trim();
 
+/** Alineado con el backend: null/undefined = pública por defecto; 0/"false" = privada */
+function reseñaEsPublicaParaMostrar(val) {
+  if (val === false || val === 0 || val === '0' || val === 'false' || val === 'FALSE') return false;
+  if (val === true || val === 1 || val === '1' || val === 'true' || val === 'TRUE') return true;
+  if (val === null || val === undefined) return true;
+  return Boolean(val);
+}
+
 // ==========================================================
 // ================== Configuración API ====================
 // ==========================================================
@@ -47,8 +55,8 @@ function hideEditButtons() {
   }
 }
 
-// Función para mostrar botones de edición
-function showEditButtons() {
+// Función para mostrar botones de edición (solo el titular puede crear voluntariados)
+function showEditButtons(showCreateVolunteer = true) {
   const editProfileBtn = $('#editProfileBtn');
   const createVolunteerBtn = $('#createVolunteerBtn');
   
@@ -56,7 +64,7 @@ function showEditButtons() {
     editProfileBtn.style.display = 'inline-flex';
   }
   if (createVolunteerBtn) {
-    createVolunteerBtn.style.display = 'inline-flex';
+    createVolunteerBtn.style.display = showCreateVolunteer ? 'inline-flex' : 'none';
   }
 }
 
@@ -473,7 +481,7 @@ async function cargarDatosOrganizacion() {
         if (!canEdit) {
           hideEditButtons();
         } else {
-          showEditButtons();
+          showEditButtons(isOwner);
         }
         
         // Asegurar que el contenido principal esté visible
@@ -482,7 +490,9 @@ async function cargarDatosOrganizacion() {
         actualizarUIOrganizacion(data.organizacion);
         cargarOportunidades();
         cargarEstadisticas();
-        cargarResenasPublicas(); // Cargar reseñas públicas
+        if (typeof window.cargarResenasPublicas === 'function') {
+          window.cargarResenasPublicas();
+        }
         return;
       } else {
         // Si hay organizacion_id en la URL pero no se encontró la organización
@@ -554,7 +564,7 @@ async function cargarDatosOrganizacion() {
           if (!canEdit) {
             hideEditButtons();
           } else {
-            showEditButtons();
+            showEditButtons(isOwner);
           }
           
           // Asegurar que el contenido principal esté visible
@@ -569,8 +579,9 @@ async function cargarDatosOrganizacion() {
           // Cargar estadísticas
           cargarEstadisticas();
           
-          // Cargar reseñas públicas
-          cargarResenasPublicas();
+          if (typeof window.cargarResenasPublicas === 'function') {
+            window.cargarResenasPublicas();
+          }
           return;
         } else {
           console.error('No se encontró organización para el usuario:', data.error || 'Error desconocido');
@@ -965,7 +976,7 @@ async function cargarOportunidades() {
             if (!canEdit) {
               hideEditButtons();
             } else {
-              showEditButtons();
+              showEditButtons(isOwner);
             }
           }
         }
@@ -2859,6 +2870,24 @@ async function cargarEstadisticas() {
     return estrellasHtml;
   }
 
+  function actualizarResumenCalificacionPerfil() {
+    const ratingElement = document.getElementById('profileRating');
+    if (!ratingElement) return;
+
+    const calificacionesValidas = allReviews
+      .map(review => Number(review.rating))
+      .filter(rating => !Number.isNaN(rating) && rating > 0);
+
+    if (calificacionesValidas.length === 0) {
+      ratingElement.textContent = '⭐ Sin calificaciones aún';
+      return;
+    }
+
+    const promedio = calificacionesValidas.reduce((acc, rating) => acc + rating, 0) / calificacionesValidas.length;
+    const textoResenas = calificacionesValidas.length === 1 ? 'reseña' : 'reseñas';
+    ratingElement.textContent = `⭐ ${promedio.toFixed(1)}/5 (${calificacionesValidas.length} ${textoResenas})`;
+  }
+
   // Cargar reseñas desde el backend
   async function cargarResenasPublicas() {
     if (!organizacionId) {
@@ -2887,8 +2916,7 @@ async function cargarEstadisticas() {
           voluntariado.reseñas.forEach(reseña => {
             // Solo incluir reseñas públicas
             // es_publica es true por defecto si no existe el campo o es null
-            const esPublica = reseña.es_publica !== false && reseña.es_publica !== null && reseña.es_publica !== undefined;
-            console.log('Reseña:', reseña.usuario_nombre, '- es_publica:', reseña.es_publica, '- esPublica calculado:', esPublica);
+                       const esPublica = reseñaEsPublicaParaMostrar(reseña.es_publica);
             if (esPublica) {
               allReviews.push({
                 userName: reseña.usuario_nombre,
@@ -2906,6 +2934,7 @@ async function cargarEstadisticas() {
         // Ordenar por fecha (más recientes primero)
         allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+        actualizarResumenCalificacionPerfil();
         currentPage = 1;
         renderReviews();
       } else {
@@ -2913,6 +2942,7 @@ async function cargarEstadisticas() {
           container.innerHTML = '<p class="text-gray-600 text-center py-4">Aún no hay reseñas públicas disponibles.</p>';
         }
         allReviews = [];
+        actualizarResumenCalificacionPerfil();
         renderReviews();
       }
     } catch (error) {
@@ -2921,6 +2951,7 @@ async function cargarEstadisticas() {
         container.innerHTML = '<p class="text-gray-600 text-center py-4">Error al cargar las reseñas.</p>';
       }
       allReviews = [];
+      actualizarResumenCalificacionPerfil();
       renderReviews();
     }
   }
