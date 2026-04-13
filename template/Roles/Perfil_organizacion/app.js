@@ -5,6 +5,7 @@ const $  = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 const show = (el) => el?.classList.remove('hidden');
 const hide = (el) => el?.classList.add('hidden');
+const sanitizePhone = (value = '') => value.replace(/[^\d+\s()-]/g, '').trim();
 
 // ==========================================================
 // ================== Configuración API ====================
@@ -15,6 +16,23 @@ const API_BASE_URL = 'http://127.0.0.1:5000/api';
 let organizacionData = null;
 let organizacionId = null;
 let userId = null;
+
+function togglePaginationByButton(nextButtonId, visible) {
+  const nextBtn = document.getElementById(nextButtonId);
+  const paginationBar = nextBtn?.parentElement;
+  if (paginationBar) {
+    paginationBar.style.display = visible ? 'flex' : 'none';
+  }
+}
+
+function actualizarVisibilidadPaginacionesVacias() {
+  // Historias no tiene render dinámico en este archivo: ocultar su paginación si no hay cards
+  const storiesContainer = document.getElementById('volunteerStoriesContainer');
+  if (storiesContainer) {
+    const hasStories = storiesContainer.querySelector('article') !== null;
+    togglePaginationByButton('nextStoriesBtn', hasStories);
+  }
+}
 
 // Función para ocultar botones de edición
 function hideEditButtons() {
@@ -704,7 +722,14 @@ function mostrarContenidoPrincipal() {
 function actualizarUIOrganizacion(org) {
   if ($('#profileName')) $('#profileName').textContent = org.nombre || 'Organización';
   if ($('#contactEmail')) $('#contactEmail').textContent = org.email_contacto || '';
-  if ($('#contactPhone')) $('#contactPhone').textContent = org.telefono_contacto || '';
+  if ($('#contactPhone')) {
+    const sanitizedPhone = sanitizePhone(org.telefono_contacto || '');
+    $('#contactPhone').textContent = sanitizedPhone;
+    const phoneP = $('#contactPhone').closest('p');
+    if (phoneP) {
+      phoneP.style.display = sanitizedPhone ? 'block' : 'none';
+    }
+  }
   if ($('#contactLocation')) {
     const location = [org.comuna, org.region].filter(Boolean).join(', ');
     $('#contactLocation').textContent = location || '';
@@ -714,7 +739,7 @@ function actualizarUIOrganizacion(org) {
   // Guardar en localStorage para el modal de edición
   localStorage.setItem('org_name', org.nombre || '');
   localStorage.setItem('org_contact_email', org.email_contacto || '');
-  localStorage.setItem('org_contact_phone', org.telefono_contacto || '');
+  localStorage.setItem('org_contact_phone', sanitizePhone(org.telefono_contacto || ''));
   localStorage.setItem('org_contact_location', [org.comuna, org.region].filter(Boolean).join(', '));
   localStorage.setItem('org_about', org.descripcion || '');
   
@@ -1009,8 +1034,10 @@ function mostrarOportunidadesActivas() {
 
   if (activas.length === 0) {
     container.innerHTML = '<p class="text-gray-500 text-center py-4">No hay voluntariados disponibles en este momento.</p>';
+    togglePaginationByButton('nextPageBtn', false);
     return;
   }
+  togglePaginationByButton('nextPageBtn', true);
 
   const itemsPerPage = 2;
   let currentPage = 1;
@@ -1114,8 +1141,10 @@ function mostrarOportunidadesCerradas() {
 
   if (cerradas.length === 0) {
     container.innerHTML = '<p class="text-gray-500 text-center py-4">No hay voluntariados cerrados.</p>';
+    togglePaginationByButton('nextClosedBtn', false);
     return;
   }
+  togglePaginationByButton('nextClosedBtn', true);
 
   const itemsPerPage = 2;
   let currentPage = 1;
@@ -2550,7 +2579,13 @@ async function cargarEstadisticas() {
     if (savedActiveSince && activeSince) activeSince.textContent = savedActiveSince;
     if (savedAbout && aboutText) aboutText.textContent = savedAbout;
     if (savedEmail && contactEmail) contactEmail.textContent = savedEmail;
-    if (savedPhone && contactPhone) contactPhone.textContent = savedPhone;
+    if (savedPhone && contactPhone) contactPhone.textContent = sanitizePhone(savedPhone);
+    if (contactPhone) {
+      const phoneP = contactPhone.closest('p');
+      if (phoneP) {
+        phoneP.style.display = sanitizePhone(savedPhone || '') ? 'block' : 'none';
+      }
+    }
     if (savedLocation && contactLocation) contactLocation.textContent = savedLocation;
     if (savedAvatar) {
       const avatarCard = $('#avatarCard');
@@ -2673,13 +2708,16 @@ async function cargarEstadisticas() {
     const orgType = organizationTypeInput?.value.trim();
     const activeSinceValue = activeSinceInput?.value.trim();
     const email = contactEmailInput?.value.trim();
-    const phone = contactPhoneInput?.value.trim();
+    const phone = sanitizePhone(contactPhoneInput?.value || '');
+    if (contactPhoneInput) {
+      contactPhoneInput.value = phone;
+    }
     const location = contactLocationInput?.value.trim();
     const about = aboutInput?.value.trim();
 
     if (orgName) updateData.nombre = orgName;
-    if (email) updateData.email_contacto = email;
-    if (phone) updateData.telefono_contacto = phone;
+    updateData.email_contacto = email || null;
+    updateData.telefono_contacto = phone || null;
     if (location) {
       const parts = location.split(',').map(s => s.trim());
       if (parts.length >= 2) {
@@ -2706,8 +2744,12 @@ async function cargarEstadisticas() {
         if (orgName && profileName) profileName.textContent = orgName;
         if (orgType && organizationType) organizationType.textContent = orgType;
         if (activeSinceValue && activeSince) activeSince.textContent = activeSinceValue;
-        if (email && contactEmail) contactEmail.textContent = email;
-        if (phone && contactPhone) contactPhone.textContent = phone;
+        if (contactEmail) contactEmail.textContent = email || '';
+        if (contactPhone) {
+          contactPhone.textContent = phone || '';
+          const phoneP = contactPhone.closest('p');
+          if (phoneP) phoneP.style.display = phone ? 'block' : 'none';
+        }
         if (location && contactLocation) contactLocation.textContent = location;
         if (about && aboutText) aboutText.textContent = about;
 
@@ -2716,7 +2758,9 @@ async function cargarEstadisticas() {
         if (orgType) localStorage.setItem('org_type', orgType);
         if (activeSinceValue) localStorage.setItem('org_active_since', activeSinceValue);
         if (email) localStorage.setItem('org_contact_email', email);
+        else localStorage.removeItem('org_contact_email');
         if (phone) localStorage.setItem('org_contact_phone', phone);
+        else localStorage.removeItem('org_contact_phone');
         if (location) localStorage.setItem('org_contact_location', location);
         if (about) localStorage.setItem('org_about', about);
 
@@ -2757,7 +2801,10 @@ async function cargarEstadisticas() {
   organizationTypeInput?.addEventListener('input', () => { unsavedChanges = true; });
   activeSinceInput?.addEventListener('input', () => { unsavedChanges = true; });
   contactEmailInput?.addEventListener('input', () => { unsavedChanges = true; });
-  contactPhoneInput?.addEventListener('input', () => { unsavedChanges = true; });
+  contactPhoneInput?.addEventListener('input', (e) => {
+    e.target.value = sanitizePhone(e.target.value);
+    unsavedChanges = true;
+  });
   contactLocationInput?.addEventListener('input', () => { unsavedChanges = true; });
   aboutInput?.addEventListener('input', () => { unsavedChanges = true; });
 
@@ -2778,6 +2825,7 @@ async function cargarEstadisticas() {
   const nextBtn = document.getElementById('nextReviewsBtn');
   const currentPageSpan = document.getElementById('currentReviewsPage');
   const totalPagesSpan = document.getElementById('totalReviewsPages');
+  const reviewsPagination = nextBtn?.parentElement;
 
   // Función para generar estrellas con medias estrellas
   function generarEstrellasReseñas(calificacion) {
@@ -2886,8 +2934,10 @@ async function cargarEstadisticas() {
       if (nextBtn) nextBtn.disabled = true;
       if (currentPageSpan) currentPageSpan.textContent = '1';
       if (totalPagesSpan) totalPagesSpan.textContent = '1';
+      if (reviewsPagination) reviewsPagination.style.display = 'none';
       return;
     }
+    if (reviewsPagination) reviewsPagination.style.display = 'flex';
 
     const totalPages = Math.ceil(allReviews.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -3168,6 +3218,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  actualizarVisibilidadPaginacionesVacias();
 });
 
 // ==========================================================
@@ -3244,6 +3296,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  actualizarVisibilidadPaginacionesVacias();
 
   // Manejar envío del formulario
   const form = $('#formAgregarCertificacion');

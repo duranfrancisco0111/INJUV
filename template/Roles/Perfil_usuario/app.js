@@ -132,6 +132,7 @@ const $  = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 const show = (el) => el?.classList.remove('hidden');
 const hide = (el) => el?.classList.add('hidden');
+const sanitizePhone = (value = '') => value.replace(/[^\d+\s()-]/g, '').trim();
 
 // Función para obtener el ID del usuario a mostrar (puede ser de la URL o del usuario logueado)
 function getUserIdToDisplay() {
@@ -457,6 +458,14 @@ function showEditOptions() {
 // ============== Cargar datos guardados ===================
 // ==========================================================
 (() => {
+  const setPhoneVisibility = (phoneValue) => {
+    const contactPhone = $('#contactPhone');
+    if (!contactPhone) return;
+    const phoneP = contactPhone.closest('p');
+    if (!phoneP) return;
+    phoneP.style.display = phoneValue && phoneValue.trim() ? 'block' : 'none';
+  };
+
   // Cargar datos guardados al cargar la página
   (function loadEditableData(){
     // Cargar datos de contacto desde localStorage individual
@@ -470,8 +479,10 @@ function showEditOptions() {
     }
     if (savedPhone) {
       const contactPhone = $('#contactPhone');
-      if (contactPhone) contactPhone.textContent = savedPhone;
+      const sanitizedPhone = sanitizePhone(savedPhone);
+      if (contactPhone) contactPhone.textContent = sanitizedPhone;
     }
+    setPhoneVisibility(sanitizePhone(savedPhone || ''));
     if (savedLocation) {
       const contactLocation = $('#contactLocation');
       if (contactLocation) {
@@ -664,6 +675,7 @@ function showEditOptions() {
   const nextBtn = document.getElementById('nextReviewsBtn');
   const currentPageSpan = document.getElementById('currentReviewsPage');
   const totalPagesSpan = document.getElementById('totalReviewsPages');
+  const reviewsPagination = nextBtn?.parentElement;
 
   // Función para renderizar estrellas según la calificación
   function renderStars(rating) {
@@ -715,8 +727,10 @@ function showEditOptions() {
       if (container) {
         container.innerHTML = '<p class="text-gray-600 text-center py-4">Aún no tienes reseñas públicas.</p>';
       }
+      if (reviewsPagination) reviewsPagination.style.display = 'none';
       return;
     }
+    if (reviewsPagination) reviewsPagination.style.display = 'flex';
     
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -1581,11 +1595,17 @@ function showEditOptions() {
       }
     }
     if (contactPhoneInput && contactPhoneEl) {
-      phone = contactPhoneInput.value.trim();
+      phone = sanitizePhone(contactPhoneInput.value);
+      contactPhoneInput.value = phone;
       if (phone) {
         contactPhoneEl.textContent = phone;
         localStorage.setItem('contactPhone', phone);
+      } else {
+        contactPhoneEl.textContent = '';
+        localStorage.removeItem('contactPhone');
       }
+      const phoneP = contactPhoneEl.closest('p');
+      if (phoneP) phoneP.style.display = phone ? 'block' : 'none';
     }
     // Obtener valores de los selectores de ubicación
     const regionSelect = $('#region-usuario');
@@ -1668,7 +1688,10 @@ function showEditOptions() {
 
   // Marcar cambios no guardados en información de contacto
   $('#contactEmailInput')?.addEventListener('input', () => { unsavedChanges = true; });
-  $('#contactPhoneInput')?.addEventListener('input', () => { unsavedChanges = true; });
+  $('#contactPhoneInput')?.addEventListener('input', (e) => {
+    e.target.value = sanitizePhone(e.target.value);
+    unsavedChanges = true;
+  });
   $('#contactLocationInput')?.addEventListener('input', () => { unsavedChanges = true; });
   
   // Marcar cambios no guardados en "Acerca de mí"
@@ -2048,9 +2071,16 @@ async function loadUserDataFromBackend() {
       }
       
       if (contactPhone) {
-        contactPhone.textContent = contacto.telefono || '';
-        if (contacto.telefono) {
-          localStorage.setItem('contactPhone', contacto.telefono);
+        const sanitizedPhone = sanitizePhone(contacto.telefono || '');
+        contactPhone.textContent = sanitizedPhone;
+        const phoneP = contactPhone.closest('p');
+        if (phoneP) {
+          phoneP.style.display = sanitizedPhone ? 'block' : 'none';
+        }
+        if (sanitizedPhone) {
+          localStorage.setItem('contactPhone', sanitizedPhone);
+        } else {
+          localStorage.removeItem('contactPhone');
         }
       }
       
@@ -2252,6 +2282,7 @@ function generarEstrellas(calificacion) {
 // Función para cargar reseñas públicas de las organizaciones
 function cargarResenasPublicas(postulaciones) {
   console.log('Cargando reseñas públicas de', postulaciones.length, 'postulaciones');
+  const reviewsPagination = $('#nextReviewsBtn')?.parentElement;
   
   // Filtrar solo las postulaciones con reseñas públicas
   // IMPORTANTE: Mostrar solo reseñas marcadas como públicas (resena_org_publica === true)
@@ -2269,6 +2300,7 @@ function cargarResenasPublicas(postulaciones) {
     if (reviewsContainer) {
       reviewsContainer.innerHTML = '<p class="text-gray-600 text-center py-4">Aún no tienes reseñas públicas de organizaciones.</p>';
     }
+    if (reviewsPagination) reviewsPagination.style.display = 'none';
     return;
   }
   
@@ -2279,6 +2311,7 @@ function cargarResenasPublicas(postulaciones) {
 // Función para mostrar las reseñas en el perfil
 function mostrarResenasEnPerfil(reseñas) {
   const reviewsContainer = $('#reviewsContainer');
+  const reviewsPagination = $('#nextReviewsBtn')?.parentElement;
   if (!reviewsContainer) {
     console.warn('No se encontró el contenedor de reseñas');
     return;
@@ -2286,8 +2319,10 @@ function mostrarResenasEnPerfil(reseñas) {
   
   if (reseñas.length === 0) {
     reviewsContainer.innerHTML = '<p class="text-gray-600 text-center py-4">Aún no tienes reseñas públicas de organizaciones.</p>';
+    if (reviewsPagination) reviewsPagination.style.display = 'none';
     return;
   }
+  if (reviewsPagination) reviewsPagination.style.display = 'flex';
   
   console.log('Mostrando', reseñas.length, 'reseñas en el perfil');
   reviewsContainer.innerHTML = '';
@@ -3078,6 +3113,7 @@ async function updateContactInfoInBackend(email, telefono, region, comuna, ciuda
   }
 
   try {
+    const sanitizedPhone = sanitizePhone(telefono || '');
     const response = await fetch(`${API_BASE_URL}/usuario/contacto`, {
       method: 'PUT',
       headers: {
@@ -3086,7 +3122,7 @@ async function updateContactInfoInBackend(email, telefono, region, comuna, ciuda
       body: JSON.stringify({
         user_id: parseInt(userId),  // El backend espera 'user_id', no 'usuario_id'
         email: email || null,
-        telefono: telefono || null,  // Asegurar que se envíe el teléfono incluso si está vacío
+        telefono: sanitizedPhone || null,  // Asegurar que se envíe el teléfono incluso si está vacío
         region: region || null,
         ciudad: ciudad || null,
         comuna: comuna || null
