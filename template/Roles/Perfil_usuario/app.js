@@ -370,7 +370,7 @@ function showEditOptions() {
     }
   });
 
-  // Guardar recorte
+  // Guardar recorte (sube al servidor para que persista tras cerrar sesión)
   cropSave?.addEventListener('click', () => {
     const size = 256;
     const canvas = document.createElement('canvas');
@@ -398,19 +398,45 @@ function showEditOptions() {
     );
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    const b64 = canvas.toDataURL('image/png');
-    if (avatarCard) avatarCard.src = b64;
-    if (avatarContainer) avatarContainer.classList.remove('avatar-default');
-    try { localStorage.setItem('injuv_avatar_b64', b64); } catch {}
-    hide(cropper);
-    avatarInput.value = '';
-    
-    // Reabrir el modal de editar perfil si estaba abierto
-    const editProfileModal = $('#editProfileModal');
-    if (cropper.dataset.wasEditModalOpen === 'true' && editProfileModal) {
-      editProfileModal.classList.remove('hidden');
-      cropper.dataset.wasEditModalOpen = 'false';
-    }
+    const uid = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        alert('No se pudo generar la imagen.');
+        return;
+      }
+      if (!uid) {
+        alert('Inicia sesión para guardar la foto de perfil.');
+        hide(cropper);
+        avatarInput.value = '';
+        return;
+      }
+      const fd = new FormData();
+      fd.append('imagen', blob, 'perfil.png');
+      try {
+        const res = await fetch(`${API_BASE_URL}/usuario/${uid}/foto-perfil`, { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          alert(data.error || 'No se pudo guardar la foto en el servidor.');
+          return;
+        }
+        try { localStorage.removeItem('injuv_avatar_b64'); } catch (_) {}
+        if (avatarCard) {
+          avatarCard.src = `${API_BASE_URL}/usuario/${uid}/foto-perfil?v=${Date.now()}`;
+        }
+        if (avatarContainer) avatarContainer.classList.remove('avatar-default');
+      } catch (e) {
+        console.error(e);
+        alert('Error de conexión al guardar la foto.');
+      } finally {
+        hide(cropper);
+        avatarInput.value = '';
+        const editProfileModal = $('#editProfileModal');
+        if (cropper.dataset.wasEditModalOpen === 'true' && editProfileModal) {
+          editProfileModal.classList.remove('hidden');
+          cropper.dataset.wasEditModalOpen = 'false';
+        }
+      }
+    }, 'image/png', 0.92);
   });
 
   // Funcionalidad de arrastrar y soltar para la foto
@@ -2049,6 +2075,28 @@ async function loadUserDataFromBackend() {
       // Guardar en localStorage para uso posterior
       if (usuario.nombre) localStorage.setItem('userNombre', usuario.nombre);
       if (usuario.apellido) localStorage.setItem('userApellido', usuario.apellido);
+
+      // Foto de perfil desde el servidor (persiste tras cerrar sesión)
+      const avatarCard = $('#avatarCard');
+      const avatarContainer = $('#avatarContainer');
+      if (avatarCard) {
+        if (usuario.foto_perfil) {
+          avatarCard.src = `${API_BASE_URL}/usuario/${userId}/foto-perfil?v=${Date.now()}`;
+          if (avatarContainer) avatarContainer.classList.remove('avatar-default');
+        } else if (!isViewingOtherProfile) {
+          const b64 = localStorage.getItem('injuv_avatar_b64');
+          if (b64) {
+            avatarCard.src = b64;
+            if (avatarContainer) avatarContainer.classList.remove('avatar-default');
+          } else {
+            avatarCard.src = 'avatar-default.png';
+            if (avatarContainer) avatarContainer.classList.add('avatar-default');
+          }
+        } else {
+          avatarCard.src = 'avatar-default.png';
+          if (avatarContainer) avatarContainer.classList.add('avatar-default');
+        }
+      }
     }
 
     // Cargar información de contacto

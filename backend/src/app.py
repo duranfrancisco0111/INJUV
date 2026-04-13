@@ -88,6 +88,8 @@ class Usuario(db.Model):
     certificado_personales = db.Column(db.JSON, default=list, nullable=True)
     organizacion_afiliada = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, nullable=True)
+    # Nombre de archivo guardado en disco (carpeta perfiles_usuarios/). Ejecutar migración SQL si la columna no existe.
+    foto_perfil = db.Column(db.String(255), nullable=True)
        
 class Organizacion(db.Model):
     __tablename__ = 'organizaciones'
@@ -112,6 +114,8 @@ class Organizacion(db.Model):
     experiencia_anios = db.Column(db.Integer, nullable=True)
     voluntarios_anuales = db.Column(db.String(100), nullable=True)
     certificacion = db.Column(db.JSON, default=list, nullable=True)
+    # Nombre de archivo del logo en disco (carpeta logos_organizaciones/). Ejecutar migración SQL si la columna no existe.
+    logo_filename = db.Column(db.String(255), nullable=True)
     # reseña_organizacion = db.Column(db.String(500), nullable=True)  # Comentado: columna no existe en BD
     created_at = db.Column(db.DateTime, nullable=True)
 
@@ -510,12 +514,73 @@ def obtener_usuario(user_id):
                 'rol': usuario.rol or '',
                 'rut': usuario.rut or '',
                 'fecha_nacimiento': usuario.fecha_nacimiento.isoformat() if usuario.fecha_nacimiento else None,
-                'hora_voluntariado': usuario.hora_voluntariado if usuario.hora_voluntariado else 0
+                'hora_voluntariado': usuario.hora_voluntariado if usuario.hora_voluntariado else 0,
+                'foto_perfil': usuario.foto_perfil or None
             }
         }), 200
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/usuario/<int:user_id>/foto-perfil", methods=["GET"])
+def obtener_foto_perfil_usuario(user_id):
+    try:
+        usuario = Usuario.query.get(user_id)
+        if not usuario or not usuario.foto_perfil:
+            return jsonify({'success': False, 'error': 'Sin foto de perfil'}), 404
+        filepath = os.path.join(os.getcwd(), 'perfiles_usuarios', usuario.foto_perfil)
+        if not os.path.isfile(filepath):
+            return jsonify({'success': False, 'error': 'Archivo no encontrado'}), 404
+        ext = os.path.splitext(usuario.foto_perfil)[1].lower()
+        mimetype = 'image/png'
+        if ext in ('.jpg', '.jpeg'):
+            mimetype = 'image/jpeg'
+        elif ext == '.webp':
+            mimetype = 'image/webp'
+        elif ext == '.gif':
+            mimetype = 'image/gif'
+        return send_file(filepath, mimetype=mimetype)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/usuario/<int:user_id>/foto-perfil", methods=["POST"])
+def subir_foto_perfil_usuario(user_id):
+    from werkzeug.utils import secure_filename
+    try:
+        usuario = Usuario.query.get(user_id)
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+        if 'imagen' not in request.files:
+            return jsonify({'success': False, 'error': 'No se proporcionó imagen'}), 400
+        file = request.files['imagen']
+        if not file or file.filename == '':
+            return jsonify({'success': False, 'error': 'Archivo vacío'}), 400
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in {'.png', '.jpg', '.jpeg', '.webp', '.gif'}:
+            file_ext = '.png'
+        upload_dir = os.path.join(os.getcwd(), 'perfiles_usuarios')
+        os.makedirs(upload_dir, exist_ok=True)
+        if usuario.foto_perfil:
+            old_path = os.path.join(upload_dir, usuario.foto_perfil)
+            if os.path.isfile(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+        filename = secure_filename(
+            f"user_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{os.urandom(4).hex()}{file_ext}"
+        )
+        filepath = os.path.join(upload_dir, filename)
+        file.save(filepath)
+        usuario.foto_perfil = filename
+        db.session.commit()
+        return jsonify({'success': True, 'filename': filename}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # Eliminar cuenta de usuario
 @app.route("/api/usuarios/<int:user_id>", methods=["DELETE"])
@@ -546,6 +611,13 @@ def eliminar_usuario(user_id):
         organizacion = Organizacion.query.filter_by(id_usuario_org=user_id).first()
         
         if organizacion:
+            if organizacion.logo_filename:
+                logo_path = os.path.join(os.getcwd(), 'logos_organizaciones', organizacion.logo_filename)
+                if os.path.isfile(logo_path):
+                    try:
+                        os.remove(logo_path)
+                    except OSError:
+                        pass
             # Si tiene una organización, eliminar también las oportunidades y postulaciones asociadas
             oportunidades = Oportunidad.query.filter_by(organizacion_id=organizacion.id).all()
             
@@ -563,6 +635,14 @@ def eliminar_usuario(user_id):
         # Eliminar todas las postulaciones del usuario
         for postulacion in postulaciones:
             db.session.delete(postulacion)
+        
+        if usuario.foto_perfil:
+            foto_path = os.path.join(os.getcwd(), 'perfiles_usuarios', usuario.foto_perfil)
+            if os.path.isfile(foto_path):
+                try:
+                    os.remove(foto_path)
+                except OSError:
+                    pass
         
         # Eliminar el usuario
         db.session.delete(usuario)
@@ -617,6 +697,7 @@ def obtener_organizacion_por_usuario(usuario_id):
                 'descripcion': organizacion.descripcion or '',
                 'id_usuario_org': organizacion.id_usuario_org,
                 'certificacion': certificaciones,
+                'logo_filename': organizacion.logo_filename or None,
                 'created_at': organizacion.created_at.strftime('%Y-%m-%d %H:%M:%S') if organizacion.created_at else None
             }
         }), 200
@@ -661,6 +742,7 @@ def obtener_organizacion(organizacion_id):
                 'descripcion': organizacion.descripcion or '',
                 'id_usuario_org': organizacion.id_usuario_org,
                 'certificacion': certificaciones,
+                'logo_filename': organizacion.logo_filename or None,
                 'created_at': organizacion.created_at.strftime('%Y-%m-%d %H:%M:%S') if organizacion.created_at else None
             }
         }), 200
@@ -670,6 +752,66 @@ def obtener_organizacion(organizacion_id):
             'success': False,
             'error': str(e)
         }), 500
+
+
+@app.route("/api/organizaciones/<int:organizacion_id>/logo", methods=["GET"])
+def obtener_logo_organizacion(organizacion_id):
+    try:
+        organizacion = Organizacion.query.get(organizacion_id)
+        if not organizacion or not organizacion.logo_filename:
+            return jsonify({'success': False, 'error': 'Sin logo'}), 404
+        filepath = os.path.join(os.getcwd(), 'logos_organizaciones', organizacion.logo_filename)
+        if not os.path.isfile(filepath):
+            return jsonify({'success': False, 'error': 'Archivo no encontrado'}), 404
+        ext = os.path.splitext(organizacion.logo_filename)[1].lower()
+        mimetype = 'image/png'
+        if ext in ('.jpg', '.jpeg'):
+            mimetype = 'image/jpeg'
+        elif ext == '.webp':
+            mimetype = 'image/webp'
+        elif ext == '.gif':
+            mimetype = 'image/gif'
+        return send_file(filepath, mimetype=mimetype)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route("/api/organizaciones/<int:organizacion_id>/logo", methods=["POST"])
+def subir_logo_organizacion(organizacion_id):
+    from werkzeug.utils import secure_filename
+    try:
+        organizacion = Organizacion.query.get(organizacion_id)
+        if not organizacion:
+            return jsonify({'success': False, 'error': 'Organización no encontrada'}), 404
+        if 'imagen' not in request.files:
+            return jsonify({'success': False, 'error': 'No se proporcionó imagen'}), 400
+        file = request.files['imagen']
+        if not file or file.filename == '':
+            return jsonify({'success': False, 'error': 'Archivo vacío'}), 400
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in {'.png', '.jpg', '.jpeg', '.webp', '.gif'}:
+            file_ext = '.png'
+        upload_dir = os.path.join(os.getcwd(), 'logos_organizaciones')
+        os.makedirs(upload_dir, exist_ok=True)
+        if organizacion.logo_filename:
+            old_path = os.path.join(upload_dir, organizacion.logo_filename)
+            if os.path.isfile(old_path):
+                try:
+                    os.remove(old_path)
+                except OSError:
+                    pass
+        filename = secure_filename(
+            f"org_{organizacion_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{os.urandom(4).hex()}{file_ext}"
+        )
+        filepath = os.path.join(upload_dir, filename)
+        file.save(filepath)
+        organizacion.logo_filename = filename
+        db.session.commit()
+        return jsonify({'success': True, 'filename': filename}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # Actualizar información de la organización
 @app.route("/api/organizaciones/<int:organizacion_id>", methods=["PUT"])
