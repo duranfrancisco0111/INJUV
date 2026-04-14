@@ -871,10 +871,7 @@
             if (container) {
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
-                        <p style="font-size: 1.1rem; margin-bottom: 1rem;">No hay oportunidades destacadas disponibles en este momento.</p>
-                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;" onclick="goToAllOpportunities(event); return false;">
-                            Ver todas las oportunidades
-                        </a>
+                        <p style="font-size: 1.1rem; margin-bottom: 0;">No hay oportunidades destacadas disponibles en este momento.</p>
                     </div>
                 `;
             }
@@ -885,10 +882,7 @@
             if (container) {
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
-                        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Error al cargar las oportunidades. Por favor, intenta más tarde.</p>
-                        <a href="visualizacion-vd/index.html" class="btn-outline" style="display: inline-block; margin-top: 1rem;" onclick="goToAllOpportunities(event); return false;">
-                            Ver todas las oportunidades
-                        </a>
+                        <p style="font-size: 1.1rem; margin-bottom: 0;">Error al cargar las oportunidades. Por favor, intenta más tarde.</p>
                     </div>
                 `;
             }
@@ -1221,20 +1215,21 @@
                 <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #666;">
                     <i class="fas fa-newspaper" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
                     <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 500;">No hay noticias disponibles</p>
-                    <p style="font-size: 0.9rem; opacity: 0.8;">Las noticias se cargarán cuando el servidor esté disponible.</p>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">Por ahora no hay publicaciones para mostrar aquí. Puedes revisar más adelante o entrar a «Ver todas las noticias».</p>
                 </div>
             `;
         }
 
-        // Mensaje genérico para secciones nuevas (academia/biblioteca)
-        // Mantiene exactamente el mismo tamaño/espaciado que el vacío de "Noticias"
-        function mostrarMensajeSinContenido(container, titulo = 'Sección en desarrollo') {
+        // Vacío de Academia / Biblioteca (mismo estilo que noticias; sin mensaje de «servidor»)
+        function mostrarMensajeSinContenido(container, titulo = 'esta sección') {
             if (!container) return;
+            const icono = titulo.includes('Biblioteca') ? 'fa-book' : (titulo.includes('Academia') ? 'fa-graduation-cap' : 'fa-folder-open');
             container.innerHTML = `
                 <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: #666;">
-                    <i class="fas fa-newspaper" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 500;">${titulo}</p>
-                    <p style="font-size: 0.9rem; opacity: 0.8;">El contenido se cargará cuando el servidor esté disponible.</p>
+                    <i class="fas ${icono}" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 500;">No hay documentos disponibles</p>
+                    <p style="font-size: 0.95rem; margin-bottom: 0.35rem; opacity: 0.85;">${titulo}</p>
+                    <p style="font-size: 0.9rem; opacity: 0.8;">Aún no hay materiales publicados para mostrar en el inicio. Puedes volver más tarde o usar «Ver todo» para ir a la sección completa.</p>
                 </div>
             `;
         }
