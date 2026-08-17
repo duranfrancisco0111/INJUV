@@ -1,12 +1,11 @@
 import psycopg2
+import os
 
 try: 
-    connection = psycopg2.connect(
-        host = "localhost",
-        user = "postgres",
-        password = "UTEM2022",
-        database = "INJUV"
-    )
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        raise ValueError("DATABASE_URL no está configurada")
+    connection = psycopg2.connect(database_url)
     print("conexion exitosa")
     cursor = connection.cursor()
 except Exception as ex:

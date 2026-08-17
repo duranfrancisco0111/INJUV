@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
+from flask_cors import CORS
+from flasgger import Swagger
 from sqlalchemy import func, text
 from sqlalchemy.exc import ProgrammingError
 from datetime import datetime
@@ -13,39 +15,31 @@ try:
     from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
     from openpyxl.drawing.image import Image
     OPENPYXL_AVAILABLE = True
-    print("✅ openpyxl está disponible")
+    print("[OK] openpyxl está disponible")
 except ImportError as e:
     OPENPYXL_AVAILABLE = False
-    print(f"⚠️ openpyxl no está instalado. Error: {e}")
-    print("⚠️ Asegúrate de activar el entorno virtual (env) y ejecutar: pip install openpyxl")
-    print(f"⚠️ Python actual: {__import__('sys').executable}")
+    print(f"[WARN] openpyxl no está instalado. Error: {e}")
+    print("[WARN] Asegúrate de activar el entorno virtual (env) y ejecutar: pip install openpyxl")
+    print(f"[INFO] Python actual: {__import__('sys').executable}")
 
 app = Flask(__name__)
 
-# Configurar CORS manualmente si flask_cors no está instalado
-@app.after_request
-def after_request(response):
-    # Solo agregar headers si no existen ya (para evitar duplicación)
-    if 'Access-Control-Allow-Origin' not in response.headers:
-        response.headers['Access-Control-Allow-Origin'] = '*'
-    if 'Access-Control-Allow-Headers' not in response.headers:
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-    if 'Access-Control-Allow-Methods' not in response.headers:
-        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE,OPTIONS'
-    return response
+# Configurar CORS para permitir que aplicaciones externas consuman la API
+CORS(app)
 
-# Manejar solicitudes OPTIONS para CORS
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = jsonify({})
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE,OPTIONS'
-        return response
+# Configurar Swagger para la documentación de la API
+swagger = Swagger(app, template={
+    "info": {
+        "title": "API de INJUV",
+        "description": "API backend para la aplicación de INJUV",
+        "version": "1.0.0"
+    }
+})
 
 # Configuración de la base de datos
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:UTEM2022@localhost/INJUV'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+if not app.config['SQLALCHEMY_DATABASE_URI']:
+    raise ValueError("La variable de entorno DATABASE_URL no está configurada")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Configuración de Flask-Mail
