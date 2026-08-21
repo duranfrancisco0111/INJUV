@@ -446,6 +446,7 @@ def login():
         usuario = Usuario.query.filter_by(email=email).first()
         
         if not usuario:
+            print(f"DEBUG LOGIN: Usuario no encontrado en la DB para el email: '{email}'")
             return jsonify({
                 'success': False,
                 'error': 'Email o contraseña incorrectos'
@@ -453,6 +454,7 @@ def login():
         
         # Verificar contraseña
         if not check_password_hash(usuario.password_hash, password):
+            print(f"DEBUG LOGIN: Falla check_password_hash para el usuario con email: '{email}'")
             return jsonify({
                 'success': False,
                 'error': 'Email o contraseña incorrectos'
