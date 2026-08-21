@@ -301,6 +301,8 @@ def register():
         data = request.json
         
         email = data.get('email')
+        if email:
+            email = email.strip().lower()
         password = data.get('password')
         nombre = data.get('nombre', '')
         apellido = data.get('apellido', '')
@@ -430,6 +432,8 @@ def login():
     try:
         data = request.json
         email = data.get('email')
+        if email:
+            email = email.strip().lower()
         password = data.get('password')
         
         if not email or not password:
