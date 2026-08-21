@@ -250,11 +250,53 @@ class AcademiaDocumento(db.Model):
 
 @app.route("/")
 def home():
+
+    """
+    GET /
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     return "Conexion exitosa con Flask + PostgreSQL"
 
 # Endpoint para registrar usuarios (útil para crear usuarios de prueba)
 @app.route("/api/auth/register", methods=["POST"])
 def register():
+
+    """
+    POST /api/auth/register
+    ---
+    tags:
+      - Autenticación
+    description: "Endpoint para la ruta /api/auth/register"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         
@@ -362,6 +404,30 @@ def register():
 # Endpoint de login
 @app.route("/api/auth/login", methods=["POST"])
 def login():
+
+    """
+    POST /api/auth/login
+    ---
+    tags:
+      - Autenticación
+    description: "Endpoint para la ruta /api/auth/login"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         email = data.get('email')
@@ -413,6 +479,30 @@ def login():
 # Endpoint para actualizar información de contacto del usuario
 @app.route("/api/usuario/contacto", methods=["PUT"])
 def actualizar_contacto():
+
+    """
+    PUT /api/usuario/contacto
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /api/usuario/contacto"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         
@@ -466,6 +556,28 @@ def actualizar_contacto():
 # Endpoint para obtener información de contacto del usuario
 @app.route("/api/usuario/<int:user_id>/contacto", methods=["GET"])
 def obtener_contacto(user_id):
+
+    """
+    GET /api/usuario/<int:user_id>/contacto
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /api/usuario/<int:user_id>/contacto"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         usuario = Usuario.query.get(user_id)
         
@@ -489,6 +601,28 @@ def obtener_contacto(user_id):
 # Endpoint para obtener información completa del usuario
 @app.route("/api/usuario/<int:user_id>", methods=["GET"])
 def obtener_usuario(user_id):
+
+    """
+    GET /api/usuario/<int:user_id>
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /api/usuario/<int:user_id>"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         usuario = Usuario.query.get(user_id)
         
@@ -519,6 +653,28 @@ def obtener_usuario(user_id):
 
 @app.route("/api/usuario/<int:user_id>/foto-perfil", methods=["GET"])
 def obtener_foto_perfil_usuario(user_id):
+
+    """
+    GET /api/usuario/<int:user_id>/foto-perfil
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /api/usuario/<int:user_id>/foto-perfil"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         usuario = Usuario.query.get(user_id)
         if not usuario or not usuario.foto_perfil:
@@ -541,6 +697,34 @@ def obtener_foto_perfil_usuario(user_id):
 
 @app.route("/api/usuario/<int:user_id>/foto-perfil", methods=["POST"])
 def subir_foto_perfil_usuario(user_id):
+
+    """
+    POST /api/usuario/<int:user_id>/foto-perfil
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /api/usuario/<int:user_id>/foto-perfil"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     from werkzeug.utils import secure_filename
     try:
         usuario = Usuario.query.get(user_id)
@@ -579,6 +763,28 @@ def subir_foto_perfil_usuario(user_id):
 # Eliminar cuenta de usuario
 @app.route("/api/usuarios/<int:user_id>", methods=["DELETE"])
 def eliminar_usuario(user_id):
+
+    """
+    DELETE /api/usuarios/<int:user_id>
+    ---
+    tags:
+      - Usuarios
+    description: "Endpoint para la ruta /api/usuarios/<int:user_id>"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json or {}
         confirmar_eliminacion = data.get('confirmar', False)
@@ -660,6 +866,28 @@ def eliminar_usuario(user_id):
 # Obtener organización por usuario admin
 @app.route("/api/organizaciones/usuario/<int:usuario_id>", methods=["GET"])
 def obtener_organizacion_por_usuario(usuario_id):
+
+    """
+    GET /api/organizaciones/usuario/<int:usuario_id>
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/usuario/<int:usuario_id>"
+    parameters:
+      - name: usuario_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         organizacion = Organizacion.query.filter_by(id_usuario_org=usuario_id).first()
         
@@ -705,6 +933,28 @@ def obtener_organizacion_por_usuario(usuario_id):
 # Obtener organización por ID
 @app.route("/api/organizaciones/<int:organizacion_id>", methods=["GET"])
 def obtener_organizacion(organizacion_id):
+
+    """
+    GET /api/organizaciones/<int:organizacion_id>
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:organizacion_id>"
+    parameters:
+      - name: organizacion_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         organizacion = Organizacion.query.get(organizacion_id)
         
@@ -750,6 +1000,28 @@ def obtener_organizacion(organizacion_id):
 
 @app.route("/api/organizaciones/<int:organizacion_id>/logo", methods=["GET"])
 def obtener_logo_organizacion(organizacion_id):
+
+    """
+    GET /api/organizaciones/<int:organizacion_id>/logo
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:organizacion_id>/logo"
+    parameters:
+      - name: organizacion_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         organizacion = Organizacion.query.get(organizacion_id)
         if not organizacion or not organizacion.logo_filename:
@@ -772,6 +1044,34 @@ def obtener_logo_organizacion(organizacion_id):
 
 @app.route("/api/organizaciones/<int:organizacion_id>/logo", methods=["POST"])
 def subir_logo_organizacion(organizacion_id):
+
+    """
+    POST /api/organizaciones/<int:organizacion_id>/logo
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:organizacion_id>/logo"
+    parameters:
+      - name: organizacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     from werkzeug.utils import secure_filename
     try:
         organizacion = Organizacion.query.get(organizacion_id)
@@ -810,6 +1110,34 @@ def subir_logo_organizacion(organizacion_id):
 # Actualizar información de la organización
 @app.route("/api/organizaciones/<int:organizacion_id>", methods=["PUT"])
 def actualizar_organizacion(organizacion_id):
+
+    """
+    PUT /api/organizaciones/<int:organizacion_id>
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:organizacion_id>"
+    parameters:
+      - name: organizacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         
@@ -921,6 +1249,34 @@ def actualizar_organizacion(organizacion_id):
 # Endpoint para subir archivo de certificación de organización
 @app.route("/api/organizaciones/<int:organizacion_id>/certificacion/upload", methods=["POST"])
 def subir_certificacion_organizacion(organizacion_id):
+
+    """
+    POST /api/organizaciones/<int:organizacion_id>/certificacion/upload
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:organizacion_id>/certificacion/upload"
+    parameters:
+      - name: organizacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         # Verificar que se envió un archivo
         if 'archivo' not in request.files:
@@ -1009,6 +1365,28 @@ def subir_certificacion_organizacion(organizacion_id):
 # Endpoint para descargar archivo de certificación
 @app.route("/api/organizaciones/certificacion/<path:filename>", methods=["GET"])
 def descargar_certificacion_organizacion(filename):
+
+    """
+    GET /api/organizaciones/certificacion/<path:filename>
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/certificacion/<path:filename>"
+    parameters:
+      - name: filename
+        in: path
+        type: string
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         filepath = os.path.join(os.getcwd(), 'certificaciones_organizaciones', filename)
         if os.path.exists(filepath):
@@ -1027,6 +1405,30 @@ def descargar_certificacion_organizacion(filename):
 # Endpoint para registrar una organización
 @app.route("/api/organizacion/registrar", methods=["POST"])
 def registrar_organizacion():
+
+    """
+    POST /api/organizacion/registrar
+    ---
+    tags:
+      - General
+    description: "Endpoint para la ruta /api/organizacion/registrar"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         
@@ -1171,6 +1573,24 @@ def registrar_organizacion():
 # Listar todas las oportunidades (con filtros opcionales)
 @app.route("/api/oportunidades", methods=["GET"])
 def listar_oportunidades():
+
+    """
+    GET /api/oportunidades
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         estado = request.args.get('estado')  # activa, cerrada, todas, o None para todas
         region = request.args.get('region')
@@ -1524,6 +1944,28 @@ def listar_oportunidades():
 # Obtener una oportunidad por ID
 @app.route("/api/oportunidades/<int:oportunidad_id>", methods=["GET"])
 def obtener_oportunidad(oportunidad_id):
+
+    """
+    GET /api/oportunidades/<int:oportunidad_id>
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         oportunidad = Oportunidad.query.get(oportunidad_id)
         
@@ -1578,6 +2020,30 @@ def obtener_oportunidad(oportunidad_id):
 # Crear una nueva oportunidad
 @app.route("/api/oportunidades", methods=["POST"])
 def crear_oportunidad():
+
+    """
+    POST /api/oportunidades
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         
@@ -1761,6 +2227,34 @@ def crear_oportunidad():
 # Actualizar estado de una oportunidad
 @app.route("/api/oportunidades/<int:oportunidad_id>/estado", methods=["PUT"])
 def actualizar_estado_oportunidad(oportunidad_id):
+
+    """
+    PUT /api/oportunidades/<int:oportunidad_id>/estado
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>/estado"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         nuevo_estado = data.get('estado')
@@ -1830,6 +2324,34 @@ def actualizar_estado_oportunidad(oportunidad_id):
 # Actualizar una oportunidad
 @app.route("/api/oportunidades/<int:oportunidad_id>", methods=["PUT"])
 def actualizar_oportunidad(oportunidad_id):
+
+    """
+    PUT /api/oportunidades/<int:oportunidad_id>
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         oportunidad = Oportunidad.query.get(oportunidad_id)
         
@@ -1957,6 +2479,34 @@ def actualizar_oportunidad(oportunidad_id):
 # Cerrar una oportunidad (mantener para compatibilidad)
 @app.route("/api/oportunidades/<int:oportunidad_id>/cerrar", methods=["PUT"])
 def cerrar_oportunidad(oportunidad_id):
+
+    """
+    PUT /api/oportunidades/<int:oportunidad_id>/cerrar
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>/cerrar"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         oportunidad = Oportunidad.query.get(oportunidad_id)
         
@@ -1988,6 +2538,24 @@ def cerrar_oportunidad(oportunidad_id):
 # Listar todas las noticias
 @app.route("/api/noticias", methods=["GET"])
 def listar_noticias():
+
+    """
+    GET /api/noticias
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         estado = request.args.get('estado')  # activa, inactiva, todas
         noticias = Noticia.query
@@ -2035,6 +2603,28 @@ def listar_noticias():
 # Obtener una noticia por ID
 @app.route("/api/noticias/<int:noticia_id>", methods=["GET"])
 def obtener_noticia(noticia_id):
+
+    """
+    GET /api/noticias/<int:noticia_id>
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias/<int:noticia_id>"
+    parameters:
+      - name: noticia_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         noticia = Noticia.query.get(noticia_id)
         
@@ -2073,6 +2663,30 @@ def obtener_noticia(noticia_id):
 # Subir imagen de noticia
 @app.route("/api/noticias/upload-imagen", methods=["POST"])
 def subir_imagen_noticia():
+
+    """
+    POST /api/noticias/upload-imagen
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias/upload-imagen"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         # Verificar que se envió un archivo
         if 'imagen' not in request.files:
@@ -2145,6 +2759,28 @@ def subir_imagen_noticia():
 # Endpoint para servir imágenes de noticias
 @app.route("/api/noticias/imagen/<path:filename>", methods=["GET"])
 def obtener_imagen_noticia(filename):
+
+    """
+    GET /api/noticias/imagen/<path:filename>
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias/imagen/<path:filename>"
+    parameters:
+      - name: filename
+        in: path
+        type: string
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         filepath = os.path.join(os.getcwd(), 'imagenes_noticias', filename)
         if os.path.exists(filepath):
@@ -2163,6 +2799,30 @@ def obtener_imagen_noticia(filename):
 # Crear una nueva noticia
 @app.route("/api/noticias", methods=["POST"])
 def crear_noticia():
+
+    """
+    POST /api/noticias
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.get_json()
         
@@ -2246,6 +2906,34 @@ def crear_noticia():
 # Actualizar una noticia
 @app.route("/api/noticias/<int:noticia_id>", methods=["PUT"])
 def actualizar_noticia(noticia_id):
+
+    """
+    PUT /api/noticias/<int:noticia_id>
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias/<int:noticia_id>"
+    parameters:
+      - name: noticia_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         print(f"DEBUG: Iniciando actualización de noticia ID: {noticia_id}")
         noticia = Noticia.query.get(noticia_id)
@@ -2368,6 +3056,28 @@ def actualizar_noticia(noticia_id):
 # Eliminar una noticia
 @app.route("/api/noticias/<int:noticia_id>", methods=["DELETE"])
 def eliminar_noticia(noticia_id):
+
+    """
+    DELETE /api/noticias/<int:noticia_id>
+    ---
+    tags:
+      - Noticias
+    description: "Endpoint para la ruta /api/noticias/<int:noticia_id>"
+    parameters:
+      - name: noticia_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         noticia = Noticia.query.get(noticia_id)
         
@@ -2405,6 +3115,24 @@ BIBLIOTECA_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.
 
 @app.route("/api/biblioteca/tematicas", methods=["GET"])
 def listar_tematicas_biblioteca():
+
+    """
+    GET /api/biblioteca/tematicas
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/tematicas"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         tematicas = BibliotecaTematica.query.order_by(BibliotecaTematica.nombre).all()
         return jsonify({
@@ -2417,6 +3145,24 @@ def listar_tematicas_biblioteca():
 
 @app.route("/api/biblioteca/documentos", methods=["GET"])
 def listar_documentos_biblioteca():
+
+    """
+    GET /api/biblioteca/documentos
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         organizacion_id = request.args.get('organizacion_id', type=int)
         tematica_id = request.args.get('tematica_id', type=int)
@@ -2488,6 +3234,28 @@ def listar_documentos_biblioteca():
 
 @app.route("/api/biblioteca/documentos/<int:doc_id>", methods=["GET"])
 def obtener_documento_biblioteca(doc_id):
+
+    """
+    GET /api/biblioteca/documentos/<int:doc_id>
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos/<int:doc_id>"
+    parameters:
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         doc = BibliotecaDocumento.query.get(doc_id)
         if not doc:
@@ -2513,6 +3281,28 @@ def obtener_documento_biblioteca(doc_id):
 
 @app.route("/api/biblioteca/documentos/<int:doc_id>/descargar", methods=["GET"])
 def descargar_documento_biblioteca(doc_id):
+
+    """
+    GET /api/biblioteca/documentos/<int:doc_id>/descargar
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos/<int:doc_id>/descargar"
+    parameters:
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         doc = BibliotecaDocumento.query.get(doc_id)
         if not doc:
@@ -2529,6 +3319,30 @@ def descargar_documento_biblioteca(doc_id):
 
 @app.route("/api/biblioteca/documentos", methods=["POST"])
 def subir_documento_biblioteca():
+
+    """
+    POST /api/biblioteca/documentos
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         if 'archivo' not in request.files:
             return jsonify({'success': False, 'error': 'No se envió ningún archivo'}), 400
@@ -2596,6 +3410,28 @@ def subir_documento_biblioteca():
 # Eliminar una oportunidad (voluntariado)
 @app.route("/api/oportunidades/<int:oportunidad_id>", methods=["DELETE"])
 def eliminar_oportunidad(oportunidad_id):
+
+    """
+    DELETE /api/oportunidades/<int:oportunidad_id>
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json or {}
         organizacion_id = data.get('organizacion_id')
@@ -3082,6 +3918,30 @@ def enviar_email_confirmacion_postulacion(usuario, oportunidad):
 # Crear una nueva postulación
 @app.route("/api/postulaciones", methods=["POST"])
 def crear_postulacion():
+
+    """
+    POST /api/postulaciones
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         print(f"📥 Datos recibidos para postulación: {data}")
@@ -3219,6 +4079,28 @@ def crear_postulacion():
 # Listar postulaciones de un usuario
 @app.route("/api/usuarios/<int:usuario_id>/postulaciones", methods=["GET"])
 def listar_postulaciones_usuario(usuario_id):
+
+    """
+    GET /api/usuarios/<int:usuario_id>/postulaciones
+    ---
+    tags:
+      - Usuarios
+    description: "Endpoint para la ruta /api/usuarios/<int:usuario_id>/postulaciones"
+    parameters:
+      - name: usuario_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         print(f"🔍 listar_postulaciones_usuario llamado para usuario_id: {usuario_id}")
         # Usar SQL directo para evitar problemas con columnas que aún no existen
@@ -3455,6 +4337,28 @@ def listar_postulaciones_usuario(usuario_id):
 # Listar postulaciones de una oportunidad (para la organización)
 @app.route("/api/oportunidades/<int:oportunidad_id>/postulaciones", methods=["GET"])
 def listar_postulaciones_oportunidad(oportunidad_id):
+
+    """
+    GET /api/oportunidades/<int:oportunidad_id>/postulaciones
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>/postulaciones"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         estado = request.args.get('estado')  # Filtro opcional por estado
         solo_seleccionados = request.args.get('solo_seleccionados', 'false').lower() == 'true'
@@ -3527,6 +4431,34 @@ def listar_postulaciones_oportunidad(oportunidad_id):
 # Actualizar estado de una postulación
 @app.route("/api/postulaciones/<int:postulacion_id>/estado", methods=["PUT"])
 def actualizar_estado_postulacion(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/estado
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/estado"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         
@@ -3598,6 +4530,34 @@ def actualizar_estado_postulacion(postulacion_id):
 # Declinar postulación (desde el usuario)
 @app.route("/api/postulaciones/<int:postulacion_id>/declinar", methods=["PUT"])
 def declinar_postulacion(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/declinar
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/declinar"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         postulacion = Postulacion.query.get(postulacion_id)
         
@@ -3627,6 +4587,34 @@ def declinar_postulacion(postulacion_id):
 # Actualizar confirmación de asistencia
 @app.route("/api/postulaciones/<int:postulacion_id>/confirmacion", methods=["PUT"])
 def actualizar_confirmacion(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/confirmacion
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/confirmacion"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         estado_confirmacion = data.get('estado_confirmacion')  # Pendiente, Confirmado, No confirmado
@@ -3664,6 +4652,34 @@ def actualizar_confirmacion(postulacion_id):
 # Confirmar postulación desde enlace de correo (GET para que funcione desde el enlace del email)
 @app.route("/api/postulaciones/<int:postulacion_id>/confirmar", methods=["GET", "POST"])
 def confirmar_postulacion(postulacion_id):
+
+    """
+    GET /api/postulaciones/<int:postulacion_id>/confirmar
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/confirmar"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         postulacion = Postulacion.query.get(postulacion_id)
         if not postulacion:
@@ -3780,6 +4796,34 @@ def confirmar_postulacion(postulacion_id):
 # Actualizar asistencia (capacitación o actividad)
 @app.route("/api/postulaciones/<int:postulacion_id>/asistencia", methods=["PUT"])
 def actualizar_asistencia(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/asistencia
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/asistencia"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json or {}
         
@@ -3925,6 +4969,34 @@ def actualizar_asistencia(postulacion_id):
 # Generar certificado
 @app.route("/api/postulaciones/<int:postulacion_id>/certificado", methods=["PUT"])
 def generar_certificado(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/certificado
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/certificado"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         generar = data.get('generar', False)  # True para generar, False para no
@@ -3966,6 +5038,34 @@ def generar_certificado(postulacion_id):
 # Agregar reseña de organización sobre voluntario
 @app.route("/api/postulaciones/<int:postulacion_id>/resena", methods=["PUT"])
 def agregar_resena(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/resena
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/resena"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         resena = data.get('resena') or data.get('resena_org_sobre_voluntario')  # Aceptar ambos nombres
@@ -4022,6 +5122,34 @@ def agregar_resena(postulacion_id):
 # Endpoint para que el usuario deje una reseña sobre la organización
 @app.route("/api/postulaciones/<int:postulacion_id>/resena-usuario", methods=["PUT"])
 def agregar_resena_usuario(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/resena-usuario
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/resena-usuario"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         # Importar text al inicio para que esté disponible en toda la función
         from sqlalchemy import text
@@ -4185,6 +5313,34 @@ def agregar_resena_usuario(postulacion_id):
 # Solo la organización puede cambiar esto
 @app.route("/api/postulaciones/<int:postulacion_id>/resena-visibilidad", methods=["PUT"])
 def cambiar_visibilidad_resena(postulacion_id):
+
+    """
+    PUT /api/postulaciones/<int:postulacion_id>/resena-visibilidad
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/resena-visibilidad"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         from sqlalchemy import text
         
@@ -4682,6 +5838,24 @@ def _documento_a_json(doc, seccion, include_organizacion_nombre=False):
 
 @app.route("/api/repositorio/documentos", methods=["GET"])
 def listar_repositorio_documentos():
+
+    """
+    GET /api/repositorio/documentos
+    ---
+    tags:
+      - Repositorio
+    description: "Endpoint para la ruta /api/repositorio/documentos"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Lista todos los documentos de Biblioteca y Academia (para panel admin)."""
     try:
         biblioteca = []
@@ -4778,6 +5952,24 @@ def listar_repositorio_documentos():
 
 @app.route("/api/biblioteca/documentos", methods=["GET"])
 def listar_biblioteca_documentos():
+
+    """
+    GET /api/biblioteca/documentos
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Lista documentos de la Biblioteca (público o admin)."""
     try:
         docs = BibliotecaDocumento.query.order_by(BibliotecaDocumento.created_at.desc()).all()
@@ -4791,6 +5983,24 @@ def listar_biblioteca_documentos():
 
 @app.route("/api/academia/documentos", methods=["GET"])
 def listar_academia_documentos():
+
+    """
+    GET /api/academia/documentos
+    ---
+    tags:
+      - Academia
+    description: "Endpoint para la ruta /api/academia/documentos"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Lista documentos de la Academia públicos (solo aprobados), con nombre de organización."""
     try:
         docs = AcademiaDocumento.query.filter(
@@ -4870,6 +6080,30 @@ def _subir_documento_repositorio(seccion, request):
 
 @app.route("/api/biblioteca/documentos", methods=["POST"])
 def subir_biblioteca_documento():
+
+    """
+    POST /api/biblioteca/documentos
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Sube un documento a la Biblioteca (multipart: archivo, nombre_archivo?, descripcion?, autor?, tematica_id?)."""
     try:
         payload, err = _subir_documento_repositorio('biblioteca', request)
@@ -4900,6 +6134,30 @@ def subir_biblioteca_documento():
 
 @app.route("/api/academia/documentos", methods=["POST"])
 def subir_academia_documento():
+
+    """
+    POST /api/academia/documentos
+    ---
+    tags:
+      - Academia
+    description: "Endpoint para la ruta /api/academia/documentos"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Sube un documento a la Academia (multipart: archivo, nombre_archivo?, descripcion obligatoria, autor?)."""
     try:
         descripcion = (request.form.get('descripcion') or '').strip()[:500]
@@ -4935,6 +6193,32 @@ def subir_academia_documento():
 
 @app.route("/api/repositorio/documento/<seccion>/<int:doc_id>/descargar", methods=["GET"])
 def descargar_repositorio_documento(seccion, doc_id):
+
+    """
+    GET /api/repositorio/documento/<seccion>/<int:doc_id>/descargar
+    ---
+    tags:
+      - Repositorio
+    description: "Endpoint para la ruta /api/repositorio/documento/<seccion>/<int:doc_id>/descargar"
+    parameters:
+      - name: seccion
+        in: path
+        type: string
+        required: true
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Descarga un documento por sección (biblioteca|academia) e id."""
     if seccion not in ('biblioteca', 'academia'):
         return jsonify({'success': False, 'error': 'Sección no válida'}), 400
@@ -4956,6 +6240,28 @@ def descargar_repositorio_documento(seccion, doc_id):
 
 @app.route("/api/biblioteca/documentos/<int:doc_id>", methods=["DELETE"])
 def eliminar_biblioteca_documento(doc_id):
+
+    """
+    DELETE /api/biblioteca/documentos/<int:doc_id>
+    ---
+    tags:
+      - Biblioteca
+    description: "Endpoint para la ruta /api/biblioteca/documentos/<int:doc_id>"
+    parameters:
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Elimina un documento de la Biblioteca."""
     try:
         doc = BibliotecaDocumento.query.get(doc_id)
@@ -4977,6 +6283,28 @@ def eliminar_biblioteca_documento(doc_id):
 
 @app.route("/api/academia/documentos/<int:doc_id>", methods=["DELETE"])
 def eliminar_academia_documento(doc_id):
+
+    """
+    DELETE /api/academia/documentos/<int:doc_id>
+    ---
+    tags:
+      - Academia
+    description: "Endpoint para la ruta /api/academia/documentos/<int:doc_id>"
+    parameters:
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Elimina un documento de la Academia."""
     try:
         doc = AcademiaDocumento.query.get(doc_id)
@@ -5000,6 +6328,28 @@ def eliminar_academia_documento(doc_id):
 
 @app.route("/api/organizaciones/<int:org_id>/academia/documentos", methods=["GET"])
 def listar_academia_documentos_organizacion(org_id):
+
+    """
+    GET /api/organizaciones/<int:org_id>/academia/documentos
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:org_id>/academia/documentos"
+    parameters:
+      - name: org_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Lista documentos educativos de la organización (panel Academia)."""
     try:
         Organizacion.query.get_or_404(org_id)
@@ -5033,6 +6383,34 @@ def listar_academia_documentos_organizacion(org_id):
 
 @app.route("/api/organizaciones/<int:org_id>/academia/documentos", methods=["POST"])
 def subir_academia_documento_organizacion(org_id):
+
+    """
+    POST /api/organizaciones/<int:org_id>/academia/documentos
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:org_id>/academia/documentos"
+    parameters:
+      - name: org_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Sube un documento educativo de la organización (multipart: archivo, nombre_archivo, descripcion obligatoria, fecha_creacion?)."""
     try:
         Organizacion.query.get_or_404(org_id)
@@ -5076,6 +6454,38 @@ def subir_academia_documento_organizacion(org_id):
 
 @app.route("/api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>", methods=["PATCH"])
 def actualizar_academia_documento_organizacion(org_id, doc_id):
+
+    """
+    PATCH /api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>"
+    parameters:
+      - name: org_id
+        in: path
+        type: integer
+        required: true
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """La organización puede editar un documento solo si está pendiente o rechazado. Aprobado no se puede editar."""
     try:
         doc = AcademiaDocumento.query.filter_by(id=doc_id, organizacion_id=org_id).first()
@@ -5128,6 +6538,32 @@ def actualizar_academia_documento_organizacion(org_id, doc_id):
 
 @app.route("/api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>", methods=["DELETE"])
 def eliminar_academia_documento_organizacion(org_id, doc_id):
+
+    """
+    DELETE /api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:org_id>/academia/documentos/<int:doc_id>"
+    parameters:
+      - name: org_id
+        in: path
+        type: integer
+        required: true
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Elimina un documento educativo de la organización (solo si pertenece a esa org)."""
     try:
         doc = AcademiaDocumento.query.filter_by(id=doc_id, organizacion_id=org_id).first()
@@ -5149,6 +6585,34 @@ def eliminar_academia_documento_organizacion(org_id, doc_id):
 
 @app.route("/api/admin/academia/documentos/<int:doc_id>/estado", methods=["PATCH"])
 def actualizar_estado_academia_documento(doc_id):
+
+    """
+    PATCH /api/admin/academia/documentos/<int:doc_id>/estado
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/academia/documentos/<int:doc_id>/estado"
+    parameters:
+      - name: doc_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Admin: cambiar estado de un documento de Academia (pendiente, aprobado, rechazado)."""
     try:
         data = request.get_json() or {}
@@ -5395,6 +6859,34 @@ def obtener_todas_reseñas_admin():
 # Endpoint para enviar correo masivo a postulantes
 @app.route("/api/oportunidades/<int:oportunidad_id>/correo-masivo", methods=["POST"])
 def enviar_correo_masivo(oportunidad_id):
+
+    """
+    POST /api/oportunidades/<int:oportunidad_id>/correo-masivo
+    ---
+    tags:
+      - Oportunidades
+    description: "Endpoint para la ruta /api/oportunidades/<int:oportunidad_id>/correo-masivo"
+    parameters:
+      - name: oportunidad_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         asunto = data.get('asunto')
@@ -5510,6 +7002,34 @@ def enviar_correo_masivo(oportunidad_id):
 # Endpoint para actualizar horas de voluntariado de un usuario
 @app.route("/api/usuarios/<int:usuario_id>/horas-voluntariado", methods=["PUT"])
 def actualizar_horas_voluntariado(usuario_id):
+
+    """
+    PUT /api/usuarios/<int:usuario_id>/horas-voluntariado
+    ---
+    tags:
+      - Usuarios
+    description: "Endpoint para la ruta /api/usuarios/<int:usuario_id>/horas-voluntariado"
+    parameters:
+      - name: usuario_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         horas = data.get('hora_voluntariado') or data.get('horas_voluntariado')
@@ -5559,6 +7079,34 @@ def actualizar_horas_voluntariado(usuario_id):
 # Subir certificado de voluntario
 @app.route("/api/postulaciones/<int:postulacion_id>/certificado", methods=["POST"])
 def subir_certificado_voluntario(postulacion_id):
+
+    """
+    POST /api/postulaciones/<int:postulacion_id>/certificado
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/certificado"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         postulacion = Postulacion.query.get(postulacion_id)
         if not postulacion:
@@ -5629,6 +7177,34 @@ def subir_certificado_voluntario(postulacion_id):
 # Enviar certificado por correo
 @app.route("/api/postulaciones/<int:postulacion_id>/enviar-certificado", methods=["POST"])
 def enviar_certificado_por_correo(postulacion_id):
+
+    """
+    POST /api/postulaciones/<int:postulacion_id>/enviar-certificado
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/enviar-certificado"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         email_destino = data.get('email')
@@ -5726,6 +7302,28 @@ def enviar_certificado_por_correo(postulacion_id):
 # Descargar certificado de voluntario
 @app.route("/api/postulaciones/<int:postulacion_id>/certificado/descargar", methods=["GET"])
 def descargar_certificado_voluntario(postulacion_id):
+
+    """
+    GET /api/postulaciones/<int:postulacion_id>/certificado/descargar
+    ---
+    tags:
+      - Postulaciones
+    description: "Endpoint para la ruta /api/postulaciones/<int:postulacion_id>/certificado/descargar"
+    parameters:
+      - name: postulacion_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         postulacion = Postulacion.query.get(postulacion_id)
         if not postulacion:
@@ -5769,6 +7367,24 @@ def descargar_certificado_voluntario(postulacion_id):
 # Endpoint para obtener todos los usuarios con sus roles
 @app.route("/api/admin/usuarios", methods=["GET"])
 def obtener_usuarios_admin():
+
+    """
+    GET /api/admin/usuarios
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/usuarios"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         usuarios = Usuario.query.all()
         
@@ -5809,6 +7425,30 @@ def obtener_usuarios_admin():
 # Endpoint para generar reporte Excel de usuarios
 @app.route("/api/admin/usuarios/generar-reporte", methods=["POST"])
 def generar_reporte_usuarios():
+
+    """
+    POST /api/admin/usuarios/generar-reporte
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/usuarios/generar-reporte"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         if not OPENPYXL_AVAILABLE:
             return jsonify({
@@ -5995,6 +7635,24 @@ def generar_reporte_usuarios():
 # Endpoint para obtener formularios de creación de organización (admin)
 @app.route("/api/admin/solicitudes-organizacion", methods=["GET"])
 def obtener_solicitudes_organizacion_admin():
+
+    """
+    GET /api/admin/solicitudes-organizacion
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/solicitudes-organizacion"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         estado = request.args.get('estado')
         query = SolicitudOrganizacion.query
@@ -6035,6 +7693,34 @@ def obtener_solicitudes_organizacion_admin():
 
 @app.route("/api/admin/solicitudes-organizacion/<int:solicitud_id>/estado", methods=["PATCH"])
 def actualizar_estado_solicitud_organizacion(solicitud_id):
+
+    """
+    PATCH /api/admin/solicitudes-organizacion/<int:solicitud_id>/estado
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/solicitudes-organizacion/<int:solicitud_id>/estado"
+    parameters:
+      - name: solicitud_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json or {}
         nuevo_estado = data.get('estado')
@@ -6107,6 +7793,24 @@ def actualizar_estado_solicitud_organizacion(solicitud_id):
 # Endpoint para obtener todas las organizaciones con sus administradores
 @app.route("/api/admin/organizaciones", methods=["GET"])
 def obtener_organizaciones_admin():
+
+    """
+    GET /api/admin/organizaciones
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/organizaciones"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         organizaciones = Organizacion.query.all()
         
@@ -6163,6 +7867,28 @@ def obtener_organizaciones_admin():
 # Endpoint para generar reporte de impacto de una organización (formato INJUV)
 @app.route("/api/organizaciones/<int:organizacion_id>/reporte-impacto", methods=["GET"])
 def generar_reporte_impacto_organizacion(organizacion_id):
+
+    """
+    GET /api/organizaciones/<int:organizacion_id>/reporte-impacto
+    ---
+    tags:
+      - Organizaciones
+    description: "Endpoint para la ruta /api/organizaciones/<int:organizacion_id>/reporte-impacto"
+    parameters:
+      - name: organizacion_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         if not OPENPYXL_AVAILABLE:
             return jsonify({
@@ -6347,6 +8073,30 @@ def generar_reporte_impacto_organizacion(organizacion_id):
 # Endpoint para generar reporte Excel de organizaciones
 @app.route("/api/admin/organizaciones/generar-reporte", methods=["POST"])
 def generar_reporte_organizaciones():
+
+    """
+    POST /api/admin/organizaciones/generar-reporte
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/organizaciones/generar-reporte"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         if not OPENPYXL_AVAILABLE:
             return jsonify({
@@ -6522,6 +8272,34 @@ def generar_reporte_organizaciones():
 # Endpoint para actualizar el rol de un usuario y asignar organización
 @app.route("/api/admin/usuarios/<int:user_id>/rol", methods=["PUT"])
 def actualizar_rol_usuario(user_id):
+
+    """
+    PUT /api/admin/usuarios/<int:user_id>/rol
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/usuarios/<int:user_id>/rol"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         data = request.json
         nuevo_rol = data.get('rol')
@@ -6621,6 +8399,28 @@ def actualizar_rol_usuario(user_id):
 # Endpoint para eliminar el rol de un usuario (poner en 'user' por defecto)
 @app.route("/api/admin/usuarios/<int:user_id>/rol", methods=["DELETE"])
 def eliminar_rol_usuario(user_id):
+
+    """
+    DELETE /api/admin/usuarios/<int:user_id>/rol
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/usuarios/<int:user_id>/rol"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         usuario = Usuario.query.get(user_id)
         if not usuario:
@@ -6664,6 +8464,28 @@ def eliminar_rol_usuario(user_id):
 # Endpoint para que el administrador elimine usuarios
 @app.route("/api/admin/usuarios/<int:user_id>", methods=["DELETE"])
 def admin_eliminar_usuario(user_id):
+
+    """
+    DELETE /api/admin/usuarios/<int:user_id>
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/usuarios/<int:user_id>"
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         # Buscar el usuario
         usuario = Usuario.query.get(user_id)
@@ -6721,6 +8543,30 @@ def admin_eliminar_usuario(user_id):
 # Endpoint para permitir NULL en id_usuario_org
 @app.route("/api/admin/migrate/allow-null-usuario-org", methods=["POST"])
 def allow_null_usuario_org():
+
+    """
+    POST /api/admin/migrate/allow-null-usuario-org
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/migrate/allow-null-usuario-org"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         with app.app_context():
             # Ejecutar ALTER TABLE para permitir NULL
@@ -6750,6 +8596,24 @@ def allow_null_usuario_org():
 # Endpoint para obtener estadísticas del dashboard
 @app.route("/api/admin/estadisticas", methods=["GET"])
 def obtener_estadisticas():
+
+    """
+    GET /api/admin/estadisticas
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/estadisticas"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         # Contar usuarios registrados
         total_usuarios = Usuario.query.count()
@@ -6836,6 +8700,24 @@ def obtener_estadisticas():
 # Endpoint para obtener estadísticas de voluntarios
 @app.route("/api/admin/estadisticas/voluntarios", methods=["GET"])
 def obtener_estadisticas_voluntarios():
+
+    """
+    GET /api/admin/estadisticas/voluntarios
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/estadisticas/voluntarios"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         from sqlalchemy import extract, func
         from datetime import datetime
@@ -6900,6 +8782,24 @@ def obtener_estadisticas_voluntarios():
 # Endpoint para obtener estadísticas de organizaciones
 @app.route("/api/admin/estadisticas/organizaciones", methods=["GET"])
 def obtener_estadisticas_organizaciones():
+
+    """
+    GET /api/admin/estadisticas/organizaciones
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/estadisticas/organizaciones"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         from sqlalchemy import func
         
@@ -6971,6 +8871,24 @@ def obtener_estadisticas_organizaciones():
 # Endpoint para obtener estadísticas de voluntariados
 @app.route("/api/admin/estadisticas/voluntariados", methods=["GET"])
 def obtener_estadisticas_voluntariados():
+
+    """
+    GET /api/admin/estadisticas/voluntariados
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/estadisticas/voluntariados"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         from sqlalchemy import func
         
@@ -7066,6 +8984,24 @@ def obtener_estadisticas_voluntariados():
 # Endpoint para obtener estadísticas mensuales
 @app.route("/api/admin/estadisticas/mensuales", methods=["GET"])
 def obtener_estadisticas_mensuales():
+
+    """
+    GET /api/admin/estadisticas/mensuales
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/estadisticas/mensuales"
+    
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         from sqlalchemy import extract, func
         from datetime import datetime
@@ -7230,6 +9166,30 @@ def obtener_estadisticas_mensuales():
 # Endpoint temporal para actualizar la tabla oportunidades
 @app.route("/api/admin/update-oportunidades-table", methods=["POST"])
 def update_oportunidades_table():
+
+    """
+    POST /api/admin/update-oportunidades-table
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/update-oportunidades-table"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Endpoint temporal para agregar columnas faltantes a la tabla oportunidades"""
     try:
         from sqlalchemy import text
@@ -7299,6 +9259,30 @@ def update_oportunidades_table():
 # Endpoint temporal para corregir el tipo de fecha_creacion
 @app.route("/api/admin/fix-fecha-creacion-type", methods=["POST"])
 def fix_fecha_creacion_type():
+
+    """
+    POST /api/admin/fix-fecha-creacion-type
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/fix-fecha-creacion-type"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Endpoint temporal para corregir el tipo de la columna fecha_creacion de INTEGER a DATE"""
     try:
         from sqlalchemy import text
@@ -7350,6 +9334,30 @@ def fix_fecha_creacion_type():
 # Endpoint temporal para actualizar la tabla organizaciones
 @app.route("/api/admin/update-organizaciones-table", methods=["POST"])
 def update_organizaciones_table():
+
+    """
+    POST /api/admin/update-organizaciones-table
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/update-organizaciones-table"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     """Endpoint temporal para agregar columnas faltantes a la tabla organizaciones"""
     try:
         from sqlalchemy import text
@@ -7496,6 +9504,30 @@ def update_organizaciones_table():
 # Endpoint para generar reporte Excel de estadísticas
 @app.route("/api/admin/estadisticas/generar-reporte", methods=["POST"])
 def generar_reporte_excel():
+
+    """
+    POST /api/admin/estadisticas/generar-reporte
+    ---
+    tags:
+      - Admin
+    description: "Endpoint para la ruta /api/admin/estadisticas/generar-reporte"
+    parameters:
+      - name: body
+        in: body
+        required: false
+        description: JSON body
+        schema:
+          type: object
+    responses:
+      200:
+        description: "Operación exitosa"
+      400:
+        description: "Error en la solicitud"
+      404:
+        description: "Recurso no encontrado"
+      500:
+        description: "Error interno del servidor"
+    """
     try:
         # Intentar importar openpyxl dinámicamente (por si se instaló después de iniciar el servidor)
         try:
