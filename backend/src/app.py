@@ -304,6 +304,8 @@ def register():
         if email:
             email = email.strip().lower()
         password = data.get('password')
+        if password is not None:
+            password = str(password).strip()
         nombre = data.get('nombre', '')
         apellido = data.get('apellido', '')
         rut = data.get('rut', '').strip().upper()
@@ -435,6 +437,8 @@ def login():
         if email:
             email = email.strip().lower()
         password = data.get('password')
+        if password is not None:
+            password = str(password).strip()
         
         if not email or not password:
             return jsonify({
@@ -453,7 +457,8 @@ def login():
             }), 401
         
         # Verificar contraseña
-        if not check_password_hash(usuario.password_hash, password):
+        hash_db = usuario.password_hash.strip() if usuario.password_hash else ""
+        if not check_password_hash(hash_db, password):
             print(f"DEBUG LOGIN: Falla check_password_hash para el usuario con email: '{email}'")
             return jsonify({
                 'success': False,
