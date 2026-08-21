@@ -333,7 +333,6 @@ def register():
         fecha_nacimiento = None
         if fecha_nacimiento_str:
             try:
-                from datetime import datetime
                 fecha_nacimiento = datetime.strptime(fecha_nacimiento_str, '%Y-%m-%d').date()
             except ValueError:
                 return jsonify({
