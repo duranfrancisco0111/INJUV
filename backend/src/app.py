@@ -42,6 +42,12 @@ if not app.config['SQLALCHEMY_DATABASE_URI']:
     raise ValueError("La variable de entorno DATABASE_URL no está configurada")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Opciones de pool seguras para entornos cloud (Render/Neon)
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
+
 # Configuración de Flask-Mail
 # Para Gmail, necesitas usar una "Contraseña de aplicación" en lugar de tu contraseña normal
 # Ve a: https://myaccount.google.com/apppasswords
